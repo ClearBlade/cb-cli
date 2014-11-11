@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"code.google.com/p/gopass"
 	"crypto/md5"
 	"encoding/json"
 	"flag"
@@ -14,14 +13,14 @@ import (
 )
 
 var (
-	URL          string
-	AuthInfoFile string
+	URL string
 )
 
 type Service_meta struct {
 	Name    string
 	Version int
 	Hash    string
+	Params  []string
 }
 
 type System_meta struct {
@@ -33,35 +32,6 @@ type System_meta struct {
 
 func init() {
 	flag.StringVar(&URL, "url", "", "Set the URL of the platform you want to use")
-	flag.StringVar(&AuthInfoFile, "authinfo", "", "File in which you wish to store auth info")
-}
-
-func auth() (*cb.DevClient, error) {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("Enter your email: ")
-	email, _ := reader.ReadString('\n')
-	pass, pass_err := gopass.GetPass("Enter your password: ")
-	if pass_err != nil {
-		return nil, pass_err
-	}
-	cli := cb.NewDevClient(email, pass)
-	if err := cli.Authenticate(); err != nil {
-		return nil, err
-	} else {
-		return cli, nil
-	}
-}
-
-func save_auth_info(filename, token string) error {
-	return ioutil.WriteFile(filename, []byte(token), 0600)
-}
-
-func load_auth_info(filename string) (string, error) {
-	if data, err := ioutil.ReadFile(filename); err != nil {
-		return "", err
-	} else {
-		return string(data), nil
-	}
 }
 
 func pull_services(systemKey string, cli *cb.DevClient) ([]*cb.Service, error) {
@@ -96,6 +66,7 @@ func pull_system_meta(systemKey string, cli *cb.DevClient) (*System_meta, error)
 			Name:    svc.Name,
 			Version: svc.Version,
 			Hash:    fmt.Sprintf("%x", md5.Sum([]byte(svc.Code))),
+			Params:  svc.Params,
 		}
 	}
 	sys_meta := &System_meta{
@@ -108,38 +79,39 @@ func pull_system_meta(systemKey string, cli *cb.DevClient) (*System_meta, error)
 }
 
 func store_services(systemKey string, services []*cb.Service, meta *System_meta) error {
-	if err := os.MkdirAll(systemKey, 0777); err != nil {
+	dir := strings.Replace(meta.Name, " ", "_", -1)
+	if err := os.MkdirAll(dir, 0777); err != nil {
 		return err
 	}
 	meta_bytes, err := json.Marshal(meta)
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(systemKey+"/.meta.json", meta_bytes, 0777); err != nil {
+	if err := ioutil.WriteFile(dir+"/.meta.json", meta_bytes, 0777); err != nil {
 		return err
 	}
 
 	for _, service := range services {
-		if err := ioutil.WriteFile(systemKey+"/"+service.Name+".js", []byte(service.Code), 0777); err != nil {
+		if err := ioutil.WriteFile(dir+"/"+service.Name+".js", []byte(service.Code), 0777); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func store_meta(systemKey string, meta *System_meta) error {
+func store_meta(dir string, meta *System_meta) error {
 	meta_bytes, err := json.Marshal(meta)
 	if err != nil {
 		return err
 	}
-	if err := ioutil.WriteFile(systemKey+"/.meta.json", meta_bytes, 0777); err != nil {
+	if err := ioutil.WriteFile(dir+"/.meta.json", meta_bytes, 0777); err != nil {
 		return err
 	}
 	return nil
 }
 
-func load_sys_meta(systemKey string) (*System_meta, error) {
-	meta_bytes, err := ioutil.ReadFile(systemKey + "/.meta.json")
+func load_sys_meta(dir string) (*System_meta, error) {
+	meta_bytes, err := ioutil.ReadFile(dir + "/.meta.json")
 	if err != nil {
 		return nil, err
 	}
@@ -150,20 +122,20 @@ func load_sys_meta(systemKey string) (*System_meta, error) {
 	return sys_meta, nil
 }
 
-func service_hash(systemKey, name string) (string, error) {
-	svc_bytes, err := ioutil.ReadFile(systemKey + "/" + name + ".js")
+func service_hash(dir, name string) (string, error) {
+	svc_bytes, err := ioutil.ReadFile(dir + "/" + name + ".js")
 	if err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("%x", md5.Sum(svc_bytes)), nil
 }
 
-func service_changed(systemKey, name string) (bool, error) {
-	sys_meta, err := load_sys_meta(systemKey)
+func service_changed(dir, name string) (bool, error) {
+	sys_meta, err := load_sys_meta(dir)
 	if err != nil {
 		return false, err
 	}
-	hash, err := service_hash(systemKey, name)
+	hash, err := service_hash(dir, name)
 	if err != nil {
 		return false, err
 	}
@@ -174,8 +146,8 @@ func service_changed(systemKey, name string) (bool, error) {
 	}
 }
 
-func service_local(systemKey, name string) bool {
-	if _, err := os.Stat(systemKey + "/" + name + ".js"); err != nil {
+func service_local(dir, name string) bool {
+	if _, err := os.Stat(dir + "/" + name + ".js"); err != nil {
 		return false
 	} else {
 		return true
@@ -188,8 +160,9 @@ func ok_to_pull(systemKey string, cli *cb.DevClient) (bool, string, error) {
 		return false, "", err
 	}
 	for k, _ := range sys_meta.Services {
-		if service_local(systemKey, k) {
-			if has_changed, err := service_changed(systemKey, k); err != nil {
+		dir := strings.Replace(sys_meta.Name, " ", "_", -1)
+		if service_local(dir, k) {
+			if has_changed, err := service_changed(dir, k); err != nil {
 				return false, "", err
 			} else if has_changed {
 				return false, "You have made changes to a service since the last pull", nil
@@ -201,14 +174,14 @@ func ok_to_pull(systemKey string, cli *cb.DevClient) (bool, string, error) {
 	return true, "", nil
 }
 
-func system_diff(systemKey string, cli *cb.DevClient) ([]string, error) {
+func system_diff(systemKey, dir string, cli *cb.DevClient) ([]string, error) {
 	sys_meta, err := pull_system_meta(systemKey, cli)
 	if err != nil {
 		return nil, err
 	}
 	changed := make([]string, 0)
 	for k, _ := range sys_meta.Services {
-		if has_changed, err := service_changed(systemKey, k); err != nil {
+		if has_changed, err := service_changed(dir, k); err != nil {
 			return nil, err
 		} else if has_changed {
 			changed = append(changed, k)
@@ -225,21 +198,9 @@ func prompt(msg string) string {
 }
 
 func pull_cmd(sysKey string) error {
-	var cli *cb.DevClient
-	var err error
-	if AuthInfoFile == "" {
-		cli, err = auth()
-		if err != nil {
-			return err
-		}
-	} else {
-		tok, load_err := load_auth_info(AuthInfoFile)
-		if load_err != nil {
-			return load_err
-		}
-		cli = &cb.DevClient{
-			DevToken: tok,
-		}
+	cli, err := auth()
+	if err != nil {
+		return err
 	}
 	if ok, msg, err := ok_to_pull(sysKey, cli); !ok && err != nil {
 		return err
@@ -270,50 +231,58 @@ func pull_cmd(sysKey string) error {
 	return nil
 }
 
-func push(systemKey string, services []string, cli *cb.DevClient) error {
+func service_params(dir, name string) ([]string, error) {
+	meta, err := load_sys_meta(dir)
+	if err != nil {
+		return nil, err
+	}
+	if svc_meta, extant := meta.Services[name]; extant {
+		return svc_meta.Params, nil
+	} else {
+		return nil, fmt.Errorf("service does not exist locally")
+	}
+}
+
+func push(systemKey, dir string, services []string, cli *cb.DevClient) error {
 	for _, svc := range services {
-		svc_bytes, err := ioutil.ReadFile(systemKey + "/" + svc + ".js")
+
+		svc_bytes, err := ioutil.ReadFile(dir + "/" + svc + ".js")
 		if err != nil {
 			return err
 		}
-		if put_err := cli.UpdateService(systemKey, svc, string(svc_bytes)); put_err != nil {
+		params, err := service_params(dir, svc)
+		if err != nil {
+			return err
+		}
+		if put_err := cli.UpdateService(systemKey, svc, string(svc_bytes), params); put_err != nil {
 			return put_err
 		}
 	}
 	return nil
 }
 
-func push_cmd(systemKey string) error {
-	var cli *cb.DevClient
-	var err error
-	if AuthInfoFile == "" {
-		cli, err = auth()
-		if err != nil {
-			return err
-		}
-	} else {
-		tok, load_err := load_auth_info(AuthInfoFile)
-		if load_err != nil {
-			return load_err
-		}
-		cli = &cb.DevClient{
-			DevToken: tok,
-		}
+func push_cmd(systemKey, dir string) error {
+	cli, err := auth()
+	if err != nil {
+		return err
+	}
+	sys_meta, err := pull_system_meta(systemKey, cli)
+	if err != nil {
+		return err
+	}
+	if dir == "" {
+		dir = strings.Replace(sys_meta.Name, " ", "_", -1)
 	}
 
-	if svcs, err := system_diff(systemKey, cli); err != nil {
+	if svcs, err := system_diff(systemKey, dir, cli); err != nil {
 		return err
 	} else if len(svcs) == 0 {
 		return fmt.Errorf("No services have changed, nothing to push")
 	} else {
-		if err := push(systemKey, svcs, cli); err != nil {
+		if err := push(systemKey, dir, svcs, cli); err != nil {
 			return err
 		} else {
-			meta, meta_err := pull_system_meta(systemKey, cli)
-			if meta_err != nil {
-				return meta_err
-			}
-			if store_err := store_meta(systemKey, meta); store_err != nil {
+			if store_err := store_meta(dir, sys_meta); store_err != nil {
 				return store_err
 			}
 			fmt.Printf("Push successful\n")
@@ -332,6 +301,17 @@ func auth_cmd() error {
 		return nil
 	}
 	return save_auth_info(AuthInfoFile, cli.DevToken)
+}
+
+func sys_for_dir() (string, error) {
+	if _, err := os.Stat(".meta.json"); os.IsNotExist(err) {
+		return "", fmt.Errorf("No system key argument given and not in a system repository")
+	}
+	sys_meta, err := load_sys_meta(".")
+	if err != nil {
+		return "", fmt.Errorf("Error loading system meta data")
+	}
+	return sys_meta.Key, nil
 }
 
 func main() {
@@ -354,10 +334,19 @@ func main() {
 			fmt.Printf("Error pulling data: %v\n", err)
 		}
 	case "push":
+		var sysKey, dir string
+		var err error
 		if flag.NArg() != 2 {
-			fmt.Printf("push requires the systemKey as an argument\n")
+			sysKey, err = sys_for_dir()
+			if err != nil {
+				fmt.Printf("%v\n", err)
+			}
+			dir = "."
+		} else {
+			dir = ""
+			sysKey = flag.Arg(1)
 		}
-		if err := push_cmd(flag.Arg(1)); err != nil {
+		if err := push_cmd(sysKey, dir); err != nil {
 			fmt.Printf("Error pushing: %v\n", err)
 		}
 	default:
