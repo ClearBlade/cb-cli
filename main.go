@@ -227,7 +227,8 @@ func pull_cmd(sysKey string) error {
 	if err := store_services(sysKey, services, sys_meta); err != nil {
 		return err
 	}
-	fmt.Printf("Code for %s has been successfully pulled and put in a directory %s\n", sysKey, sysKey)
+	dir := strings.Replace(sys_meta.Name, " ", "_", -1)
+	fmt.Printf("Code for %s has been successfully pulled and put in a directory %s\n", sysKey, dir)
 	return nil
 }
 
