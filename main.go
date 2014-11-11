@@ -361,6 +361,6 @@ func main() {
 			fmt.Printf("Error pushing: %v\n", err)
 		}
 	default:
-		fmt.Printf("Commands: 'auth', 'pull'\n")
+		fmt.Printf("Commands: 'auth', 'pull', 'push'\n")
 	}
 }
