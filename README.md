@@ -106,3 +106,4 @@ If you are in the root directory of multiple systems, you will have to specify t
 
 -   Create more tooling around local/server conflicts.
 -   Expose more settings to the cb-cli (params, service creation)
+-   Allow for local execution of service via local nodejs
