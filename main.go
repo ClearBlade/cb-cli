@@ -251,6 +251,7 @@ func push(systemKey, dir string, services []string, cli *cb.DevClient) error {
 		if err != nil {
 			return err
 		}
+		svc_bytes = []byte(strings.Replace(strings.Replace(string(svc_bytes), "\\n", "\n", -1), "\n", "\\n", -1))
 		params, err := service_params(dir, svc)
 		if err != nil {
 			return err
