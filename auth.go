@@ -46,6 +46,9 @@ func auth() (*cb.DevClient, error) {
 			return nil, prompt_err
 		}
 		cli = cb.NewDevClient(email, pass)
+		fmt.Printf("URL is: %s\n", URL)
+		fmt.Printf("URL is: %s\n", cb.CB_ADDR)
+
 		if err := cli.Authenticate(); err != nil {
 			return nil, err
 		} else {
