@@ -273,6 +273,18 @@ func load_services(dir string, meta *System_meta) ([]cb.Service, error) {
 	return service_meta, nil
 }
 
+func load_roles(dir string) ([]interface{}, error) {
+	roles_bytes, err := ioutil.ReadFile(dir + "/auth/roles.json")
+	if err != nil {
+		return nil, err
+	}
+	var roles_data []interface{}
+	if err := json.Unmarshal(roles_bytes, &roles_data); err != nil {
+		return nil, err
+	}
+	return roles_data, nil
+}
+
 func service_hash(dir, name string) (string, error) {
 	svc_bytes, err := ioutil.ReadFile(dir + "/" + name + ".js")
 	if err != nil {
@@ -535,18 +547,19 @@ func import_cmd(dir string) error {
 	err = CreateServices(cli, sysKey, old_services)
 	if err != nil {
 		fmt.Printf("Import failed - uploading service info\n")
+		return err
 	}
 
-	// err = importServices(cli, old_services)
-	// if err != nil {
-	// 	fmt.Printf("Import failed - importing services\n")
-	// 	return err
-	// }
-	// old_collections, err := load_collections()
-	// if err != nil {
-	// 	fmt.Printf("Import failed - loading collections info\n")
-	// 	return err
-	// }
+	old_roles, err := load_roles(dir)
+	if err != nil {
+		fmt.Printf("Import failed - retrieving roles info\n")
+	}
+
+	err = CreateRoles(cli, sysKey, old_roles)
+	if err != nil {
+		fmt.Printf("Import failed - uploading service info\n")
+		return err
+	}
 	// old_roles, err := load_roles()
 	// if err != nil {
 	// 	fmt.Printf("Import failed - loading roles info\n")

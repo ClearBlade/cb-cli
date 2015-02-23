@@ -44,6 +44,28 @@ func CreateServices(cli *cb.DevClient, sysKey string, services []cb.Service) err
 	return nil
 }
 
-func CreateRoles(meta *System_meta) error {
+func CreateRoles(cli *cb.DevClient, sysKey string, roles []interface{}) error {
+	for i := 0; i < len(roles); i++ {
+		for k, v := range roles[i].(map[string]interface{})["Permissions"].(map[string]interface{}) {
+			if k == "CodeServices" {
+				for j := 0; j < len(v.([]interface{})); j++ {
+					err := cli.AddServiceToRole(sysKey, v.([]interface{})[j].(map[string]interface{})["Name"].(string), roles[i].(map[string]interface{})["ID"].(string), int(v.([]interface{})[j].(map[string]interface{})["Level"].(float64)))
+					if err != nil {
+						return err
+					}
+				}
+			}
+			if k == "Collections" {
+				for j := 0; j < len(v.([]interface{})); j++ {
+					if roles[i].(map[string]interface{})["ID"].(string) != "Administrator" {
+						err := cli.AddCollectionToRole(sysKey, v.([]interface{})[j].(map[string]interface{})["ID"].(string), roles[i].(map[string]interface{})["ID"].(string), int(v.([]interface{})[j].(map[string]interface{})["Level"].(float64)))
+						if err != nil {
+							return err
+						}
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
