@@ -94,7 +94,6 @@ func pull_colls(systemKey string, cli *cb.DevClient) ([]Collection_meta, error) 
 		if !ok {
 			return nil, fmt.Errorf("collectionID is not a string")
 		}
-		//fmt.Printf("id: %+v\n", id)
 		columnsResp, err := cli.GetColumns(id)
 
 		if err != nil {
@@ -114,7 +113,7 @@ func pull_colls(systemKey string, cli *cb.DevClient) ([]Collection_meta, error) 
 			Columns:       columns,
 		}
 	}
-	//fmt.Printf("collections: %+v\n", collections)
+
 	return collections, nil
 }
 
@@ -489,16 +488,16 @@ func import_cmd(dir string) error {
 		fmt.Printf("Import failed - creating new system\n")
 	}
 	//fmt.Printf("%s\n", new_sys_meta)
-	old_services, err := load_services()
-	if err != nil {
-		fmt.Printf("Import failed - loading service info\n")
-		return err
-	}
-	err = importServices(cli, old_services)
-	if err != nil {
-		fmt.Printf("Import failed - importing services\n")
-		return err
-	}
+	// old_services, err := load_services()
+	// if err != nil {
+	// 	fmt.Printf("Import failed - loading service info\n")
+	// 	return err
+	// }
+	// err = importServices(cli, old_services)
+	// if err != nil {
+	// 	fmt.Printf("Import failed - importing services\n")
+	// 	return err
+	// }
 	// old_collections, err := load_collections()
 	// if err != nil {
 	// 	fmt.Printf("Import failed - loading collections info\n")
