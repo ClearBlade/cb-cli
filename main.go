@@ -208,7 +208,7 @@ func store_system(systemKey string, meta *System_meta) error {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		return err
 	}
-	meta.Services = nil
+	// meta.Services = nil
 
 	meta_bytes, err := json.Marshal(meta)
 	if err != nil {
@@ -241,6 +241,36 @@ func load_sys_meta(dir string) (*System_meta, error) {
 		return nil, err
 	}
 	return sys_meta, nil
+}
+
+func load_collection_meta(dir string) ([]Collection_meta, error) {
+	meta_bytes, err := ioutil.ReadFile(dir + "/data/collections.json")
+	if err != nil {
+		return nil, err
+	}
+	var collection_meta []Collection_meta
+	if err := json.Unmarshal(meta_bytes, &collection_meta); err != nil {
+		return nil, err
+	}
+	return collection_meta, nil
+}
+
+func load_services(dir string, meta *System_meta) ([]cb.Service, error) {
+	service_meta := make([]cb.Service, len(meta.Services))
+
+	i := 0
+	for k, _ := range meta.Services {
+		code_bytes, err := ioutil.ReadFile(dir + "/code/" + k + ".js")
+		if err != nil {
+			return nil, err
+		}
+		service_meta[i].Name = meta.Services[k].Name
+		service_meta[i].Params = meta.Services[k].Params
+		service_meta[i].Code = string(code_bytes)
+		i++
+	}
+
+	return service_meta, nil
 }
 
 func service_hash(dir, name string) (string, error) {
@@ -480,19 +510,33 @@ func import_cmd(dir string) error {
 		dir = strings.Replace(old_sys_meta.Name, " ", "_", -1)
 	}
 	if err != nil {
-		fmt.Printf("Import failed - loading system info\n")
 		return err
 	}
-	err = CreateSystem(cli, old_sys_meta)
+	sysKey, err := CreateSystem(cli, old_sys_meta)
 	if err != nil {
-		fmt.Printf("Import failed - creating new system\n")
+		return err
 	}
-	//fmt.Printf("%s\n", new_sys_meta)
-	// old_services, err := load_services()
-	// if err != nil {
-	// 	fmt.Printf("Import failed - loading service info\n")
-	// 	return err
-	// }
+
+	old_collection_meta, err := load_collection_meta(dir)
+	if err != nil {
+		return err
+	}
+	err = CreateCollections(cli, sysKey, old_collection_meta)
+	if err != nil {
+		return err
+	}
+
+	old_services, err := load_services(dir, old_sys_meta)
+	if err != nil {
+		fmt.Printf("Import failed - loading service info\n")
+		return err
+	}
+
+	err = CreateServices(cli, sysKey, old_services)
+	if err != nil {
+		fmt.Printf("Import failed - uploading service info\n")
+	}
+
 	// err = importServices(cli, old_services)
 	// if err != nil {
 	// 	fmt.Printf("Import failed - importing services\n")
@@ -596,6 +640,7 @@ func main() {
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			fmt.Printf("%v\n", sysKey)
+			return
 		}
 		dir = "."
 
