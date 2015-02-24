@@ -1,13 +1,14 @@
 package main
 
 import (
-	// "fmt"
+	"fmt"
 	cb "github.com/clearblade/Go-SDK"
 	// "os"
 	// "os/user"
 )
 
 func CreateSystem(cli *cb.DevClient, meta *System_meta) (string, error) {
+	fmt.Println("Creating system...")
 	result, err := cli.NewSystem(meta.Name, meta.Description, true)
 	if err != nil {
 		return "", err
@@ -15,25 +16,32 @@ func CreateSystem(cli *cb.DevClient, meta *System_meta) (string, error) {
 	return result, nil
 }
 
-func CreateCollections(cli *cb.DevClient, sysKey string, meta []Collection_meta) error {
+func CreateCollections(cli *cb.DevClient, sysKey string, meta []Collection_meta) ([]Collection_meta, error) {
+	fmt.Println("Creating collections...")
+	newCollections := make([]Collection_meta, len(meta))
 	for i := 0; i < len(meta); i++ {
 		collID, err := cli.NewCollection(sysKey, meta[i].Name)
 		if err != nil {
-			return err
+			return nil, err
+		}
+		newCollections[i] = Collection_meta{
+			Collection_id: collID,
+			Columns:       meta[i].Columns,
 		}
 		for j := 0; j < len(meta[i].Columns); j++ {
 			if meta[i].Columns[j].ColumnName != "item_id" {
 				err := cli.AddColumn(collID, meta[i].Columns[j].ColumnName, meta[i].Columns[j].ColumnType)
 				if err != nil {
-					return err
+					return nil, err
 				}
 			}
 		}
 	}
-	return nil
+	return newCollections, nil
 }
 
 func CreateServices(cli *cb.DevClient, sysKey string, services []cb.Service) error {
+	fmt.Println("Creating services...")
 	for i := 0; i < len(services); i++ {
 		err := cli.NewService(sysKey, services[i].Name, services[i].Code, services[i].Params)
 		if err != nil {
@@ -73,6 +81,7 @@ func CreateCustomRole(cli *cb.DevClient, sysKey, role_id string) (string, error)
 }
 
 func CreateRoles(cli *cb.DevClient, sysKey string, roles []interface{}) error {
+	fmt.Println("Creating roles...")
 	for i := 0; i < len(roles); i++ {
 		roleID := roles[i].(map[string]interface{})["ID"].(string)
 		if isCustomRole(roles[i].(map[string]interface{})["Name"].(string)) {
@@ -115,6 +124,70 @@ func CreateRoles(cli *cb.DevClient, sysKey string, roles []interface{}) error {
 				if err != nil {
 					return err
 				}
+			}
+		}
+	}
+	return nil
+}
+
+func getNilValue(columns []Column, columnName string) interface{} {
+	nilValueMap := map[string]interface{}{
+		"string":    "",
+		"int":       0,
+		"float":     0,
+		"uuid":      "00000000-0000-0000-0000-000000000000",
+		"bigint":    0,
+		"blob":      "",
+		"bool":      false,
+		"double":    0,
+		"timestamp": 0,
+	}
+	for i := 0; i < len(columns); i++ {
+		if columns[i].ColumnName == columnName {
+			return nilValueMap[columns[i].ColumnType]
+		}
+	}
+	var thing interface{}
+	return thing
+}
+
+func MigrateRows(cli *cb.DevClient, oldSysKey, newSysKey string, oldCollections, newCollections []Collection_meta) error {
+	fmt.Println("Migrating items...")
+	investigatorQuery := new(cb.Query)
+	investigatorQuery.PageNumber = 1
+	investigatorQuery.PageSize = 0
+
+	pageSize := 100
+	for i := 0; i < len(oldCollections); i++ {
+		data, err := cli.GetData(oldCollections[i].Collection_id, investigatorQuery)
+		if err != nil {
+			return err
+		}
+		totalItems := data["TOTAL"].(float64)
+
+		for j := 0; j < int(totalItems); j += pageSize {
+			currentQuery := new(cb.Query)
+			currentQuery.PageNumber = (j / pageSize) + 1
+			currentQuery.PageSize = pageSize
+			data, err := cli.GetData(oldCollections[i].Collection_id, currentQuery)
+			if err != nil {
+				return err
+			}
+
+			typedData := data["DATA"].([]interface{})
+
+			for k := 0; k < len(typedData); k++ {
+				delete(typedData[k].(map[string]interface{}), "item_id")
+				for key, val := range typedData[k].(map[string]interface{}) {
+					if val == nil {
+						typedData[k].(map[string]interface{})[key] = getNilValue(newCollections[i].Columns, key)
+					}
+
+				}
+			}
+			err = cli.InsertData(newCollections[i].Collection_id, data["DATA"].([]interface{}))
+			if err != nil {
+				return err
 			}
 		}
 	}

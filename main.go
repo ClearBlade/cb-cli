@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	URL string
+	URL                        string
+	shouldImportCollectionRows bool
 )
 
 // type CollectionPermission struct {
@@ -55,6 +56,7 @@ type System_meta struct {
 
 func init() {
 	flag.StringVar(&URL, "url", "", "Set the URL of the platform you want to use")
+	flag.BoolVar(&shouldImportCollectionRows, "importrows", false, "If supplied the import command will transfer collection rows from the old system to the new system")
 }
 
 func pull_roles(systemKey string, cli *cb.DevClient) ([]interface{}, error) {
@@ -516,25 +518,28 @@ func import_cmd(dir string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Printf("directory is: %s\n", dir)
 	old_sys_meta, err := load_sys_meta(dir)
 	if dir == "" {
 		dir = strings.Replace(old_sys_meta.Name, " ", "_", -1)
 	}
 	if err != nil {
+		fmt.Printf("Import failed - loading system metadata\n")
 		return err
 	}
 	sysKey, err := CreateSystem(cli, old_sys_meta)
 	if err != nil {
+		fmt.Printf("Import failed - uploading system metadata\n")
 		return err
 	}
 
 	old_collection_meta, err := load_collection_meta(dir)
 	if err != nil {
+		fmt.Printf("Import failed - loading collection metadata\n")
 		return err
 	}
-	err = CreateCollections(cli, sysKey, old_collection_meta)
+	newCollections, err := CreateCollections(cli, sysKey, old_collection_meta)
 	if err != nil {
+		fmt.Printf("Import failed - uploading collection metadata\n")
 		return err
 	}
 
@@ -560,32 +565,14 @@ func import_cmd(dir string) error {
 		fmt.Printf("Import failed - uploading service info\n")
 		return err
 	}
-	// old_roles, err := load_roles()
-	// if err != nil {
-	// 	fmt.Printf("Import failed - loading roles info\n")
-	// 	return err
-	// }
 
-	// new_sys_meta, err = createSystem(old_sys_meta, cli)
-	// if err != nil {
-	// 	fmt.Printf("Import failed - creating system\n")
-	// 	return err
-	// }
-	// new_collections, err = importCollections(new_sys_meta, cli)
-	// if err != nil {
-	// 	fmt.Printf("Import failed - importing collections\n")
-	// 	return err
-	// }
-	// new_services, err = importServices(old_services, cli)
-	// if err != nil {
-	// 	fmt.Printf("Import failed - importing services\n")
-	// 	return err
-	// }
-	// new_roles, err = importRoles(old_roles, cli)
-	// if err != nil {
-	// 	fmt.Printf("Import failed - importing roles\n")
-	// 	return err
-	// }
+	if shouldImportCollectionRows {
+		err = MigrateRows(cli, old_sys_meta.Key, sysKey, old_collection_meta, newCollections)
+		if err != nil {
+			fmt.Printf("Import failed - uploading collection rows\n")
+			return err
+		}
+	}
 
 	fmt.Printf("Import successful\n")
 	return nil
