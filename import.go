@@ -3,7 +3,6 @@ package main
 import (
 	// "fmt"
 	cb "github.com/clearblade/Go-SDK"
-	// "io/ioutil"
 	// "os"
 	// "os/user"
 )
@@ -44,46 +43,75 @@ func CreateServices(cli *cb.DevClient, sysKey string, services []cb.Service) err
 	return nil
 }
 
-func CreateGenericRole(cli *cb.DevClient, sysKey, role, permission string, level int) error {
-	err := cli.AddGenericRole(sysKey, role, permission, level)
+func isCustomRole(role_id string) bool {
+	switch role_id {
+	case "Authenticated":
+		return false
+	case "Administrator":
+		return false
+	case "Anonymous":
+		return false
+	default:
+		return true
+	}
+}
+
+func AddGenericPermission(cli *cb.DevClient, sysKey, role, permission string, level int) error {
+	err := cli.AddGenericPermissionToRole(sysKey, role, permission, level)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
+func CreateCustomRole(cli *cb.DevClient, sysKey, role_id string) (string, error) {
+	resp, err := cli.CreateRole(sysKey, role_id)
+	if err != nil {
+		return "", err
+	}
+	return resp.(map[string]interface{})["role_id"].(string), nil
+}
+
 func CreateRoles(cli *cb.DevClient, sysKey string, roles []interface{}) error {
 	for i := 0; i < len(roles); i++ {
+		roleID := roles[i].(map[string]interface{})["ID"].(string)
+		if isCustomRole(roles[i].(map[string]interface{})["Name"].(string)) {
+			resp, err := CreateCustomRole(cli, sysKey, roles[i].(map[string]interface{})["Name"].(string))
+			if err != nil {
+				return err
+			}
+			roleID = resp
+		}
 		for k, v := range roles[i].(map[string]interface{})["Permissions"].(map[string]interface{}) {
 			switch k {
 			case "CodeServices":
 				for j := 0; j < len(v.([]interface{})); j++ {
-					err := cli.AddServiceToRole(sysKey, v.([]interface{})[j].(map[string]interface{})["Name"].(string), roles[i].(map[string]interface{})["ID"].(string), int(v.([]interface{})[j].(map[string]interface{})["Level"].(float64)))
+					err := cli.AddServiceToRole(sysKey, v.([]interface{})[j].(map[string]interface{})["Name"].(string), roleID, int(v.([]interface{})[j].(map[string]interface{})["Level"].(float64)))
 					if err != nil {
 						return err
 					}
 				}
 			case "Collections":
 				for j := 0; j < len(v.([]interface{})); j++ {
-					if roles[i].(map[string]interface{})["ID"].(string) != "Administrator" {
-						err := cli.AddCollectionToRole(sysKey, v.([]interface{})[j].(map[string]interface{})["ID"].(string), roles[i].(map[string]interface{})["ID"].(string), int(v.([]interface{})[j].(map[string]interface{})["Level"].(float64)))
+					if roles[i].(map[string]interface{})["Name"].(string) != "Administrator" {
+						err := cli.AddCollectionToRole(sysKey, v.([]interface{})[j].(map[string]interface{})["ID"].(string), roleID, int(v.([]interface{})[j].(map[string]interface{})["Level"].(float64)))
 						if err != nil {
 							return err
 						}
 					}
 				}
 			case "MsgHistory":
-				err := CreateGenericRole(cli, sysKey, roles[i].(map[string]interface{})["ID"].(string), "msgHistory", int(v.(map[string]interface{})["Level"].(float64)))
+				err := AddGenericPermission(cli, sysKey, roleID, "msgHistory", int(v.(map[string]interface{})["Level"].(float64)))
 				if err != nil {
 					return err
 				}
 			case "Push":
-				err := CreateGenericRole(cli, sysKey, roles[i].(map[string]interface{})["ID"].(string), "push", int(v.(map[string]interface{})["Level"].(float64)))
+				err := AddGenericPermission(cli, sysKey, roleID, "push", int(v.(map[string]interface{})["Level"].(float64)))
 				if err != nil {
 					return err
 				}
 			case "UsersList":
-				err := CreateGenericRole(cli, sysKey, roles[i].(map[string]interface{})["ID"].(string), "users", int(v.(map[string]interface{})["Level"].(float64)))
+				err := AddGenericPermission(cli, sysKey, roleID, "users", int(v.(map[string]interface{})["Level"].(float64)))
 				if err != nil {
 					return err
 				}
