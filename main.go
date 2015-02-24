@@ -580,7 +580,6 @@ func import_cmd(dir string) error {
 }
 
 func sys_for_dir() (string, error) {
-	fmt.Printf("directory is:")
 	if _, err := os.Stat(".meta.json"); os.IsNotExist(err) {
 		return "", fmt.Errorf("No system key argument given and not in a system repository")
 	}
