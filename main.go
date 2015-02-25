@@ -513,7 +513,7 @@ func export_cmd(sysKey string) error {
 }
 
 func import_cmd(dir string) error {
-	fmt.Printf("directory is: %s\n", dir)
+
 	cli, err := auth()
 	if err != nil {
 		return err
@@ -592,7 +592,6 @@ func sys_for_dir() (string, error) {
 
 func main() {
 	flag.Parse()
-	fmt.Printf("URL from main is: %s\n", URL)
 	if URL != "" {
 		cb.CB_ADDR = URL
 	}
