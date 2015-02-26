@@ -15,6 +15,7 @@ import (
 var (
 	URL                        string
 	shouldImportCollectionRows bool
+	importPageSize             int
 )
 
 type Role_meta struct {
@@ -52,6 +53,7 @@ type System_meta struct {
 func init() {
 	flag.StringVar(&URL, "url", "", "Set the URL of the platform you want to use")
 	flag.BoolVar(&shouldImportCollectionRows, "importrows", false, "If supplied the import command will transfer collection rows from the old system to the new system")
+	flag.IntVar(&importPageSize, "pagesize", 100, "If supplied the import command will migrate the specified number of rows per request")
 }
 
 func pull_roles(systemKey string, cli *cb.DevClient) ([]interface{}, error) {
@@ -478,7 +480,7 @@ func auth_cmd() error {
 	return save_auth_info(AuthInfoFile, cli.DevToken)
 }
 
-func export_cmd(sysKey, dir string) error {
+func export_cmd(sysKey string) error {
 	cli, err := auth()
 	if err != nil {
 		return err
@@ -580,7 +582,7 @@ func import_cmd(dir string) error {
 	}
 
 	if shouldImportCollectionRows {
-		err = MigrateRows(cli, old_sys_meta.Key, sysKey, old_collection_meta, newCollections)
+		err = MigrateRows(cli, old_sys_meta, sysKey, old_collection_meta, newCollections)
 		if err != nil {
 			fmt.Printf("Import failed - uploading collection rows\n")
 			return err
@@ -642,16 +644,9 @@ func main() {
 		}
 	case "export":
 		if flag.NArg() != 2 {
-			sysKey, err = sys_for_dir()
-			if err != nil {
-				fmt.Printf("%v\n", err)
-			}
-			dir = "."
-		} else {
-			dir = ""
-			sysKey = flag.Arg(1)
+			fmt.Printf("export requires the systemKey as an argument\n")
 		}
-		if err := export_cmd(sysKey, dir); err != nil {
+		if err := export_cmd(flag.Arg(1)); err != nil {
 			fmt.Printf("Error export data: %v\n", err)
 		}
 	case "import":
