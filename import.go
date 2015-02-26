@@ -159,6 +159,7 @@ func MigrateRows(cli *cb.DevClient, oldSysKey, newSysKey string, oldCollections,
 
 	pageSize := 100
 	for i := 0; i < len(oldCollections); i++ {
+		fmt.Println("inspect collection= ", oldCollections[i].Collection_id)
 		data, err := cli.GetData(oldCollections[i].Collection_id, investigatorQuery)
 		if err != nil {
 			return err
@@ -169,6 +170,7 @@ func MigrateRows(cli *cb.DevClient, oldSysKey, newSysKey string, oldCollections,
 			currentQuery := new(cb.Query)
 			currentQuery.PageNumber = (j / pageSize) + 1
 			currentQuery.PageSize = pageSize
+			fmt.Println("retrieve collection= ", oldCollections[i].Collection_id)
 			data, err := cli.GetData(oldCollections[i].Collection_id, currentQuery)
 			if err != nil {
 				return err
