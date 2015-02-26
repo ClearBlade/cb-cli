@@ -151,25 +151,43 @@ func getNilValue(columns []Column, columnName string) interface{} {
 	return thing
 }
 
-func MigrateRows(cli *cb.DevClient, oldSysKey, newSysKey string, oldCollections, newCollections []Collection_meta) error {
+func MigrateRows(cli *cb.DevClient, oldSystemMeta *System_meta, newSysKey string, oldCollections, newCollections []Collection_meta) error {
 	fmt.Println("Migrating items...")
 	investigatorQuery := new(cb.Query)
 	investigatorQuery.PageNumber = 1
 	investigatorQuery.PageSize = 0
+	var oldSystemCli *cb.DevClient
 
-	pageSize := 100
+	if URL != oldSystemMeta.PlatformUrl {
+		cb.CB_ADDR = oldSystemMeta.PlatformUrl
+		fmt.Println("Please enter your credentials for your old system")
+		email, pass, err := auth_prompt()
+		if err != nil {
+			return err
+		}
+		oldSystemCli = cb.NewDevClient(email, pass)
+		err = oldSystemCli.Authenticate()
+		if err != nil {
+			return err
+		}
+	} else {
+		oldSystemCli = cli
+	}
+
 	for i := 0; i < len(oldCollections); i++ {
-		data, err := cli.GetData(oldCollections[i].Collection_id, investigatorQuery)
+		cb.CB_ADDR = oldSystemMeta.PlatformUrl
+		data, err := oldSystemCli.GetData(oldCollections[i].Collection_id, investigatorQuery)
 		if err != nil {
 			return err
 		}
 		totalItems := data["TOTAL"].(float64)
 
-		for j := 0; j < int(totalItems); j += pageSize {
+		for j := 0; j < int(totalItems); j += importPageSize {
+			cb.CB_ADDR = oldSystemMeta.PlatformUrl
 			currentQuery := new(cb.Query)
-			currentQuery.PageNumber = (j / pageSize) + 1
-			currentQuery.PageSize = pageSize
-			data, err := cli.GetData(oldCollections[i].Collection_id, currentQuery)
+			currentQuery.PageNumber = (j / importPageSize) + 1
+			currentQuery.PageSize = importPageSize
+			data, err := oldSystemCli.GetData(oldCollections[i].Collection_id, currentQuery)
 			if err != nil {
 				return err
 			}
@@ -185,6 +203,7 @@ func MigrateRows(cli *cb.DevClient, oldSysKey, newSysKey string, oldCollections,
 
 				}
 			}
+			cb.CB_ADDR = URL
 			err = cli.InsertData(newCollections[i].Collection_id, data["DATA"].([]interface{}))
 			if err != nil {
 				return err

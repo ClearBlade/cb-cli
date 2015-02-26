@@ -15,13 +15,8 @@ import (
 var (
 	URL                        string
 	shouldImportCollectionRows bool
+	importPageSize             int
 )
-
-// type CollectionPermission struct {
-// 	Collection_id string
-// 	Name          string
-// 	Level         int
-// }
 
 type Role_meta struct {
 	Name        string
@@ -52,11 +47,13 @@ type System_meta struct {
 	Key         string
 	Description string
 	Services    map[string]Service_meta
+	PlatformUrl string
 }
 
 func init() {
 	flag.StringVar(&URL, "url", "", "Set the URL of the platform you want to use")
 	flag.BoolVar(&shouldImportCollectionRows, "importrows", false, "If supplied the import command will transfer collection rows from the old system to the new system")
+	flag.IntVar(&importPageSize, "pagesize", 100, "If supplied the import command will migrate the specified number of rows per request")
 }
 
 func pull_roles(systemKey string, cli *cb.DevClient) ([]interface{}, error) {
@@ -176,13 +173,24 @@ func pull_system_meta(systemKey string, cli *cb.DevClient) (*System_meta, error)
 		Key:         sys.Key,
 		Description: sys.Description,
 		Services:    serv_metas,
+		PlatformUrl: URL,
 	}
 	return sys_meta, nil
 }
 
+func createSystemDirectory(dir string, meta *System_meta) error {
+	if err := os.MkdirAll(dir, 0777); err != nil {
+		fmt.Println("wtf")
+		fmt.Println("dir= ", dir)
+		return err
+	}
+	return nil
+}
+
 func store_services(systemKey string, services []*cb.Service, meta *System_meta) error {
 	dir := strings.Replace(meta.Name, " ", "_", -1)
-	if err := os.MkdirAll(dir, 0777); err != nil {
+	err := createSystemDirectory(dir, meta)
+	if err != nil {
 		return err
 	}
 	codedir := strings.Replace(meta.Name+"/code", " ", "_", -1)
@@ -205,29 +213,31 @@ func store_services(systemKey string, services []*cb.Service, meta *System_meta)
 	return nil
 }
 
-func store_system(systemKey string, meta *System_meta) error {
-	dir := strings.Replace(meta.Name, " ", "_", -1)
-	if err := os.MkdirAll(dir, 0777); err != nil {
-		return err
-	}
-	// meta.Services = nil
+// func store_system(systemKey string, meta *System_meta) error {
+// 	dir := strings.Replace(meta.Name, " ", "_", -1)
+// 	if err := os.MkdirAll(dir, 0777); err != nil {
+// 		return err
+// 	}
+// 	// meta.Services = nil
 
-	meta_bytes, err := json.Marshal(meta)
-	if err != nil {
-		return err
-	}
-	if err := ioutil.WriteFile(dir+"/system.json", meta_bytes, 0777); err != nil {
-		return err
-	}
-	return nil
-}
+// 	meta_bytes, err := json.Marshal(meta)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if err := ioutil.WriteFile(dir+"/system.json", meta_bytes, 0777); err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
 func store_meta(dir string, meta *System_meta) error {
+	meta.PlatformUrl = URL
 	meta_bytes, err := json.Marshal(meta)
 	if err != nil {
 		return err
 	}
 	if err := ioutil.WriteFile(dir+"/.meta.json", meta_bytes, 0777); err != nil {
+		fmt.Println("fuckkk")
 		return err
 	}
 	return nil
@@ -480,7 +490,12 @@ func export_cmd(sysKey string) error {
 	if err != nil {
 		return err
 	}
-	if err := store_system(sysKey, sys_meta); err != nil {
+	dir := strings.Replace(sys_meta.Name, " ", "_", -1)
+	if err := createSystemDirectory(dir, sys_meta); err != nil {
+		return err
+	}
+
+	if err := store_meta(dir, sys_meta); err != nil {
 		return err
 	}
 
@@ -507,7 +522,7 @@ func export_cmd(sysKey string) error {
 		return err
 	}
 
-	dir := strings.Replace(sys_meta.Name, " ", "_", -1)
+	dir = strings.Replace(sys_meta.Name, " ", "_", -1)
 	fmt.Printf("System %s has been successfully pulled and put in a directory %s\n", sysKey, dir)
 	return nil
 }
@@ -567,7 +582,7 @@ func import_cmd(dir string) error {
 	}
 
 	if shouldImportCollectionRows {
-		err = MigrateRows(cli, old_sys_meta.Key, sysKey, old_collection_meta, newCollections)
+		err = MigrateRows(cli, old_sys_meta, sysKey, old_collection_meta, newCollections)
 		if err != nil {
 			fmt.Printf("Import failed - uploading collection rows\n")
 			return err
@@ -594,8 +609,13 @@ func main() {
 	flag.Parse()
 	if URL != "" {
 		cb.CB_ADDR = URL
+	} else {
+		URL = cb.CB_ADDR
 	}
 	cmd := strings.ToLower(flag.Arg(0))
+	var err error
+	var sysKey, dir string
+
 	switch cmd {
 	case "auth":
 		if err := auth_cmd(); err != nil {
@@ -609,8 +629,6 @@ func main() {
 			fmt.Printf("Error pulling data: %v\n", err)
 		}
 	case "push":
-		var sysKey, dir string
-		var err error
 		if flag.NArg() != 2 {
 			sysKey, err = sys_for_dir()
 			if err != nil {
