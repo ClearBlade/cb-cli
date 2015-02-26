@@ -488,7 +488,7 @@ func export_cmd(sysKey, dir string) error {
 	if err != nil {
 		return err
 	}
-
+	dir := strings.Replace(sys_meta.Name, " ", "_", -1)
 	if err := createSystemDirectory(dir, sys_meta); err != nil {
 		return err
 	}
