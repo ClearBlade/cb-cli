@@ -373,7 +373,7 @@ func prompt(msg string) string {
 }
 
 func pull_cmd(sysKey string) error {
-	cli, err := auth()
+	cli, err := auth("")
 	if err != nil {
 		return err
 	}
@@ -439,7 +439,7 @@ func push(systemKey, dir string, services []string, cli *cb.DevClient) error {
 }
 
 func push_cmd(systemKey, dir string) error {
-	cli, err := auth()
+	cli, err := auth("")
 	if err != nil {
 		return err
 	}
@@ -469,7 +469,7 @@ func push_cmd(systemKey, dir string) error {
 }
 
 func auth_cmd() error {
-	cli, auth_err := auth()
+	cli, auth_err := auth("")
 	if auth_err != nil {
 		return auth_err
 	}
@@ -480,8 +480,8 @@ func auth_cmd() error {
 	return save_auth_info(AuthInfoFile, cli.DevToken)
 }
 
-func export_cmd(sysKey string) error {
-	cli, err := auth()
+func export_cmd(sysKey, devToken string) error {
+	cli, err := auth(devToken)
 	if err != nil {
 		return err
 	}
@@ -529,7 +529,7 @@ func export_cmd(sysKey string) error {
 
 func import_cmd(dir string) error {
 
-	cli, err := auth()
+	cli, err := auth("")
 	if err != nil {
 		return err
 	}
@@ -646,7 +646,7 @@ func main() {
 		if flag.NArg() != 2 {
 			fmt.Printf("export requires the systemKey as an argument\n")
 		}
-		if err := export_cmd(flag.Arg(1)); err != nil {
+		if err := export_cmd(flag.Arg(1), flag.Arg(2)); err != nil {
 			fmt.Printf("Error export data: %v\n", err)
 		}
 	case "import":

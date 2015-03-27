@@ -38,8 +38,14 @@ func auth_prompt() (string, string, error) {
 	return email, pass, nil
 }
 
-func auth() (*cb.DevClient, error) {
+func auth(devToken string) (*cb.DevClient, error) {
 	var cli *cb.DevClient
+	if devToken != "" {
+		cli = &cb.DevClient{
+			DevToken: devToken,
+		}
+		return cli, nil
+	}
 	if _, err := os.Stat(AuthInfoFile); os.IsNotExist(err) {
 		email, pass, prompt_err := auth_prompt()
 		if prompt_err != nil {
