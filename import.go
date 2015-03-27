@@ -1,4 +1,4 @@
-package CbCLI
+package CBCLI
 
 import (
 	"fmt"
