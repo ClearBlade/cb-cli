@@ -14,8 +14,8 @@ import (
 
 var (
 	URL                        string
-	shouldImportCollectionRows bool
-	importPageSize             int
+	ShouldImportCollectionRows bool
+	ImportPageSize             int
 )
 
 type Role_meta struct {
@@ -52,8 +52,8 @@ type System_meta struct {
 
 func init() {
 	flag.StringVar(&URL, "url", "", "Set the URL of the platform you want to use")
-	flag.BoolVar(&shouldImportCollectionRows, "importrows", false, "If supplied the import command will transfer collection rows from the old system to the new system")
-	flag.IntVar(&importPageSize, "pagesize", 100, "If supplied the import command will migrate the specified number of rows per request")
+	flag.BoolVar(&ShouldImportCollectionRows, "importrows", false, "If supplied the import command will transfer collection rows from the old system to the new system")
+	flag.IntVar(&ImportPageSize, "pagesize", 100, "If supplied the import command will migrate the specified number of rows per request")
 }
 
 func pull_roles(systemKey string, cli *cb.DevClient) ([]interface{}, error) {
@@ -64,9 +64,8 @@ func pull_roles(systemKey string, cli *cb.DevClient) ([]interface{}, error) {
 
 	return r, nil
 }
-func store_roles(roles []interface{}, meta *System_meta) error {
-
-	authdir := strings.Replace(meta.Name+"/auth", " ", "_", -1)
+func store_roles(dir string, roles []interface{}) error {
+	authdir := dir + "/auth"
 	if err := os.MkdirAll(authdir, 0777); err != nil {
 		return err
 	}
@@ -116,10 +115,10 @@ func pull_colls(systemKey string, cli *cb.DevClient) ([]Collection_meta, error) 
 	return collections, nil
 }
 
-func store_cols(collections []Collection_meta, meta *System_meta) error {
+func store_cols(dir string, collections []Collection_meta) error {
 
-	datadir := strings.Replace(meta.Name+"/data", " ", "_", -1)
-	if err := os.MkdirAll(datadir, 0777); err != nil {
+	datadir := dir + "/data"
+	if err := os.MkdirAll(dir+"/data", 0777); err != nil {
 		return err
 	}
 	meta_bytes, err := json.Marshal(collections)
@@ -180,20 +179,17 @@ func pull_system_meta(systemKey string, cli *cb.DevClient) (*System_meta, error)
 
 func createSystemDirectory(dir string, meta *System_meta) error {
 	if err := os.MkdirAll(dir, 0777); err != nil {
-		fmt.Println("wtf")
-		fmt.Println("dir= ", dir)
 		return err
 	}
 	return nil
 }
 
-func store_services(systemKey string, services []*cb.Service, meta *System_meta) error {
-	dir := strings.Replace(meta.Name, " ", "_", -1)
+func store_services(dir string, services []*cb.Service, meta *System_meta) error {
 	err := createSystemDirectory(dir, meta)
 	if err != nil {
 		return err
 	}
-	codedir := strings.Replace(meta.Name+"/code", " ", "_", -1)
+	codedir := dir + "/code"
 	if err := os.MkdirAll(codedir, 0777); err != nil {
 		return err
 	}
@@ -399,10 +395,10 @@ func pull_cmd(sysKey string) error {
 	if svcErr != nil {
 		return svcErr
 	}
-	if err := store_services(sysKey, services, sys_meta); err != nil {
+	dir := strings.Replace(sys_meta.Name, " ", "_", -1)
+	if err := store_services(dir, services, sys_meta); err != nil {
 		return err
 	}
-	dir := strings.Replace(sys_meta.Name, " ", "_", -1)
 	fmt.Printf("Code for %s has been successfully pulled and put in a directory %s\n", sysKey, dir)
 	return nil
 }
@@ -480,7 +476,7 @@ func auth_cmd() error {
 	return save_auth_info(AuthInfoFile, cli.DevToken)
 }
 
-func export_cmd(sysKey, devToken string) error {
+func Export_cmd(sysKey, devToken string) error {
 	cli, err := auth(devToken)
 	if err != nil {
 		return err
@@ -490,7 +486,16 @@ func export_cmd(sysKey, devToken string) error {
 	if err != nil {
 		return err
 	}
-	dir := strings.Replace(sys_meta.Name, " ", "_", -1)
+
+	var dir string
+	//if we have a devtoken then command is coming from goPlatform so we need to create
+	//a directory that has the systemKey in it to avoid naming conflicts
+	if devToken != "" {
+		dir = strings.Replace(sysKey+"="+sys_meta.Name, " ", "_", -1)
+	} else {
+		dir = strings.Replace(sys_meta.Name, " ", "_", -1)
+	}
+
 	if err := createSystemDirectory(dir, sys_meta); err != nil {
 		return err
 	}
@@ -503,14 +508,14 @@ func export_cmd(sysKey, devToken string) error {
 	if err != nil {
 		return err
 	}
-	if err := store_services(sysKey, services, sys_meta); err != nil {
+	if err := store_services(dir, services, sys_meta); err != nil {
 		return err
 	}
 	collections, err := pull_colls(sysKey, cli)
 	if err != nil {
 		return err
 	}
-	if err := store_cols(collections, sys_meta); err != nil {
+	if err := store_cols(dir, collections); err != nil {
 		return err
 	}
 
@@ -518,18 +523,17 @@ func export_cmd(sysKey, devToken string) error {
 	if err != nil {
 		return err
 	}
-	if err := store_roles(roles, sys_meta); err != nil {
+	if err := store_roles(dir, roles); err != nil {
 		return err
 	}
 
-	dir = strings.Replace(sys_meta.Name, " ", "_", -1)
 	fmt.Printf("System %s has been successfully pulled and put in a directory %s\n", sysKey, dir)
 	return nil
 }
 
-func import_cmd(dir string) error {
+func Import_cmd(dir, devToken string) error {
 
-	cli, err := auth("")
+	cli, err := auth(devToken)
 	if err != nil {
 		return err
 	}
@@ -581,7 +585,7 @@ func import_cmd(dir string) error {
 		return err
 	}
 
-	if shouldImportCollectionRows {
+	if ShouldImportCollectionRows {
 		err = MigrateRows(cli, old_sys_meta, sysKey, old_collection_meta, newCollections)
 		if err != nil {
 			fmt.Printf("Import failed - uploading collection rows\n")
@@ -646,7 +650,7 @@ func main() {
 		if flag.NArg() != 2 {
 			fmt.Printf("export requires the systemKey as an argument\n")
 		}
-		if err := export_cmd(flag.Arg(1), flag.Arg(2)); err != nil {
+		if err := Export_cmd(flag.Arg(1), flag.Arg(2)); err != nil {
 			fmt.Printf("Error export data: %v\n", err)
 		}
 	case "import":
@@ -660,7 +664,7 @@ func main() {
 		}
 		dir = "."
 
-		if err := import_cmd(dir); err != nil {
+		if err := Import_cmd(dir, flag.Arg(2)); err != nil {
 			fmt.Printf("Error import data: %v\n", err)
 		}
 	default:

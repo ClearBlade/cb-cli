@@ -182,11 +182,11 @@ func MigrateRows(cli *cb.DevClient, oldSystemMeta *System_meta, newSysKey string
 		}
 		totalItems := data["TOTAL"].(float64)
 
-		for j := 0; j < int(totalItems); j += importPageSize {
+		for j := 0; j < int(totalItems); j += ImportPageSize {
 			cb.CB_ADDR = oldSystemMeta.PlatformUrl
 			currentQuery := new(cb.Query)
-			currentQuery.PageNumber = (j / importPageSize) + 1
-			currentQuery.PageSize = importPageSize
+			currentQuery.PageNumber = (j / ImportPageSize) + 1
+			currentQuery.PageSize = ImportPageSize
 			data, err := oldSystemCli.GetData(oldCollections[i].Collection_id, currentQuery)
 			if err != nil {
 				return err
