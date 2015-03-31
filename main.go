@@ -35,6 +35,10 @@ type Collection_meta struct {
 	Columns       []Column
 }
 
+type User_meta struct {
+	Columns []Column
+}
+
 type Service_meta struct {
 	Name    string
 	Version int
@@ -118,7 +122,7 @@ func pull_colls(systemKey string, cli *cb.DevClient) ([]Collection_meta, error) 
 func store_cols(dir string, collections []Collection_meta) error {
 
 	datadir := dir + "/data"
-	if err := os.MkdirAll(dir+"/data", 0777); err != nil {
+	if err := os.MkdirAll(datadir, 0777); err != nil {
 		return err
 	}
 	meta_bytes, err := json.Marshal(collections)
@@ -126,6 +130,41 @@ func store_cols(dir string, collections []Collection_meta) error {
 		return err
 	}
 	if err := ioutil.WriteFile(datadir+"/collections.json", meta_bytes, 0777); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func pull_user_columns(systemKey string, cli *cb.DevClient) (User_meta, error) {
+	resp, err := cli.GetUserColumns(systemKey)
+	if err != nil {
+		return User_meta{}, err
+	}
+	columns := make([]Column, len(resp))
+	for j := 0; j < len(resp); j++ {
+		columns[j] = Column{
+			ColumnName: resp[j].(map[string]interface{})["ColumnName"].(string),
+			ColumnType: resp[j].(map[string]interface{})["ColumnType"].(string),
+		}
+	}
+
+	return User_meta{
+		Columns: columns,
+	}, nil
+}
+
+func store_user_columns(dir string, meta User_meta) error {
+
+	userdir := dir + "/user"
+	if err := os.MkdirAll(userdir, 0777); err != nil {
+		return err
+	}
+	meta_bytes, err := json.Marshal(meta)
+	if err != nil {
+		return err
+	}
+	if err := ioutil.WriteFile(userdir+"/columns.json", meta_bytes, 0777); err != nil {
 		return err
 	}
 
@@ -291,6 +330,18 @@ func load_roles(dir string) ([]interface{}, error) {
 		return nil, err
 	}
 	return roles_data, nil
+}
+
+func load_user_columns(dir string) ([]Column, error) {
+	user_bytes, err := ioutil.ReadFile(dir + "/user/columns.json")
+	if err != nil {
+		return nil, err
+	}
+	var meta User_meta
+	if err := json.Unmarshal(user_bytes, &meta); err != nil {
+		return nil, err
+	}
+	return meta.Columns, nil
 }
 
 func service_hash(dir, name string) (string, error) {
@@ -527,6 +578,14 @@ func Export_cmd(sysKey, devToken string) error {
 		return err
 	}
 
+	userColumns, err := pull_user_columns(sysKey, cli)
+	if err != nil {
+		return err
+	}
+	if err := store_user_columns(dir, userColumns); err != nil {
+		return err
+	}
+
 	fmt.Printf("System %s has been successfully pulled and put in a directory %s\n", sysKey, dir)
 	return nil
 }
@@ -582,6 +641,18 @@ func Import_cmd(dir, devToken string) error {
 	err = CreateRoles(cli, sysKey, old_roles)
 	if err != nil {
 		fmt.Printf("Import failed - uploading service info\n")
+		return err
+	}
+
+	old_user_columns, err := load_user_columns(dir)
+	if err != nil {
+		fmt.Printf("Import failed - retrieving user columns\n")
+		return err
+	}
+
+	err = CreateUserColumns(cli, sysKey, old_user_columns)
+	if err != nil {
+		fmt.Printf("Import failed - uploading user column info\n")
 		return err
 	}
 
