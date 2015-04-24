@@ -42,6 +42,7 @@ func main() {
 			sysKey, err = cblib.Sys_for_dir()
 			if err != nil {
 				fmt.Printf("%v\n", err)
+				return
 			}
 			dir = "."
 		} else {
