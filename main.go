@@ -26,9 +26,9 @@ func main() {
 	var sysKey, dir string
 
 	switch cmd {
-	case "auth":
-		if err := cblib.Auth_cmd(); err != nil {
-			fmt.Printf("Error authenticated: %v\n", err)
+	case "init":
+		if err := cblib.Init_cmd(); err != nil {
+			fmt.Printf("Error initializing: %v\n", err)
 		}
 	case "pull":
 		if flag.NArg() != 2 {
@@ -73,7 +73,17 @@ func main() {
 		if err := cblib.Import_cmd(dir, flag.Arg(2)); err != nil {
 			fmt.Printf("Error import data: %v\n", err)
 		}
+	case "promote":
+		fmt.Printf("promote command not yet implemented\n")
+	case "diff":
+		fmt.Printf("diff command not yet implemented\n")
+	case "status":
+		fmt.Printf("status command not yet implemented\n")
+	case "test":
+		fmt.Printf("test command not yet implemented\n")
+	case "generate":
+		fmt.Printf("generate command not yet implemented\n")
 	default:
-		fmt.Printf("Commands: 'auth', 'pull', 'push', 'export', 'import'\n")
+		fmt.Printf("Commands: 'init', 'pull', 'push', 'export', 'import', 'promote', 'diff', 'status', 'test', 'generate'\n")
 	}
 }
