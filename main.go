@@ -60,18 +60,23 @@ func main() {
 			fmt.Printf("Error export data: %v\n", err)
 		}
 	case "import":
-		var sysKey, dir string
-		var err error
-		sysKey, err = cblib.Sys_for_dir()
-		if err != nil {
-			fmt.Printf("%v\n", err)
-			fmt.Printf("%v\n", sysKey)
-			return
-		}
-		dir = "."
+		/*
+			var sysKey, dir string
+			var err error
+			sysKey, err = cblib.Sys_for_dir()
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				fmt.Printf("%v\n", sysKey)
+				return
+			}
+			dir = "."
 
-		if err := cblib.Import_cmd(dir, flag.Arg(2)); err != nil {
-			fmt.Printf("Error import data: %v\n", err)
+			if err := cblib.Import_cmd(dir, flag.Arg(2)); err != nil {
+				fmt.Printf("Error import data: %v\n", err)
+			}
+		*/
+		if err := cblib.Import_cmd(); err != nil {
+			fmt.Printf("Error import data: %s\n", err.Error())
 		}
 	case "promote":
 		fmt.Printf("promote command not yet implemented\n")
