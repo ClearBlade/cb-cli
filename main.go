@@ -9,6 +9,7 @@ import (
 )
 
 func init() {
+	flag.StringVar(&cblib.SchemaDir, "schemadir", ".", "Name of root directory of your export/import schema")
 	flag.StringVar(&cblib.URL, "url", "", "Set the URL of the platform you want to use")
 	flag.BoolVar(&cblib.ShouldImportCollectionRows, "importrows", false, "If supplied the import command will transfer collection rows from the old system to the new system")
 	flag.IntVar(&cblib.ImportPageSize, "pagesize", 100, "If supplied the import command will migrate the specified number of rows per request")
