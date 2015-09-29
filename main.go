@@ -17,6 +17,9 @@ func init() {
 }
 
 func main() {
+	flag.Usage = func() {
+		fmt.Printf("DA USAGE\n")
+	}
 	flag.Parse()
 	if cblib.URL != "" {
 		cb.CB_ADDR = cblib.URL
