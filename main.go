@@ -40,7 +40,7 @@ func main() {
 	subArgs := flag.Args()
 	err = subCommand.Execute(client, subArgs[1:])
 	if err != nil {
-		fmt.Printf("MAJOR FAIL: %s\n", err.Error())
+		fmt.Printf("Aborting: %s\n", err.Error())
 	}
 }
 
