@@ -20,11 +20,9 @@ func main() {
 	flag.Usage = func() {
 		fmt.Printf("DA USAGE\n")
 	}
-	flag.Parse()
-	if cblib.URL != "" {
-		cb.CB_ADDR = cblib.URL
-	} else {
-		cblib.URL = cb.CB_ADDR
+	if err := setupFromOptsAndCBMeta(); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 	client, err := doAuth()
 	if err != nil {
@@ -44,9 +42,39 @@ func main() {
 	}
 }
 
+func setupFromOptsAndCBMeta() error {
+	flag.Parse()
+	cblib.DevToken, _ = cblib.Load_auth_info(cblib.AuthInfoFile)
+	err := cblib.GoToRepoRootDir()
+	if err != nil && err.Error() != cblib.SpecialNoCBMetaError {
+		return err
+	}
+	if cblib.URL != "" {
+		cb.CB_ADDR = cblib.URL
+	} else if url, ok := cblib.MetaInfo["platformURL"]; ok {
+		cblib.URL = url.(string)
+		cb.CB_ADDR = url.(string)
+	} else {
+		cblib.URL = cb.CB_ADDR
+	}
+
+	fmt.Printf("Using system at '%s'\n", cb.CB_ADDR)
+
+	if cblib.Email == "" {
+		if email, ok := cblib.MetaInfo["developerEmail"]; ok {
+			cblib.Email = email.(string)
+		}
+	} else {
+		cblib.CommandLineEmail = true
+	}
+	return nil
+}
+
 func doAuth() (*cb.DevClient, error) {
 	if cblib.Email != "" && cblib.Password != "" {
 		return cblib.AuthUserPass(cblib.Email, cblib.Password)
+	} else if cblib.CommandLineEmail {
+		return cblib.AuthPromptPass(cblib.Email)
 	} else {
 		return cblib.Auth("")
 	}
