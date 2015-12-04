@@ -24,7 +24,9 @@ and regenerate this document
 <li><a href="#sec-1-2-4">1.2.4. Importing</a></li>
 </ul>
 </li>
-<li><a href="#sec-1-3">1.3. Todo</a></li>
+<li><a href="#sec-1-3">1.3. Usage Example</a>
+</li>
+<li><a href="#sec-1-4">1.4. Todo</a></li>
 </ul>
 </li>
 </ul>
@@ -127,10 +129,31 @@ Flags:
 
 Advanced example:
 
-    $ cb-cli -url=platforminstance.com -importrows import
+    $ cb-cli -url=platforminstance.com -importrows import  
+    
+## Usage Example<a id="sec-1-3" name="sec-1-3"></a>  
 
+Here is an example of exporting a system from one platform instance to another. First run the following command:  
 
-## Todo<a id="sec-1-3" name="sec-1-3"></a>
+    $ rm ~/.cbauth  
+    
+This will remove any previously saved authentication details. Next, make a note of the ___platform URL___ and ___system key___ of the system you wish to export. Then run the following command:  
+
+    $ cb-cli -url=http://your_platform_URL export -exportrows -exportusers <SYSTEM-KEY>
+    
+Replace the url flag with either http or https depending on your platform and replace the URL with the URL of your platform instance. The ___-exportrows___ flag is used to export all the data in the collections and the ___-exportusers___ flag is used to export all the users in the ___Auth___ tab of the platform console. Also replace the ___<SYSTEM-KEY>__ with your system key. After hitting "Enter", you will be asked to enter your email and password for your developer account. And if everything goes well you will get a message similar to this: ___System 'YOUR_SYSTEM_NAME' has been exported into directory YOUR_SYSTEM_NAME___. The cb-cli export command will create a new directory in your current working directory with the name of the system you just exported.  
+
+Now, to import this system to another platform instance `cd` to the directory where you have exported your system and execute the following command:  
+
+     $ rm ~/.cbauth  
+     
+This will remove any previously saved authentication details. Now execute the following command to import your system:
+
+    $ cb-cli -url=http://your_new_platform_url import -importrows -importusers  
+    
+Replace the url flag with either http or https depending on your platform and replace the URL with the URL of your new platform instance. If everything goes well, you will have your system imported to your new platform instance and ready to go!
+
+## Todo<a id="sec-1-4" name="sec-1-4"></a>
 
 -   Create more tooling around local/server conflicts.
 -   Expose more settings to the cb-cli (params, service creation)
