@@ -17,9 +17,6 @@ func init() {
 }
 
 func main() {
-	flag.Usage = func() {
-		fmt.Printf("DA USAGE\n")
-	}
 	if err := setupFromOptsAndCBMeta(); err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -44,7 +41,7 @@ func main() {
 
 func setupFromOptsAndCBMeta() error {
 	flag.Parse()
-	cblib.DevToken, _ = cblib.Load_auth_info(cblib.AuthInfoFile)
+	//cblib.DevToken, _ = cblib.Load_auth_info(cblib.AuthInfoFile)
 	err := cblib.GoToRepoRootDir()
 	if err != nil && err.Error() != cblib.SpecialNoCBMetaError {
 		return err
@@ -56,6 +53,12 @@ func setupFromOptsAndCBMeta() error {
 		cb.CB_ADDR = url.(string)
 	} else {
 		cblib.URL = cb.CB_ADDR
+	}
+
+	if cblib.DevToken != "" {
+		if tok, ok := cblib.MetaInfo["token"]; ok {
+			cblib.DevToken = tok.(string)
+		}
 	}
 
 	fmt.Printf("Using system at '%s'\n", cb.CB_ADDR)
