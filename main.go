@@ -55,7 +55,7 @@ func setupFromOptsAndCBMeta() error {
 		cblib.URL = cb.CB_ADDR
 	}
 
-	if cblib.DevToken != "" {
+	if cblib.DevToken == "" {
 		if tok, ok := cblib.MetaInfo["token"]; ok {
 			cblib.DevToken = tok.(string)
 		}
@@ -76,6 +76,8 @@ func setupFromOptsAndCBMeta() error {
 func doAuth() (*cb.DevClient, error) {
 	if cblib.Email != "" && cblib.Password != "" {
 		return cblib.AuthUserPass(cblib.Email, cblib.Password)
+	} else if cblib.DevToken != "" {
+		return cblib.Auth(cblib.DevToken)
 	} else if cblib.CommandLineEmail {
 		return cblib.AuthPromptPass(cblib.Email)
 	} else {
