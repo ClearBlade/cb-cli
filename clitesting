@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# Init the test system
+echo -e "\nINITIALIZING SYSTEM FOR TESTING...\n"
+sleep 2
+cb-cli init -url=https://dev.clearblade.com -messaging-url= -system-key=e4fab0880ba6cac994c7a195e44c -email=testcli@clearblade.com -password=clearblade
+
+# Change directory to init'd system
+cd CBCliRegressionTesting/
+
+# Export system
+echo -e "\nEXPORTING SYSTEM...\n"
+sleep 2
+cb-cli export -exportrows -exportusers
+
+# Test different push operations
+echo -e "\nTESTING PUSH OPERATIONS...\n"
+sleep 2
+cb-cli push -all-services
+cb-cli push -all-libraries
+cb-cli push -all-devices
+cb-cli push -all-portals
+cb-cli push -all-plugins
+cb-cli push -all-edges
+cb-cli push -role=CliRole
+cb-cli push -service=HelloWorld
+cb-cli push -collection=TestCollection
+cb-cli push -trigger=CliTrigger
+cb-cli push -timer=CliTimer
+cb-cli push -device=CliDevice
+cb-cli push -edge=CliEdge
+cb-cli push -portal=CliPortal
+
+#Test different pull operations
+echo -e "\nTESTING PULL OPERATIONS...\n"
+sleep 2
+cb-cli pull -all-services
+cb-cli pull -all-libraries
+cb-cli pull -all-devices
+cb-cli pull -all-portals
+cb-cli pull -all-plugins
+cb-cli pull -all-edges
+cb-cli pull -service=HelloWorld
+cb-cli pull -collection=TestCollection
+cb-cli pull -role=CliRole
+cb-cli pull -trigger=CliTrigger
+cb-cli pull -timer=CliTimer
+cb-cli pull -device=CliDevice	
+cb-cli pull -edge=CliEdge
+cb-cli pull -portal=CliPortal
+
+#Make some changes locally and test cb-cli update operations
+echo -e "\nTESTING UPDATE OPERATIONS...\n"
+sleep 2
+echo "function HelloWorld(req, resp){resp.success(\"Hello World Again\");}" > code/services/HelloWorld/HelloWorld.js
+cb-cli update -service=HelloWorld
+echo "displayMessage = function() {return \"Hello World After Update\";};" > code/libraries/CliLibrary/CliLibrary.js
+cb-cli update -library=CliLibrary
+sed -i '' '1,/.*"name".*/s/.*"name".*/"name": "John Doe"/' data/TestCollection.json
+cb-cli update -collection=TestCollection
+sed -i '' '1,/.*"repeats".*/s/.*"repeats".*/"repeats": 10001,/' timers/CliTimer.json
+cb-cli update -timer=CliTimer
+sed -i '' '1,/.*"service_name".*/s/.*"service_name".*/"service_name": "HelloWorld"/' triggers/CliTrigger.json
+cb-cli update -trigger=CliTrigger
+
+echo -e "\nALL TESTS COMPLETED...PLS CHECK PROMPT FOR ANY FAILURES...\n"
+sleep 2
