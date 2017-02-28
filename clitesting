@@ -3,7 +3,7 @@
 # Init the test system
 echo -e "\nINITIALIZING SYSTEM FOR TESTING...\n"
 sleep 2
-cb-cli init -url=https://dev.clearblade.com -messaging-url= -system-key=e4fab0880ba6cac994c7a195e44c -email=testcli@clearblade.com -password=clearblade
+cb-cli init -url=https://rtp.clearblade.com -messaging-url= -system-key=94f4ac8b0bb8b2a4b3848e8b81ef01 -email=cli@clearblade.com -password=clearblade
 
 # Change directory to init'd system
 cd CBCliRegressionTesting/
@@ -56,7 +56,7 @@ echo "function HelloWorld(req, resp){resp.success(\"Hello World Again\");}" > co
 cb-cli update -service=HelloWorld
 echo "displayMessage = function() {return \"Hello World After Update\";};" > code/libraries/CliLibrary/CliLibrary.js
 cb-cli update -library=CliLibrary
-sed -i '' '1,/.*"name".*/s/.*"name".*/"name": "John Doe"/' data/TestCollection.json
+sed -i '' '1,/.*"name".*/s/.*"name".*/"name": "John Doe",/' data/TestCollection.json
 cb-cli update -collection=TestCollection
 sed -i '' '1,/.*"repeats".*/s/.*"repeats".*/"repeats": 10001,/' timers/CliTimer.json
 cb-cli update -timer=CliTimer
