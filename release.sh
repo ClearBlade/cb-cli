@@ -2,11 +2,11 @@
 
 version=$1
 
+cd $GOPATH/src/github.com/clearblade/cb-cli
 mkdir -p release_binaries
 chmod 777 release_binaries
 rm -f release_binaries/*
 
-cd $GOPATH/src/github.com/clearblade/cb-cli
 export PATH=$PATH:$GOPATH/bin
 
 #
