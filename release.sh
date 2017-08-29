@@ -1,12 +1,16 @@
 #!/bin/bash
 
+if [ $# -ne 1 ] ; then
+    echo "wrong number of arguments"
+    exit 1
+fi
+
 version=$1
 
 cd $GOPATH/src/github.com/clearblade/cb-cli
 mkdir -p release_binaries
 chmod 777 release_binaries
 rm -f release_binaries/*
-
 export PATH=$PATH:$GOPATH/bin
 
 #
