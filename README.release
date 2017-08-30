@@ -1,5 +1,8 @@
 How to build a release and put it on github
 
+This assumes you're on a mac osx or linux box/vm
+and you have golang installed.
+
 Figure out the release number/name, for example of the form
 2.10.  (It is a string everywhere so it can contain non numbers)
 Do all of the following in the cb-cli directory:
