@@ -9,6 +9,8 @@ Do all of the following in the cb-cli directory:
 
 Edit version.go and change cbCliVersion to "2.10"
 
+commit and push the cb-cli repo.
+
 In your shell, run:
 ./release.sh 2.10  # the release number/name must match
 
