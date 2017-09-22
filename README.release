@@ -1,0 +1,34 @@
+How to build a release and put it on github
+
+This assumes you're on a mac osx or linux box/vm
+and you have golang installed.
+
+Figure out the release number/name, for example of the form
+2.10.  (It is a string everywhere so it can contain non numbers)
+Do all of the following in the cb-cli directory:
+
+Edit version.go and change cbCliVersion to "2.10"
+
+commit and push the cb-cli repo.
+
+In your shell, run:
+./release.sh 2.10  # the release number/name must match
+
+Now, all the files you need for the release are in the
+"release_binaries" directory.
+
+Go to the cb-cli project on github, click "releases" and
+then click the "Draft a new release" button.
+
+On the screen that appears, set the tag version to "v2.10",
+set the release title to "2.10", and describe the release in
+the large text box.
+
+Now, select the "Attach binaries by dropping them here or selecting them"
+link. traverse to the "release_binaries" directory, select everything
+and then press the "open" button. The files are now being
+copied one-by-one into the release.
+
+finally, Press the "Publish Release" button.
+
+Good luck. -swm

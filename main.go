@@ -15,6 +15,12 @@ func main() {
 		fmt.Printf("No command provided\n")
 		os.Exit(1)
 	}
+	// Special case version command for cb-cli only
+	if theArgs[1] == "version" {
+		fmt.Printf("%s\n", cbCliVersion)
+		os.Exit(0)
+	}
+
 	subCommand, err := cblib.GetCommand(theArgs[1])
 
 	if err != nil {
