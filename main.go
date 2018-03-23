@@ -18,11 +18,19 @@ func main() {
 		os.Exit(0)
 	}
 
+	// TODO CBCOMM-192 add root --help
+
 	subCommand, err := cblib.GetCommand(theArgs[1])
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+
+	if theArgs[2] == "help" || theArgs[2] == "--help" {
+		cblib.PrintHelpFor(subCommand)
+		os.Exit(1)
+	}
+
 	err = subCommand.Execute( /*client,*/ theArgs[2:])
 	if err != nil {
 		fmt.Printf("Aborting: %s\n", err.Error())
