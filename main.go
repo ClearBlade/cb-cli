@@ -18,11 +18,27 @@ func main() {
 		os.Exit(0)
 	}
 
+	if len(theArgs) >= 2 {
+		if theArgs[1] == "help" || theArgs[1] == "--help" {
+			cblib.PrintRootHelp()
+			os.Exit(1)
+		}
+	}
+
 	subCommand, err := cblib.GetCommand(theArgs[1])
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+
+
+	if len(theArgs) >= 3 {
+		if theArgs[2] == "help" || theArgs[2] == "--help" {
+			cblib.PrintHelpFor(subCommand)
+			os.Exit(1)
+		}
+	}
+
 	err = subCommand.Execute( /*client,*/ theArgs[2:])
 	if err != nil {
 		fmt.Printf("Aborting: %s\n", err.Error())
