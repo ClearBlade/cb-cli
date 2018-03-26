@@ -5,13 +5,17 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	mqtt "github.com/clearblade/mqtt_parsing"
-	"github.com/clearblade/mqttclient"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"net/url"
+	"os"
+	"os/exec"
 	"strings"
 	"time"
+
+	mqttTypes "github.com/clearblade/mqtt_parsing"
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
 
 var (
@@ -25,7 +29,8 @@ var (
 )
 
 var tr = &http.Transport{
-	TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
+	// TLSClientConfig: &tls.Config{InsecureSkipVerify: false},
+	TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 }
 
 const (
@@ -40,20 +45,53 @@ type Client interface {
 	Logout() error
 
 	//data calls
+	CreateData(string, interface{}) ([]interface{}, error)
 	InsertData(string, interface{}) error
 	UpdateData(string, *Query, map[string]interface{}) error
 	GetData(string, *Query) (map[string]interface{}, error)
 	GetDataByName(string, *Query) (map[string]interface{}, error)
 	GetDataByKeyAndName(string, string, *Query) (map[string]interface{}, error)
 	DeleteData(string, *Query) error
+	GetItemCount(string) (int, error)
+	GetDataTotal(string, *Query) (map[string]interface{}, error)
+	GetColumns(string, string, string) ([]interface{}, error)
 
 	//mqtt calls
-	InitializeMQTT(string, string, int) error
-	ConnectMQTT(*tls.Config, *LastWillPacket) error
+	SetMqttClient(MqttClient)
+	InitializeMQTT(string, string, int, *tls.Config, *LastWillPacket) error
 	Publish(string, []byte, int) error
-	Subscribe(string, int) (<-chan *mqtt.Publish, error)
+	Subscribe(string, int) (<-chan *mqttTypes.Publish, error)
 	Unsubscribe(string) error
 	Disconnect() error
+
+	// Device calls
+	GetDevices(string, *Query) ([]interface{}, error)
+	GetDevice(string, string) (map[string]interface{}, error)
+	CreateDevice(string, string, map[string]interface{}) (map[string]interface{}, error)
+	UpdateDevice(string, string, map[string]interface{}) (map[string]interface{}, error)
+	DeleteDevice(string, string) error
+	UpdateDevices(string, *Query, map[string]interface{}) ([]interface{}, error)
+	DeleteDevices(string, *Query) error
+
+	// Adaptor calls
+	GetAdaptors(string) ([]interface{}, error)
+	GetAdaptor(string, string) (map[string]interface{}, error)
+	CreateAdaptor(string, string, map[string]interface{}) (map[string]interface{}, error)
+	UpdateAdaptor(string, string, map[string]interface{}) (map[string]interface{}, error)
+	DeleteAdaptor(string, string) error
+	DeployAdaptor(string, string, map[string]interface{}) (map[string]interface{}, error)
+	ControlAdaptor(string, string, map[string]interface{}) (map[string]interface{}, error)
+
+	// Adaptor File calls
+	GetAdaptorFiles(string, string) ([]interface{}, error)
+	GetAdaptorFile(string, string, string) (map[string]interface{}, error)
+	CreateAdaptorFile(string, string, string, map[string]interface{}) (map[string]interface{}, error)
+	UpdateAdaptorFile(string, string, string, map[string]interface{}) (map[string]interface{}, error)
+	DeleteAdaptorFile(string, string, string) error
+}
+
+type MqttClient interface {
+	mqtt.Client
 }
 
 //cbClient will supply various information that differs between privleged and unprivleged users
@@ -67,30 +105,57 @@ type cbClient interface {
 	getMessageId() uint16
 	getHttpAddr() string
 	getMqttAddr() string
+	getEdgeProxy() *EdgeProxy
 }
+
+// receiver for methods that can be shared between users/devs/devices
+type client struct{}
 
 //UserClient is the type for users
 type UserClient struct {
+	client
 	UserToken    string
 	mrand        *rand.Rand
-	MQTTClient   *mqttclient.Client
+	MQTTClient   MqttClient
 	SystemKey    string
 	SystemSecret string
 	Email        string
 	Password     string
 	HttpAddr     string
 	MqttAddr     string
+	edgeProxy    *EdgeProxy
+}
+
+type DeviceClient struct {
+	client
+	DeviceName   string
+	ActiveKey    string
+	DeviceToken  string
+	mrand        *rand.Rand
+	MQTTClient   MqttClient
+	SystemKey    string
+	SystemSecret string
+	HttpAddr     string
+	MqttAddr     string
+	edgeProxy    *EdgeProxy
 }
 
 //DevClient is the type for developers
 type DevClient struct {
+	client
 	DevToken   string
 	mrand      *rand.Rand
-	MQTTClient *mqttclient.Client
+	MQTTClient MqttClient
 	Email      string
 	Password   string
 	HttpAddr   string
 	MqttAddr   string
+	edgeProxy  *EdgeProxy
+}
+
+type EdgeProxy struct {
+	SystemKey string
+	EdgeName  string
 }
 
 //CbReq is a wrapper around an HTTP request
@@ -124,6 +189,44 @@ func (u *UserClient) getMqttAddr() string {
 
 func (d *DevClient) getMqttAddr() string {
 	return d.MqttAddr
+}
+
+func (u *UserClient) getEdgeProxy() *EdgeProxy {
+	return u.edgeProxy
+}
+
+func (d *DevClient) getEdgeProxy() *EdgeProxy {
+	return d.edgeProxy
+}
+
+func (d *DeviceClient) getEdgeProxy() *EdgeProxy {
+	return d.edgeProxy
+}
+
+func (u *UserClient) SetMqttClient(c MqttClient) {
+	u.MQTTClient = c
+}
+
+func (d *DevClient) SetMqttClient(c MqttClient) {
+	d.MQTTClient = c
+}
+
+func (d *DeviceClient) SetMqttClient(c MqttClient) {
+	d.MQTTClient = c
+}
+
+func NewDeviceClient(systemkey, systemsecret, deviceName, activeKey string) *DeviceClient {
+	return &DeviceClient{
+		DeviceName:   deviceName,
+		DeviceToken:  "",
+		ActiveKey:    activeKey,
+		mrand:        rand.New(rand.NewSource(time.Now().UnixNano())),
+		MQTTClient:   nil,
+		SystemKey:    systemkey,
+		SystemSecret: systemsecret,
+		HttpAddr:     CB_ADDR,
+		MqttAddr:     CB_MSG_ADDR,
+	}
 }
 
 //NewUserClient allocates a new UserClient struct
@@ -203,6 +306,85 @@ func NewDevClientWithTokenAndAddrs(httpAddr, mqttAddr, token, email string) *Dev
 	}
 }
 
+func NewDeviceClientWithAddrs(httpAddr, mqttAddr, systemkey, systemsecret, deviceName, activeKey string) *DeviceClient {
+	return &DeviceClient{
+		DeviceName:   deviceName,
+		DeviceToken:  "",
+		ActiveKey:    activeKey,
+		mrand:        rand.New(rand.NewSource(time.Now().UnixNano())),
+		MQTTClient:   nil,
+		SystemKey:    systemkey,
+		SystemSecret: systemsecret,
+		HttpAddr:     httpAddr,
+		MqttAddr:     mqttAddr,
+	}
+}
+
+func NewEdgeProxyDevClient(email, password, systemKey, edgeName string) (*DevClient, error) {
+	d := NewDevClient(email, password)
+	if err := d.startProxyToEdge(systemKey, edgeName); err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+func NewEdgeProxyUserClient(email, password, systemKey, systemSecret, edgeName string) (*UserClient, error) {
+	u := NewUserClient(systemKey, systemSecret, email, password)
+	if err := u.startProxyToEdge(systemKey, edgeName); err != nil {
+		return nil, err
+	}
+	return u, nil
+}
+func NewEdgeProxyDeviceClient(systemkey, systemsecret, deviceName, activeKey, edgeName string) (*DeviceClient, error) {
+	d := NewDeviceClient(systemkey, systemsecret, deviceName, activeKey)
+	if err := d.startProxyToEdge(systemkey, edgeName); err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+
+func (u *UserClient) startProxyToEdge(systemKey, edgeName string) error {
+	if systemKey == "" || edgeName == "" {
+		return fmt.Errorf("systemKey and edgeName required")
+	}
+	u.edgeProxy = &EdgeProxy{systemKey, edgeName}
+	return nil
+}
+func (u *UserClient) stopProxyToEdge() error {
+	if u.edgeProxy == nil {
+		return fmt.Errorf("Requests are not being proxied to edge")
+	}
+	u.edgeProxy = nil
+	return nil
+}
+func (d *DevClient) startProxyToEdge(systemKey, edgeName string) error {
+	if systemKey == "" || edgeName == "" {
+		return fmt.Errorf("systemKey and edgeName required")
+	}
+	d.edgeProxy = &EdgeProxy{systemKey, edgeName}
+	return nil
+}
+func (d *DevClient) stopProxyToEdge() error {
+	if d.edgeProxy == nil {
+		return fmt.Errorf("No edge proxy active")
+	}
+	d.edgeProxy = nil
+	return nil
+}
+func (d *DeviceClient) startProxyToEdge(systemKey, edgeName string) error {
+	if systemKey == "" || edgeName == "" {
+		return fmt.Errorf("systemKey and edgeName required")
+	}
+	d.edgeProxy = &EdgeProxy{systemKey, edgeName}
+	return nil
+}
+func (d *DeviceClient) stopProxyToEdge() error {
+	if d.edgeProxy == nil {
+		return fmt.Errorf("No edge proxy active")
+	}
+	d.edgeProxy = nil
+	return nil
+}
+
 //Authenticate retrieves a token from the specified Clearblade Platform
 func (u *UserClient) Authenticate() error {
 	return authenticate(u, u.Email, u.Password)
@@ -222,7 +404,7 @@ func (u *UserClient) Register(username, password string) error {
 	if u.UserToken == "" {
 		return fmt.Errorf("Must be logged in to create users")
 	}
-	_, err := register(u, createUser, username, password, u.SystemKey, u.SystemSecret, "", "", "")
+	_, err := register(u, createUser, username, password, u.SystemKey, u.SystemSecret, "", "", "", "")
 	return err
 }
 
@@ -231,7 +413,7 @@ func (u *UserClient) RegisterUser(username, password string) (map[string]interfa
 	if u.UserToken == "" {
 		return nil, fmt.Errorf("Must be logged in to create users")
 	}
-	resp, err := register(u, createUser, username, password, u.SystemKey, u.SystemSecret, "", "", "")
+	resp, err := register(u, createUser, username, password, u.SystemKey, u.SystemSecret, "", "", "", "")
 	if err != nil {
 		return nil, err
 	}
@@ -240,7 +422,7 @@ func (u *UserClient) RegisterUser(username, password string) (map[string]interfa
 
 //Registers a new developer
 func (d *DevClient) Register(username, password, fname, lname, org string) error {
-	resp, err := register(d, createDevUser, username, password, "", "", fname, lname, org)
+	resp, err := register(d, createDevUser, username, password, "", "", fname, lname, org, "")
 	if err != nil {
 		return err
 	} else {
@@ -253,13 +435,22 @@ func (d *DevClient) RegisterNewUser(username, password, systemkey, systemsecret 
 	if d.DevToken == "" {
 		return nil, fmt.Errorf("Must authenticate first")
 	}
-	return register(d, createUser, username, password, systemkey, systemsecret, "", "", "")
+	return register(d, createUser, username, password, systemkey, systemsecret, "", "", "", "")
 
 }
 
 //Register creates a new developer user
 func (d *DevClient) RegisterDevUser(username, password, fname, lname, org string) (map[string]interface{}, error) {
-	resp, err := register(d, createDevUser, username, password, "", "", fname, lname, org)
+	resp, err := register(d, createDevUser, username, password, "", "", fname, lname, org, "")
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+//Register creates a new developer user
+func (d *DevClient) RegisterDevUserWithKey(username, password, fname, lname, org, key string) (map[string]interface{}, error) {
+	resp, err := register(d, createDevUser, username, password, "", "", fname, lname, org, key)
 	if err != nil {
 		return nil, err
 	}
@@ -274,6 +465,31 @@ func (u *UserClient) Logout() error {
 //Logout ends the session
 func (d *DevClient) Logout() error {
 	return logout(d)
+}
+
+//Check Auth of Developer
+func (d *DevClient) CheckAuth() error {
+	return checkAuth(d)
+}
+
+func checkAuth(c cbClient) error {
+	creds, err := c.credentials()
+	if err != nil {
+		return err
+	}
+	//log.Println("Checking user auth")
+	resp, err := post(c, c.preamble()+"/checkauth", nil, creds, nil)
+	if err != nil {
+		return err
+	}
+	body := resp.Body.(map[string]interface{})
+	if body["is_authenticated"] != nil && body["is_authenticated"].(bool) {
+		return nil
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error in authenticating, Status Code: %d, %v\n", resp.StatusCode, resp.Body)
+	}
+	return nil
 }
 
 //Below are some shared functions
@@ -331,7 +547,7 @@ func authAnon(c cbClient) error {
 	return nil
 }
 
-func register(c cbClient, kind int, username, password, syskey, syssec, fname, lname, org string) (map[string]interface{}, error) {
+func register(c cbClient, kind int, username, password, syskey, syssec, fname, lname, org, key string) (map[string]interface{}, error) {
 	payload := map[string]interface{}{
 		"email":    username,
 		"password": password,
@@ -345,6 +561,9 @@ func register(c cbClient, kind int, username, password, syskey, syssec, fname, l
 		payload["fname"] = fname
 		payload["lname"] = lname
 		payload["org"] = org
+		if key != "" {
+			payload["key"] = key
+		}
 	case createUser:
 		switch c.(type) {
 		case *DevClient:
@@ -411,6 +630,7 @@ func logout(c cbClient) error {
 }
 
 func do(c cbClient, r *CbReq, creds [][]string) (*CbResp, error) {
+	checkForEdgeProxy(c, r)
 	var bodyToSend *bytes.Buffer
 	if r.Body != nil {
 		b, jsonErr := json.Marshal(r.Body)
@@ -433,13 +653,12 @@ func do(c cbClient, r *CbReq, creds [][]string) (*CbResp, error) {
 		req, reqErr = http.NewRequest(r.Method, url, nil)
 	}
 	if reqErr != nil {
-		return nil, fmt.Errorf("Request Creation Error: %v", reqErr)
+		return nil, fmt.Errorf("Request Creation Error: %s", reqErr)
 	}
-	if r.Headers != nil {
-		for hed, val := range r.Headers {
-			for _, vv := range val {
-				req.Header.Add(hed, vv)
-			}
+	req.Close = true
+	for hed, val := range r.Headers {
+		for _, vv := range val {
+			req.Header.Add(hed, vv)
 		}
 	}
 	for _, c := range creds {
@@ -523,7 +742,7 @@ func put(c cbClient, endpoint string, body interface{}, heads [][]string, header
 	return do(c, req, heads)
 }
 
-func delete(c cbClient, endpoint string, query map[string]string, heds [][]string, headers map[string][]string) (*CbResp, error) {
+func delete(c cbClient, endpoint string, query map[string]string, heads [][]string, headers map[string][]string) (*CbResp, error) {
 	req := &CbReq{
 		Body:        nil,
 		Method:      "DELETE",
@@ -531,7 +750,18 @@ func delete(c cbClient, endpoint string, query map[string]string, heds [][]strin
 		Headers:     headers,
 		QueryString: query_to_string(query),
 	}
-	return do(c, req, heds)
+	return do(c, req, heads)
+}
+
+func deleteWithBody(c cbClient, endpoint string, body interface{}, heads [][]string, headers map[string][]string) (*CbResp, error) {
+	req := &CbReq{
+		Body:        body,
+		Method:      "DELETE",
+		Endpoint:    endpoint,
+		Headers:     headers,
+		QueryString: "",
+	}
+	return do(c, req, heads)
 }
 
 func query_to_string(query map[string]string) string {
@@ -540,4 +770,108 @@ func query_to_string(query map[string]string) string {
 		qryStr += k + "=" + v + "&"
 	}
 	return strings.TrimSuffix(qryStr, "&")
+}
+
+func checkForEdgeProxy(c cbClient, r *CbReq) {
+	edgeProxy := c.getEdgeProxy()
+	if r.Headers == nil {
+		r.Headers = map[string][]string{}
+	}
+	if edgeProxy != nil {
+		r.Headers["Clearblade-Systemkey"] = []string{edgeProxy.SystemKey}
+		r.Headers["Clearblade-Edge"] = []string{edgeProxy.EdgeName}
+	}
+}
+
+func parseEdgeConfig(e EdgeConfig) *exec.Cmd {
+	cmd := exec.Command("edge",
+		"-edge-ip=localhost",
+		"-edge-id="+e.EdgeName,
+		"-edge-cookie="+e.EdgeToken,
+		"-platform-ip="+e.PlatformIP,
+		"-platform-port="+e.PlatformPort,
+		"-parent-system="+e.ParentSystem,
+	)
+	if p := e.HttpPort; p != "" {
+		cmd.Args = append(cmd.Args, "-edge-listen-port="+p)
+	}
+	if p := e.MqttPort; p != "" {
+		cmd.Args = append(cmd.Args, "-broker-tcp-port="+p)
+	}
+	if p := e.MqttTlsPort; p != "" {
+		cmd.Args = append(cmd.Args, "-broker-tls-port="+p)
+	}
+	if p := e.WsPort; p != "" {
+		cmd.Args = append(cmd.Args, "-broker-ws-port="+p)
+	}
+	if p := e.WssPort; p != "" {
+		cmd.Args = append(cmd.Args, "-broker-wss-port="+p)
+	}
+	if p := e.AuthPort; p != "" {
+		cmd.Args = append(cmd.Args, "-mqtt-auth-port="+p)
+	}
+	if p := e.AuthWsPort; p != "" {
+		cmd.Args = append(cmd.Args, "-mqtt-ws-auth-port="+p)
+	}
+	if e.Lean {
+		cmd.Args = append(cmd.Args, "-lean-mode")
+	}
+	if e.Cache {
+		cmd.Args = append(cmd.Args, "-local")
+	}
+	if p := e.LogLevel; p != "" {
+		cmd.Args = append(cmd.Args, "-log-level="+p)
+	}
+	if e.Insecure {
+		cmd.Args = append(cmd.Args, "-insecure=true")
+	}
+	if s := e.Stdout; s != nil {
+		cmd.Stdout = s
+	} else {
+		cmd.Stdout = os.Stdout
+	}
+	if s := e.Stderr; s != nil {
+		cmd.Stderr = s
+	} else {
+		cmd.Stderr = os.Stderr
+	}
+	return cmd
+}
+
+func makeSliceOfMaps(inIF interface{}) ([]map[string]interface{}, error) {
+	switch inIF.(type) {
+	case []interface{}:
+		in := inIF.([]interface{})
+		rval := make([]map[string]interface{}, len(in))
+		for i, val := range in {
+			valMap, ok := val.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("expected item to be a map, got %T", val)
+			}
+			rval[i] = valMap
+		}
+		return rval, nil
+	case []map[string]interface{}:
+		return inIF.([]map[string]interface{}), nil
+	default:
+		return nil, fmt.Errorf("Expected list of maps, got %T", inIF)
+	}
+}
+
+func createQueryMap(query *Query) (map[string]string, error) {
+	var qry map[string]string
+	if query != nil {
+		queryMap := query.serialize()
+		queryBytes, err := json.Marshal(queryMap)
+		if err != nil {
+			return nil, err
+		}
+		qry = map[string]string{
+			"query": url.QueryEscape(string(queryBytes)),
+		}
+	} else {
+		qry = nil
+	}
+
+	return qry, nil
 }

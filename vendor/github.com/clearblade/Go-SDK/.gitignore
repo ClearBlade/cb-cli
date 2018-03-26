@@ -1,1 +1,2 @@
 *.go~
+.DS_Store

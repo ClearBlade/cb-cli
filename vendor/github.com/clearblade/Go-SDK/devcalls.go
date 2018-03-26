@@ -151,6 +151,25 @@ func (d *DevClient) SetSystemDescription(system_key, system_description string) 
 	return nil
 }
 
+//SetSystemTokenTTL can change the value for the system's token TTL
+func (d *DevClient) SetSystemTokenTTL(system_key string, token_ttl int) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := put(d, d.preamble()+"/systemmanagement", map[string]interface{}{
+		"id":        system_key,
+		"token_ttl": token_ttl,
+	}, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error changing system token TTL: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error changing system token TTL: %v", resp.Body)
+	}
+	return nil
+}
+
 //SetSystemAuthOn is depreciated
 func (d *DevClient) SetSystemAuthOn(system_key string) error {
 	return fmt.Errorf("Auth is now mandatory")
@@ -179,7 +198,7 @@ func (d *DevClient) NewConnectCollection(systemkey string, connectConfig connect
 	creds, err := d.credentials()
 	m := connectConfig.toMap()
 	m["appID"] = systemkey
-	m["name"] = connectConfig.tableName()
+	m["name"] = connectConfig.name()
 	if err != nil {
 		return "", err
 	}
@@ -199,7 +218,7 @@ func (d *DevClient) AlterConnectionDetails(systemkey string, connectConfig conne
 	out := make(map[string]interface{})
 	m := connectConfig.toMap()
 	out["appID"] = systemkey
-	out["name"] = connectConfig.tableName()
+	out["name"] = connectConfig.name()
 	out["connectionStringMap"] = m
 	resp, err := put(d, d.preamble()+"/collectionmanagement", out, creds, nil)
 	if err != nil {
@@ -209,123 +228,6 @@ func (d *DevClient) AlterConnectionDetails(systemkey string, connectConfig conne
 	} else {
 		return nil
 	}
-}
-
-//CreateCollection creates a new collection
-func (d *DevClient) NewCollection(systemKey, name string) (string, error) {
-	creds, err := d.credentials()
-	if err != nil {
-		return "", err
-	}
-	resp, err := post(d, d.preamble()+"/collectionmanagement", map[string]interface{}{
-		"name":  name,
-		"appID": systemKey,
-	}, creds, nil)
-	if err != nil {
-		return "", fmt.Errorf("Error creating collection: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("Error creating collection %v", resp.Body)
-	}
-	return resp.Body.(map[string]interface{})["collectionID"].(string), nil
-}
-
-//DeleteCollection deletes the collection. Note that this does not apply to collections backed by a non-default datastore.
-func (d *DevClient) DeleteCollection(colId string) error {
-	creds, err := d.credentials()
-	if err != nil {
-		return err
-	}
-	resp, err := delete(d, d.preamble()+"/collectionmanagement", map[string]string{
-		"id": colId,
-	}, creds, nil)
-	if err != nil {
-		return fmt.Errorf("Error deleting collection %v", err)
-	}
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error deleting collection %v", resp.Body)
-	}
-	return nil
-}
-
-//AddColumn adds a column to a collection. Note that this does not apply to collections backed by a non-default datastore.
-func (d *DevClient) AddColumn(collection_id, column_name, column_type string) error {
-	creds, err := d.credentials()
-	if err != nil {
-		return err
-	}
-	resp, err := put(d, d.preamble()+"/collectionmanagement", map[string]interface{}{
-		"id": collection_id,
-		"addColumn": map[string]interface{}{
-			"name": column_name,
-			"type": column_type,
-		},
-	}, creds, nil)
-	if err != nil {
-		return fmt.Errorf("Error adding column: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error adding column: %v", resp.Body)
-	}
-	return nil
-}
-
-//DeleteColumn removes a column from a collection. Note that this does not apply to collections backed by a non-default datastore.
-func (d *DevClient) DeleteColumn(collection_id, column_name string) error {
-	creds, err := d.credentials()
-	if err != nil {
-		return err
-	}
-	resp, err := put(d, d.preamble()+"/collectionmanagement", map[string]interface{}{
-		"id":           collection_id,
-		"deleteColumn": column_name,
-	}, creds, nil)
-	if err != nil {
-		return fmt.Errorf("Error deleting column: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error deleting column: %v", resp.Body)
-	}
-	return nil
-}
-
-//GetCollectionInfo retrieves some describing information on the specified collection
-//Keys "name","collectoinID","appID"
-func (d *DevClient) GetCollectionInfo(collection_id string) (map[string]interface{}, error) {
-	creds, err := d.credentials()
-	if err != nil {
-		return map[string]interface{}{}, err
-	}
-	resp, err := get(d, d.preamble()+"/collectionmanagement", map[string]string{
-		"id": collection_id,
-	}, creds, nil)
-	if err != nil {
-		return nil, fmt.Errorf("Error getting collection info: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Error getting collection info: %v", resp.Body)
-	}
-	return resp.Body.(map[string]interface{}), nil
-}
-
-//GetAllCollections retrieves a list of every collection in the system
-//The return value is a slice of strings
-func (d *DevClient) GetAllCollections(SystemKey string) ([]interface{}, error) {
-	creds, err := d.credentials()
-	if err != nil {
-		return nil, err
-	}
-	resp, err := get(d, d.preamble()+"/allcollections", map[string]string{
-		"appid": SystemKey,
-	}, creds, nil)
-	if err != nil {
-		return nil, fmt.Errorf("Error getting collection info: %v", err)
-	}
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Error getting collection info: %v", resp.Body)
-	}
-
-	return resp.Body.([]interface{}), nil
 }
 
 //GetAllRoles returns a slice of all roles, including their permissions
@@ -344,7 +246,7 @@ func (d *DevClient) GetAllRoles(SystemKey string) ([]interface{}, error) {
 
 	rval, ok := resp.Body.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("Bad type returned by GetAllRoles")
+		return nil, fmt.Errorf("Bad type returned by GetAllRoles: %T, %s", resp.Body, resp.Body.(string))
 	}
 
 	return rval, nil
@@ -375,31 +277,66 @@ func (d *DevClient) CreateRole(systemKey, role_id string) (interface{}, error) {
 
 func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]interface{}) error {
 	data := map[string]interface{}{
-		"name":        role["Name"],
-		"collections": []map[string]interface{}{},
-		"topics":      []map[string]interface{}{},
-		"services":    []map[string]interface{}{},
+		"name": roleName,
+		"changes": map[string]interface{}{
+			"collections": []map[string]interface{}{},
+			"topics":      []map[string]interface{}{},
+			"services":    []map[string]interface{}{},
+			"portals":     []map[string]interface{}{},
+		},
 	}
-	if collections, ok := role["Collections"]; ok {
-		data["collections"] = collections
+	changes := data["changes"].(map[string]interface{})
+
+	if roleId, ok := role["ID"].(string); ok {
+		data["id"] = roleId
+	} else {
+		return fmt.Errorf("The role id key (ID) must be present to update the role")
 	}
-	if topics, ok := role["Topics"]; ok {
-		data["topics"] = topics
+	permissions, ok := role["Permissions"].(map[string]interface{})
+	if !ok {
+		permissions = map[string]interface{}{}
 	}
-	if services, ok := role["Services"]; ok {
-		data["services"] = services
+	if collections, ok := permissions["collections"]; ok {
+		changes["collections"] = collections
 	}
+	if topics, ok := permissions["topics"]; ok {
+		changes["topics"] = topics
+	}
+	if services, ok := permissions["services"]; ok {
+		changes["services"] = services
+	}
+	if portals, ok := permissions["portals"]; ok {
+		changes["portals"] = portals
+	}
+	if msgHist, ok := permissions["msgHistory"]; ok {
+		changes["msgHistory"] = msgHist
+	}
+	if deviceList, ok := permissions["devices"]; ok {
+		changes["devices"] = deviceList
+	}
+	if userList, ok := permissions["users"]; ok {
+		changes["users"] = userList
+	}
+	if allservices, ok := permissions["allservices"]; ok {
+		changes["allservices"] = allservices
+	}
+	if allcollections, ok := permissions["allcollections"]; ok {
+		changes["allcollections"] = allcollections
+	}
+
+	// Just to be safe, this is silly
+	data["changes"] = changes
 	creds, err := d.credentials()
 	if err != nil {
 		return err
 	}
-	// resp, err := post(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
+
 	resp, err := put(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
 	if err != nil {
 		return err
 	}
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error updating role %s", roleName)
+		return fmt.Errorf("Error updating role %s: %d", roleName, resp.StatusCode)
 	}
 	return nil
 }
@@ -514,6 +451,24 @@ func (d *DevClient) AddUserToRoles(systemKey, userId string, roles []string) err
 	return nil
 }
 
+//AddDeviceToRoles assigns a role to a device
+func (d *DevClient) AddDeviceToRoles(systemKey, deviceName string, roles []string) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{"add": roles}
+	resp, err := put(d, d.preamble()+"/devices/roles/"+systemKey+"/"+deviceName, data, creds, nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error adding roles to a device: %v", resp.Body)
+	}
+
+	return nil
+}
+
 func (d *DevClient) GetUserRoles(systemKey, userId string) ([]string, error) {
 	creds, err := d.credentials()
 	if err != nil {
@@ -552,8 +507,6 @@ func (d *DevClient) AddCollectionToRole(systemKey, collection_id, role_id string
 					"permissions": level,
 				},
 			},
-			"topics":   []map[string]interface{}{},
-			"services": []map[string]interface{}{},
 		},
 	}
 	resp, err := put(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
@@ -566,14 +519,42 @@ func (d *DevClient) AddCollectionToRole(systemKey, collection_id, role_id string
 	return nil
 }
 
-//AddServiceToRole associates some kind of permission dealing with the specified service to the role
-func (d *DevClient) AddServiceToRole(systemKey, service, role_id string, level int) error {
+func (d *DevClient) AddPortalToRole(systemKey, portalName, roleId string, level int) error {
 	creds, err := d.credentials()
 	if err != nil {
 		return err
 	}
 	data := map[string]interface{}{
-		"id": role_id,
+		"id": roleId,
+		"changes": map[string]interface{}{
+			"portals": []map[string]interface{}{
+				map[string]interface{}{
+					"itemInfo": map[string]interface{}{
+						"name": portalName,
+					},
+					"permissions": level,
+				},
+			},
+		},
+	}
+	resp, err := put(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating a role to have a portal: %v", resp.Body)
+	}
+	return nil
+}
+
+//AddServiceToRole associates some kind of permission dealing with the specified service to the role
+func (d *DevClient) AddServiceToRole(systemKey, service, roleId string, level int) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{
+		"id": roleId,
 		"changes": map[string]interface{}{
 			"services": []map[string]interface{}{
 				map[string]interface{}{
@@ -583,8 +564,6 @@ func (d *DevClient) AddServiceToRole(systemKey, service, role_id string, level i
 					"permissions": level,
 				},
 			},
-			"topics":      []map[string]interface{}{},
-			"collections": []map[string]interface{}{},
 		},
 	}
 	resp, err := put(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
@@ -597,19 +576,15 @@ func (d *DevClient) AddServiceToRole(systemKey, service, role_id string, level i
 	return nil
 }
 
-func (d *DevClient) AddGenericPermissionToRole(systemKey, role_id, permission string, level int) error {
+func (d *DevClient) AddGenericPermissionToRole(systemKey, roleId, permission string, level int) error {
 	creds, err := d.credentials()
 	if err != nil {
 		return err
 	}
 
 	data := map[string]interface{}{
-		"id": role_id,
-		"changes": map[string]interface{}{
-			"services":    []map[string]interface{}{},
-			"topics":      []map[string]interface{}{},
-			"collections": []map[string]interface{}{},
-		},
+		"id":      roleId,
+		"changes": map[string]interface{}{},
 	}
 
 	data["changes"].(map[string]interface{})[permission] = map[string]interface{}{

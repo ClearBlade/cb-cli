@@ -58,6 +58,23 @@ func (u *UserClient) getMessageId() uint16 {
 	return uint16(u.mrand.Int())
 }
 
+func (u *UserClient) GetUserCount(systemKey string) (int, error) {
+	creds, err := u.credentials()
+	if err != nil {
+		return -1, err
+	}
+	resp, err := get(u, u.preamble()+"/count", nil, creds, nil)
+	if err != nil {
+		return -1, fmt.Errorf("Error getting count: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return -1, fmt.Errorf("Error getting count: %v", resp.Body)
+	}
+	bod := resp.Body.(map[string]interface{})
+	theCount := int(bod["count"].(float64))
+	return theCount, nil
+}
+
 //GetUserColumns returns the description of the columns in the user table
 //Returns a structure shaped []map[string]interface{}{map[string]interface{}{"ColumnName":"blah","ColumnType":"int"}}
 func (d *DevClient) GetUserColumns(systemKey string) ([]interface{}, error) {

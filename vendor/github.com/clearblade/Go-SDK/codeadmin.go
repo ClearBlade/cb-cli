@@ -121,30 +121,33 @@ func (d *DevClient) SetServiceEffectiveUser(systemKey, name, userid string) erro
 }
 
 //UpdateService facillitates changes to the service's code
-func (d *DevClient) UpdateService(systemKey, name, code string, params []string) error {
+func (d *DevClient) UpdateService(systemKey, name, code string, params []string) (error, map[string]interface{}) {
 	extra := map[string]interface{}{"code": code, "name": name, "parameters": params}
 	return d.updateService(systemKey, name, code, extra)
 }
 
-func (d *DevClient) UpdateServiceWithLibraries(systemKey, name, code, deps string, params []string) error {
+func (d *DevClient) UpdateServiceWithLibraries(systemKey, name, code, deps string, params []string) (error, map[string]interface{}) {
 	extra := map[string]interface{}{"code": code, "name": name, "parameters": params, "dependencies": deps}
 	return d.updateService(systemKey, name, code, extra)
 }
 
-func (d *DevClient) updateService(sysKey, name, code string, extra map[string]interface{}) error {
+func (d *DevClient) updateService(sysKey, name, code string, extra map[string]interface{}) (error, map[string]interface{}) {
 	creds, err := d.credentials()
 	if err != nil {
-		return err
+		return err, nil
 	}
-
 	resp, err := put(d, _CODE_ADMIN_PREAMBLE+"/"+sysKey+"/"+name, extra, creds, nil)
 	if err != nil {
-		return fmt.Errorf("Error updating service: %v\n", err)
+		return fmt.Errorf("Error updating service: %v\n", err), nil
+	}
+	body, ok := resp.Body.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("Service not created. First create service..."), nil
 	}
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error updating service: %v\n", resp.Body)
+		return fmt.Errorf("Error updating service: %v\n", resp.Body), nil
 	}
-	return nil
+	return nil, body
 }
 
 //NewServiceWithLibraries creates a new service with the specified code, params, and libraries/dependencies.
@@ -261,6 +264,57 @@ func (d *DevClient) DeleteService(systemKey, name string) error {
 		return fmt.Errorf("Error deleting service: %v", resp.Body)
 	}
 	return nil
+}
+
+func (d *DevClient) GetFailedServices(systemKey string) ([]map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(d, "/codeadmin/failed/"+systemKey, nil, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Could not get failed services: %s", err)
+	}
+	body := resp.Body.(map[string]interface{})[systemKey].([]interface{})
+	services := make([]map[string]interface{}, len(body))
+	for i, b := range body {
+		services[i] = b.(map[string]interface{})
+	}
+	return services, nil
+}
+
+func (d *DevClient) RetryFailedServices(systemKey string, ids []string) ([]string, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := post(d, "/codeadmin/failed/"+systemKey, map[string]interface{}{"id": ids}, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Could not retry failed service %s/%s: %s", systemKey, ids, err)
+	}
+	body := resp.Body.([]interface{})
+	responses := make([]string, len(body))
+	for i, b := range body {
+		responses[i] = b.(string)
+	}
+	return responses, nil
+}
+
+func (d *DevClient) DeleteFailedServices(systemKey string, ids []string) ([]map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := deleteWithBody(d, "/codeadmin/failed/"+systemKey, map[string]interface{}{"id": ids}, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Could not delete failed services %s/%s: %s", systemKey, ids, err)
+	}
+	body := resp.Body.([]interface{})
+	services := make([]map[string]interface{}, len(body))
+	for i, b := range body {
+		services[i] = b.(map[string]interface{})
+	}
+	return services, nil
 }
 
 func genCodeLog(m map[string]interface{}) CodeLog {
