@@ -1,6 +1,4 @@
-/auth.go~
 /cb-cli
-/readme.org~
 *.tar.gz
 *.zip
 *.exe

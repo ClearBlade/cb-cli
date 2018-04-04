@@ -25,8 +25,8 @@
     ".",
     "models"
   ]
-  revision = "cf58292b25b40fedac40382584721559aa242f8b"
-  version = "v4.0"
+  revision = "ed51c4ed7674f6721a7fe8a6bfe528f5c050a291"
+  version = "v4.0.1"
 
 [[projects]]
   name = "github.com/clearblade/mqtt_parsing"
@@ -50,11 +50,11 @@
     "proxy",
     "websocket"
   ]
-  revision = "6078986fec03a1dcc236c34816c71b0e05018fda"
+  revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b2928fda10b177328530c71d88982ecf4ffe901bdd07761f1a7a6dd7eeb0802a"
+  inputs-digest = "4f3ede86f22e75c1ee084db673a2f9d56163014b08e836b60031b92cc1cdd78d"
   solver-name = "gps-cdcl"
   solver-version = 1
