@@ -5,4 +5,4 @@
 //
 package main
 
-var cbCliVersion = "4.0"
+var cbCliVersion = "4.0.1"
