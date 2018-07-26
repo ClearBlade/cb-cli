@@ -71,12 +71,16 @@ func createRoles(systemInfo map[string]interface{}, client *cb.DevClient) error 
 	}
 	for _, role := range roles {
 		name := role["Name"].(string)
-		fmt.Printf(" %s", name)
-		//if name != "Authenticated" && name != "Administrator" && name != "Anonymous" {
-		if err := createRole(sysKey, role, client); err != nil {
-			return err
-		}
-		//}
+		 if name == "Authenticated" || name == "Administrator" || name == "Anonymous" {
+			fmt.Printf("Updating default user acct: %s",name)
+			if err := updateRole(sysKey, role, client); err != nil {
+				return err
+			}
+		} else{
+			if err := createRole(sysKey, role, client); err != nil {
+				return err
+			}
+		 }
 	}
 	// ids were created on import for the new roles, grab those
 	rolesInfo, err = pullRoles(sysKey, client, false) // global :(

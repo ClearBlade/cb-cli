@@ -801,6 +801,7 @@ func createRole(systemKey string, role map[string]interface{}, client *cb.DevCli
 	convertedPermissions := convertPermissionsStructure(permissions)
 	convertedRole := map[string]interface{}{"ID": roleID, "Permissions": convertedPermissions}
 	if err := client.UpdateRole(systemKey, role["Name"].(string), convertedRole); err != nil {
+		fmt.Println("Failed to update role via client")
 		return err
 	}
 	return nil
