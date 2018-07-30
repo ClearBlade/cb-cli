@@ -4,13 +4,14 @@ import (
 	"bytes"
 	//"encoding/json"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"reflect"
 	"runtime"
 	"strings"
+
+	cb "github.com/clearblade/Go-SDK"
 )
 
 type Stack struct {
@@ -29,13 +30,13 @@ var (
 
 func init() {
 
-	usage := 
-	`
+	usage :=
+		`
 	Perform a diff operation between your local assets and the remote assets in the ClearBlade Platform. For example, see what changes have been made in the platform since your last export, or pull.
 	`
 
-	example := 
-	`
+	example :=
+		`
 	cb-cli diff -all-services                           # Diffs all your local services against all the services in the platform
 	cb-cli diff -collection=someone_modified_coll       # Shows diff between remote and local versions of the collection 'someone_modified_coll'
 	`
@@ -72,7 +73,7 @@ func init() {
 		needsAuth:    true,
 		mustBeInRepo: true,
 		run:          doDiff,
-		example:	  example,
+		example:      example,
 	}
 	myDiffCommand.flags.BoolVar(&UserSchema, "userschema", false, "diff user table schema")
 	myDiffCommand.flags.BoolVar(&AllServices, "all-services", false, "diff all of the services stored locally")
@@ -358,7 +359,7 @@ func diffCollection(sys *System_meta, client *cb.DevClient, collectionName strin
 }
 
 func diffUser(sys *System_meta, client *cb.DevClient, userName string) error {
-	exportUsers = true
+	ExportUsers = true
 	allUsers, err := pullUsers(sys, client, false)
 	if err != nil {
 		return err

@@ -17,24 +17,36 @@ const (
 )
 
 type EdgeConfig struct {
-	EdgeName     string
-	EdgeToken    string
-	PlatformIP   string
-	PlatformPort string
-	ParentSystem string
-	HttpPort     string
-	MqttPort     string
-	MqttTlsPort  string
-	WsPort       string
-	WssPort      string
-	AuthPort     string
-	AuthWsPort   string
-	Lean         bool
-	Cache        bool
-	LogLevel     string
-	Insecure		 bool
-	Stdout       *os.File
-	Stderr       *os.File
+	EdgeName       string
+	EdgeToken      string
+	PlatformIP     string
+	PlatformPort   string
+	ParentSystem   string
+	HttpPort       string
+	MqttPort       string
+	MqttTlsPort    string
+	WsPort         string
+	WssPort        string
+	AuthPort       string
+	AuthWsPort     string
+	AdapterRootDir string
+	Lean           bool
+	Cache          bool
+	LogLevel       string
+	Insecure       bool
+	DevMode        bool
+	Stdout         *os.File
+	Stderr         *os.File
+}
+
+func CreateNewEdgeWithCmd(e EdgeConfig) (*exec.Cmd, *os.Process, error) {
+	_, err := exec.LookPath("edge")
+	if err != nil {
+		println("edge not found in $PATH")
+		return nil, nil, err
+	}
+	cmd := parseEdgeConfig(e)
+	return cmd, cmd.Process, cmd.Start()
 }
 
 func CreateNewEdge(e EdgeConfig) (*os.Process, error) {
@@ -98,6 +110,19 @@ func (d *DevClient) GetEdge(systemKey, name string) (map[string]interface{}, err
 		return nil, err
 	}
 	resp, err := get(d, _EDGES_PREAMBLE+systemKey+"/"+name, nil, creds, nil)
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body.(map[string]interface{}), nil
+}
+
+func (u *UserClient) GetEdge(systemKey, name string) (map[string]interface{}, error) {
+	creds, err := u.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(u, _EDGES_PREAMBLE+systemKey+"/"+name, nil, creds, nil)
 	resp, err = mapResponse(resp, err)
 	if err != nil {
 		return nil, err

@@ -14,8 +14,9 @@ import (
 	"strings"
 	"time"
 
+	cbErr "github.com/clearblade/go-utils/errors"
 	mqttTypes "github.com/clearblade/mqtt_parsing"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/clearblade/paho.mqtt.golang"
 )
 
 var (
@@ -487,7 +488,7 @@ func checkAuth(c cbClient) error {
 		return nil
 	}
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error in authenticating, Status Code: %d, %v\n", resp.StatusCode, resp.Body)
+		return cbErr.CreateResponseFromMap(resp.Body)
 	}
 	return nil
 }
@@ -513,7 +514,7 @@ func authenticate(c cbClient, username, password string) error {
 		return err
 	}
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error in authenticating, Status Code: %d, %v\n", resp.StatusCode, resp.Body)
+		return cbErr.CreateResponseFromMap(resp.Body)
 	}
 
 	var token string = ""
@@ -538,6 +539,9 @@ func authAnon(c cbClient) error {
 	resp, err := post(c, c.preamble()+"/anon", nil, creds, nil)
 	if err != nil {
 		return fmt.Errorf("Error retrieving anon user token: %s", err.Error())
+	}
+	if resp.StatusCode != 200 {
+		return cbErr.CreateResponseFromMap(resp.Body)
 	}
 	token := resp.Body.(map[string]interface{})["user_token"].(string)
 	if token == "" {
@@ -598,7 +602,7 @@ func register(c cbClient, kind int, username, password, syskey, syssec, fname, l
 		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("Status code: %d, Error in authenticating, %v\n", resp.StatusCode, resp.Body)
+		return nil, cbErr.CreateResponseFromMap(resp.Body)
 	}
 	var token string = ""
 	switch kind {
@@ -624,7 +628,7 @@ func logout(c cbClient) error {
 		return err
 	}
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error in authenticating %v\n", resp.Body)
+		return cbErr.CreateResponseFromMap(resp.Body)
 	}
 	return nil
 }
@@ -813,6 +817,9 @@ func parseEdgeConfig(e EdgeConfig) *exec.Cmd {
 	if p := e.AuthWsPort; p != "" {
 		cmd.Args = append(cmd.Args, "-mqtt-ws-auth-port="+p)
 	}
+	if p := e.AdapterRootDir; p != "" {
+		cmd.Args = append(cmd.Args, "-adaptors-root-dir="+p)
+	}
 	if e.Lean {
 		cmd.Args = append(cmd.Args, "-lean-mode")
 	}
@@ -824,6 +831,9 @@ func parseEdgeConfig(e EdgeConfig) *exec.Cmd {
 	}
 	if e.Insecure {
 		cmd.Args = append(cmd.Args, "-insecure=true")
+	}
+	if e.DevMode {
+		cmd.Args = append(cmd.Args, "-development-mode=true")
 	}
 	if s := e.Stdout; s != nil {
 		cmd.Stdout = s

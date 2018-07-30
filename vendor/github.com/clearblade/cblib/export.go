@@ -11,8 +11,7 @@ import (
 )
 
 var (
-	exportUsers bool
-	inARepo     bool
+	inARepo bool
 )
 
 func init() {
@@ -38,7 +37,7 @@ func init() {
 		needsAuth:    false,
 		mustBeInRepo: false,
 		run:          doExport,
-		example:	  example,
+		example:      example,
 	}
 	myExportCommand.flags.StringVar(&URL, "url", "https://platform.clearblade.com", "Clearblade Platform URL where system is hosted")
 	myExportCommand.flags.StringVar(&MsgURL, "messaging-url", "platform.clearblade.com", "Clearblade messaging url for target system")
@@ -47,7 +46,7 @@ func init() {
 	myExportCommand.flags.StringVar(&DevToken, "dev-token", "", "Advanced: Developer Token for login")
 	myExportCommand.flags.BoolVar(&CleanUp, "cleanup", false, "Clean up directories before export, recommended after having deleted assets on Platform")
 	myExportCommand.flags.BoolVar(&ExportRows, "exportrows", false, "Exports all rows from all collections, Note: Large collections may take a long time")
-	myExportCommand.flags.BoolVar(&exportUsers, "exportusers", false, "exports user, Note: Passwords are not exported")
+	myExportCommand.flags.BoolVar(&ExportUsers, "exportusers", false, "exports user, Note: Passwords are not exported")
 	myExportCommand.flags.BoolVar(&ExportItemId, "exportitemid", ExportItemIdDefault, "exports a collection rows' item_id column, Default: true")
 	myExportCommand.flags.BoolVar(&SortCollections, "sort-collections", SortCollectionsDefault, "Sort collections version control ease, Note: exportitemid must be enabled")
 	myExportCommand.flags.IntVar(&DataPageSize, "data-page-size", DataPageSizeDefault, "Number of rows in a collection to fetch at a time, Note: Large collections should increase up to 1000 rows")
@@ -71,6 +70,7 @@ func pullRoles(systemKey string, cli *cb.DevClient, writeThem bool) ([]map[strin
 	}
 	return rval, nil
 }
+
 func storeRoles(roles []map[string]interface{}) {
 	roleList := make([]string, len(roles))
 	for idx, role := range roles {
@@ -458,7 +458,7 @@ func storeMeta(meta *System_meta) {
 
 func pullUsers(sysMeta *System_meta, cli *cb.DevClient, saveThem bool) ([]map[string]interface{}, error) {
 	sysKey := sysMeta.Key
-	if !exportUsers {
+	if !ExportUsers {
 		return []map[string]interface{}{}, nil
 	}
 	allUsers, err := cli.GetAllUsers(sysKey)
@@ -721,7 +721,7 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 	}
 	// This was overwriting the rootdir set by cb_console
 	// Only set if it has not already been set
-	if ! RootDirIsSet {
+	if !RootDirIsSet {
 		SetRootDir(strings.Replace(sysMeta.Name, " ", "_", -1))
 	}
 

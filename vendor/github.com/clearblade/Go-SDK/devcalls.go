@@ -1,10 +1,11 @@
 package GoSDK
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
-	//	"log"
 )
 
 const (
@@ -341,6 +342,43 @@ func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]inter
 	return nil
 }
 
+func (d *DevClient) GetUserInfo(systemKey, email string) (map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	query := NewQuery()
+	query.EqualTo("email", email)
+	var qry map[string]string
+	query_map := query.serialize()
+	query_bytes, err := json.Marshal(query_map)
+	if err != nil {
+		return nil, err
+	}
+	qry = map[string]string{
+		"query": url.QueryEscape(string(query_bytes)),
+	}
+	resp, err := get(d, d.preamble()+"/user/"+systemKey, qry, creds, nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting user %s: %v", email, resp.Body)
+	}
+	rawData, ok := resp.Body.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("Error parsing response")
+	}
+	if len(rawData) == 0 {
+		return nil, fmt.Errorf("User with email %s does not exist", email)
+	}
+	if len(rawData) != 1 {
+		return nil, fmt.Errorf("Got more than one user for email %s", email)
+	}
+
+	return rawData[0].(map[string]interface{}), nil
+}
+
 //DeleteRole removes a role
 func (d *DevClient) DeleteRole(systemKey, roleId string) error {
 	creds, err := d.credentials()
@@ -451,6 +489,31 @@ func (d *DevClient) AddUserToRoles(systemKey, userId string, roles []string) err
 	return nil
 }
 
+func (d *DevClient) UpdateUserRoles(systemKey, userId string, rolesAdd, rolesRemove []string) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{
+		"user": userId,
+		"changes": map[string]interface{}{
+			"roles": map[string]interface{}{
+				"add":    rolesAdd,
+				"delete": rolesRemove,
+			},
+		},
+	}
+	resp, err := put(d, d.preamble()+"/user/"+systemKey, data, creds, nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error adding roles to a user: %v", resp.Body)
+	}
+
+	return nil
+}
+
 //AddDeviceToRoles assigns a role to a device
 func (d *DevClient) AddDeviceToRoles(systemKey, deviceName string, roles []string) error {
 	creds, err := d.credentials()
@@ -467,6 +530,45 @@ func (d *DevClient) AddDeviceToRoles(systemKey, deviceName string, roles []strin
 	}
 
 	return nil
+}
+
+func (d *DevClient) UpdateDeviceRoles(systemKey, deviceName string, rolesAdd, rolesRemove []string) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{"add": rolesAdd, "delete": rolesRemove}
+	resp, err := put(d, d.preamble()+"/devices/roles/"+systemKey+"/"+deviceName, data, creds, nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating roles for a device: %v", resp.Body)
+	}
+
+	return nil
+}
+
+func (d *DevClient) GetDeviceRoles(systemKey, deviceName string) ([]string, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(d, d.preamble()+"/devices/roles/"+systemKey+"/"+deviceName, nil, creds, nil)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting roles for a user: %v", resp.Body)
+	}
+	rawBody := resp.Body.(map[string]interface{})
+	roles := rawBody["roles"].([]interface{})
+	rval := make([]string, len(roles))
+	for idx, oneBody := range roles {
+		oneMap := oneBody.(map[string]interface{})
+		rval[idx] = oneMap["Name"].(string)
+	}
+	return rval, nil
 }
 
 func (d *DevClient) GetUserRoles(systemKey, userId string) ([]string, error) {
@@ -572,6 +674,35 @@ func (d *DevClient) AddServiceToRole(systemKey, service, roleId string, level in
 	}
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Error updating a role to have a service: %v", resp.Body)
+	}
+	return nil
+}
+
+//AddTopicToRole associates some kind of permission dealing with the specified topic to the role
+func (d *DevClient) AddTopicToRole(systemKey, topic, roleId string, level int) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{
+		"id": roleId,
+		"changes": map[string]interface{}{
+			"topics": []map[string]interface{}{
+				map[string]interface{}{
+					"itemInfo": map[string]interface{}{
+						"name": topic,
+					},
+					"permissions": level,
+				},
+			},
+		},
+	}
+	resp, err := put(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating a role to have a topic: %v", resp.Body)
 	}
 	return nil
 }

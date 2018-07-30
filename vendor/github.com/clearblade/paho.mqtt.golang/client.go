@@ -23,7 +23,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/eclipse/paho.mqtt.golang/packets"
+	"github.com/clearblade/paho.mqtt.golang/packets"
 )
 
 const (
@@ -615,9 +615,9 @@ func (c *client) Unsubscribe(topics ...string) Token {
 	copy(unsub.Topics, topics)
 
 	c.oboundP <- &PacketAndToken{p: unsub, t: token}
-	for _, topic := range topics {
-		c.msgRouter.deleteRoute(topic)
-	}
+	// for _, topic := range topics {
+	// 	c.msgRouter.deleteRoute(topic)
+	// }
 
 	DEBUG.Println(CLI, "exit Unsubscribe")
 	return token

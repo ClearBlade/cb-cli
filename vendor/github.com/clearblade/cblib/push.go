@@ -4,24 +4,25 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/clearblade/cblib/models"
 	"os"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/clearblade/cblib/models"
 
 	cb "github.com/clearblade/Go-SDK"
 )
 
 func init() {
 
-	usage := 
-	`
+	usage :=
+		`
 	Push a ClearBlade asset from local filesystem to ClearBlade Platform
 	`
 
-	example := 
-	`
+	example :=
+		`
 	cb-cli push -service=Service1				# Push a code service up to Platform
 	cb-cli push -collection=Collection1			# Push a code service up to Platform
 	`
@@ -32,7 +33,7 @@ func init() {
 		needsAuth:    true,
 		mustBeInRepo: true,
 		run:          doPush,
-		example:	  example,
+		example:      example,
 	}
 
 	pushCommand.flags.BoolVar(&UserSchema, "userschema", false, "push user table schema")
@@ -1038,7 +1039,7 @@ func updateTimer(systemKey string, timer map[string]interface{}, client *cb.DevC
 			return err
 		} else {
 			if strings.Contains(strings.ToUpper(text), "Y") {
-				if _, err := client.CreateEventHandler(systemKey, timerName, timer); err != nil {
+				if _, err := client.CreateTimer(systemKey, timerName, timer); err != nil {
 					return fmt.Errorf("Could not create timer %s: %s", timerName, err.Error())
 				} else {
 					fmt.Printf("Successfully created new timer %s\n", timerName)
@@ -1508,7 +1509,7 @@ func CreateCollection(systemKey string, collection map[string]interface{}, clien
 	if totalItems == 0 {
 		return nil
 	}
-	if totalItems / DataPageSize > 1000 {
+	if totalItems/DataPageSize > 1000 {
 		fmt.Println("Large dataset detected. Recommend increasing page size. Use flag: -data-page-size=1000")
 	}
 
@@ -1521,11 +1522,11 @@ func CreateCollection(systemKey string, collection map[string]interface{}, clien
 		endOfRange := i + DataPageSize
 
 		// if this is last page, and items on this page are fewer than page size
-		if(totalItems < endOfRange){
+		if totalItems < endOfRange {
 			endOfRange = totalItems
 		}
 
-		itemsInThisPage := allItems[ beginningOfRange : endOfRange ]
+		itemsInThisPage := allItems[beginningOfRange:endOfRange]
 
 		for i, item := range itemsInThisPage {
 			itemsInThisPage[i] = item.(map[string]interface{})

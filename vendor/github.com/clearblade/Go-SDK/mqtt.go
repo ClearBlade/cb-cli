@@ -8,7 +8,7 @@ import (
 	"time"
 
 	mqttTypes "github.com/clearblade/mqtt_parsing"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	mqtt "github.com/clearblade/paho.mqtt.golang"
 )
 
 const (
@@ -18,6 +18,7 @@ const (
 	QOS_AtLeastOnce
 	//Mqtt QOS 2
 	QOS_PreciselyOnce
+	PUBLISH_HTTP_PREAMBLE = "/api/v/1/message/"
 )
 
 //LastWillPacket is a type to represent the Last Will and Testament packet
@@ -114,6 +115,23 @@ func (d *DeviceClient) Publish(topic string, message []byte, qos int) error {
 //Publish publishes a message to the specified mqtt topic
 func (d *DevClient) Publish(topic string, message []byte, qos int) error {
 	return publish(d.MQTTClient, topic, message, qos, d.getMessageId())
+}
+
+func (d *DevClient) PublishHttp(systemKey, topic string, message []byte, qos int) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{
+		"topic": topic,
+		"body":  string(message[:]),
+		"qos":   qos,
+	}
+	_, err = post(d, PUBLISH_HTTP_PREAMBLE+systemKey+"/publish", data, creds, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 //Subscribe subscribes a user to a topic. Incoming messages will be sent over the channel.
