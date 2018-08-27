@@ -15,8 +15,8 @@ const SORT_KEY_COLLECTION_ITEM = "item_id"
 const SORT_KEY_COLLECTION = "Name"
 
 var (
-	RootDirIsSet   bool
-	
+	RootDirIsSet bool
+
 	rootDir        string
 	dataDir        string
 	svcDir         string
@@ -284,7 +284,25 @@ func writeLibraryVersion(name string, data map[string]interface{}) error {
 	return writeEntity(myLibDir, name, data)
 }
 
+func removeBogusColumns(stuff interface{}) interface{} {
+	switch stuff.(type) {
+	case map[string]interface{}:
+		delete(stuff.(map[string]interface{}), "namespace")
+		delete(stuff.(map[string]interface{}), "has_keys")
+	case []interface{}:
+		for _, val := range stuff.([]interface{}) {
+			switch val.(type) {
+			case map[string]interface{}:
+				delete(val.(map[string]interface{}), "namespace")
+				delete(stuff.(map[string]interface{}), "has_keys")
+			}
+		}
+	}
+	return stuff
+}
+
 func writeEntity(dirName, fileName string, stuff interface{}) error {
+	stuff = removeBogusColumns(stuff)
 	marshalled, err := json.MarshalIndent(stuff, "", "    ")
 	if err != nil {
 		return fmt.Errorf("Could not marshall %s: %s", fileName, err.Error())

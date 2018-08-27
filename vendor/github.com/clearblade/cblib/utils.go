@@ -335,3 +335,13 @@ func FoundCBMeta() bool {
 	return false
 
 }
+
+// These keys are generated upon GET, and not representative of the data model
+// If we store to filesystem with these keys, the corresponding PUT/POST for portal fails
+func removeBlacklistedPortalKeys(portal map[string]interface{}) map[string]interface{} {
+	var blacklist=[]string{"permissions","plugins"}
+	for _, key := range blacklist {
+		delete(portal,key)
+	}
+	return portal
+}

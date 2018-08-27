@@ -25,8 +25,8 @@
     ".",
     "models"
   ]
-  revision = "c3e2f6f56cd339d9464da581cf710629027e9ff7"
-  version = "v4.0.4"
+  revision = "799aa7d16985854ed49fe83c80d784e7653e4e39"
+  version = "v4.1.2"
 
 [[projects]]
   name = "github.com/clearblade/go-utils"
@@ -66,6 +66,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a7967a73339aaefda781ccd1ea7d5de9cdec312290f7b4440487e229f81a617f"
+  inputs-digest = "0e2d79f145b7604ea4dcf0d750ccf1e61727543f5519d239d4d5338c0ce5c6c8"
   solver-name = "gps-cdcl"
   solver-version = 1
