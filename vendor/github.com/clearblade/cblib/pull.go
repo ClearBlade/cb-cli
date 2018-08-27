@@ -550,6 +550,7 @@ func pullEdge(systemKey string, edgeName string, client *cb.DevClient) (map[stri
 }
 
 func transformPortal(portal map[string]interface{}) error {
+	portal = removeBlacklistedPortalKeys(portal)
 	if parsed, err := parseIfNeeded(portal["config"]); err != nil {
 		return err
 	} else {
