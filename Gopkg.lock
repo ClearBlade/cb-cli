@@ -58,10 +58,11 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = [
+    "internal/socks",
     "proxy",
     "websocket"
   ]
-  revision = "b3c676e531a6dc479fa1b35ac961c13f5e2b4d2e"
+  revision = "8a410e7b638dca158bf9e766925842f6651ff828"
 
 [solve-meta]
   analyzer-name = "dep"
