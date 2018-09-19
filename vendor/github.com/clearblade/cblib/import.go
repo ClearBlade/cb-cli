@@ -88,7 +88,7 @@ func createRoles(systemInfo map[string]interface{}, client *cb.DevClient) error 
 }
 
 func createUsers(systemInfo map[string]interface{}, users []map[string]interface{}, client *cb.DevClient) error {
-
+	BLACKLISTED_USER_COLUMN := "user_id"
 	//  Create user columns first -- if any
 	sysKey := systemInfo["systemKey"].(string)
 	sysSec := systemInfo["systemSecret"].(string)
@@ -102,6 +102,9 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 	for _, columnIF := range userCols {
 		column := columnIF.(map[string]interface{})
 		columnName := column["ColumnName"].(string)
+		if columnName == BLACKLISTED_USER_COLUMN {
+			continue;
+		}
 		columnType := column["ColumnType"].(string)
 		if err := client.CreateUserColumn(sysKey, columnName, columnType); err != nil {
 			return fmt.Errorf("Could not create user column %s: %s", columnName, err.Error())
