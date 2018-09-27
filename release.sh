@@ -117,18 +117,7 @@ echo "Success"
 echo -n "Building Windows/64... "
 export GOOS=windows
 export GOARCH=amd64
-go build -o cb-cli64.exe > build.out 2>&1
-if [ $? -ne 0 ] ; then
-    echo "build failed"
-    cat build.out
-    exit 1
-fi
-echo "Done"
-
-echo -n "Building Windows/32... "
-export GOOS=windows
-export GOARCH=386
-go build -o cb-cli32.exe > build.out 2>&1
+go build -o cb-cli.exe > build.out 2>&1
 if [ $? -ne 0 ] ; then
     echo "build failed"
     cat build.out
@@ -138,7 +127,7 @@ echo "Done"
 
 echo -n "Zipping Windows binaries... "
 
-zip release_binaries/cb-cli-${version}-Windows.zip cb-cli32.exe cb-cli64.exe README.md LICENSE > zip.out 2>&1
+zip release_binaries/cb-cli-${version}-Windows.zip cb-cli.exe README.md LICENSE > zip.out 2>&1
 if [ $? -ne 0 ] ; then
     echo "zip failed:"
     cat tar.out
