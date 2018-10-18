@@ -1,1 +1,1 @@
-ClearBlade cb-cli 4.2.6
+ClearBlade cb-cli 4.3.0-rc1
