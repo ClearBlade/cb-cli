@@ -317,6 +317,21 @@ func (d *DevClient) DeleteFailedServices(systemKey string, ids []string) ([]map[
 	return services, nil
 }
 
+func (d *DevClient) SetLongRunningServiceParams(systemKey, name string, autoRestart bool, concurrency int) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	params := map[string]interface{}{
+		"execution_timeout": -1,
+		"auto_restart":      autoRestart,
+		"concurrency":       concurrency,
+	}
+
+	_, err = put(d, _CODE_ADMIN_PREAMBLE_V2+"/"+systemKey+"/"+name, params, creds, nil)
+	return err
+}
+
 func genCodeLog(m map[string]interface{}) CodeLog {
 	cl := CodeLog{}
 	if tim, ext := m["service_execution_time"]; ext {

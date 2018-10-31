@@ -1,8 +1,10 @@
 package GoSDK
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 )
 
 const (
@@ -10,6 +12,7 @@ const (
 	_USER_PREAMBLE   = "/api/v/1/user"
 	_USER_V2         = "/api/v/2/user"
 	_USER_ADMIN      = "/admin/user"
+	_USER_SESSION    = "/admin/v/4/session"
 )
 
 func (u *UserClient) credentials() ([][]string, error) {
@@ -157,5 +160,94 @@ func updateUser(c cbClient, userQuery *Query, changes map[string]interface{}) er
 		return fmt.Errorf("Error updating data: %v", resp.Body)
 	}
 
+	return nil
+}
+
+//update the parameters of AutoDelete using the endpoint
+func (d *UserClient) UpdateAutoDelete(systemKey string, preamble string, size_limit int, expiry_messages int, time_interval int, truncateStat int, panic_truncate int, autoDelete int) (bool, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return false, err
+	}
+
+	//qry := query.serialize()
+	body := map[string]interface{}{
+		"sizelimit":      size_limit,
+		"expirytime":     expiry_messages,
+		"timeperiod":     time_interval,
+		"truncate":       truncateStat,
+		"panic_truncate": panic_truncate,
+		"autoDelete":     autoDelete,
+	}
+	systemKey = ""
+
+	resp, err := post(d, preamble+systemKey, body, creds, nil)
+	if err != nil {
+		return false, fmt.Errorf("Error updating data: %s", err)
+	}
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != 200 {
+		return false, fmt.Errorf("Error updating data: %v", resp.Body)
+	}
+
+	return true, nil
+}
+
+func (d *DevClient) GetUserSession(systemKey string, query *Query) ([]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	var qry map[string]string
+	if query != nil {
+		query_map := query.serialize()
+		query_bytes, err := json.Marshal(query_map)
+		if err != nil {
+			return nil, err
+		}
+		qry = map[string]string{
+			"query": url.QueryEscape(string(query_bytes)),
+		}
+	} else {
+		qry = nil
+	}
+	resp, err := get(d, _USER_SESSION+"/"+systemKey+"/user", qry, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting user session data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting user session data: %v", resp.Body)
+	}
+	return resp.Body.([]interface{}), nil
+}
+
+func (d *DevClient) DeleteUserSession(systemKey string, query *Query) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	var qry map[string]string
+	if query != nil {
+		query_map := query.serialize()
+		query_bytes, err := json.Marshal(query_map)
+		if err != nil {
+			return err
+		}
+		qry = map[string]string{
+			"query": url.QueryEscape(string(query_bytes)),
+		}
+	} else {
+		qry = nil
+	}
+	resp, err := delete(d, _USER_SESSION+"/"+systemKey+"/user", qry, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error deleting user session data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error deleting user session data: %v", resp.Body)
+	}
 	return nil
 }

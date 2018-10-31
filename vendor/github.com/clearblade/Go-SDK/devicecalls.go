@@ -1,14 +1,17 @@
 package GoSDK
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 )
 
 const (
 	_DEVICE_HEADER_KEY     = "ClearBlade-DeviceToken"
 	_DEVICES_DEV_PREAMBLE  = "/admin/devices/"
 	_DEVICES_USER_PREAMBLE = "/api/v/2/devices/"
+	_DEVICE_SESSION        = "/admin/v/4/session"
 )
 
 func (d *DevClient) GetDevices(systemKey string, query *Query) ([]interface{}, error) {
@@ -387,6 +390,62 @@ func (d *DevClient) DeleteDeviceColumn(systemKey, columnName string) error {
 		return fmt.Errorf("Error deleting device column: %v", resp.Body)
 	}
 
+	return nil
+}
+
+func (d *DevClient) GetDeviceSession(systemKey string, query *Query) ([]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	var qry map[string]string
+	if query != nil {
+		query_map := query.serialize()
+		query_bytes, err := json.Marshal(query_map)
+		if err != nil {
+			return nil, err
+		}
+		qry = map[string]string{
+			"query": url.QueryEscape(string(query_bytes)),
+		}
+	} else {
+		qry = nil
+	}
+	resp, err := get(d, _DEVICE_SESSION+"/"+systemKey+"/device", qry, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting device session data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting device session data: %v", resp.Body)
+	}
+	return resp.Body.([]interface{}), nil
+}
+
+func (d *DevClient) DeleteDeviceSession(systemKey string, query *Query) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	var qry map[string]string
+	if query != nil {
+		query_map := query.serialize()
+		query_bytes, err := json.Marshal(query_map)
+		if err != nil {
+			return err
+		}
+		qry = map[string]string{
+			"query": url.QueryEscape(string(query_bytes)),
+		}
+	} else {
+		qry = nil
+	}
+	resp, err := delete(d, _DEVICE_SESSION+"/"+systemKey+"/device", qry, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error deleting device session data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error deleting device session data: %v", resp.Body)
+	}
 	return nil
 }
 

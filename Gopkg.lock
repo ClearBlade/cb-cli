@@ -10,8 +10,8 @@
 [[projects]]
   name = "github.com/clearblade/Go-SDK"
   packages = ["."]
-  revision = "36a72f4d78892b9a5d53165626f3f0a536bb03a1"
-  version = "v2.5.1"
+  revision = "beb71d220f8e0617a4ae5aa435bdd16fbeb703e6"
+  version = "v2.5.2"
 
 [[projects]]
   name = "github.com/clearblade/cbjson"
@@ -25,8 +25,8 @@
     ".",
     "models"
   ]
-  revision = "081e52d3f63a317727b5b96348cb600170f4bdb1"
-  version = "4.1.3"
+  revision = "1b7eba37edf7e8ac359f4cbd1699750c939899c1"
+  version = "4.1.4"
 
 [[projects]]
   name = "github.com/clearblade/go-utils"
@@ -67,6 +67,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "ad67728ef17f4f889cddd88f31fb1fbd796e72565f2fc51fcfbba359bb96863a"
+  inputs-digest = "c16bd73050b5abbbd579f67555ef3a3d9da8c6825fe31567b553679c79dfee8b"
   solver-name = "gps-cdcl"
   solver-version = 1

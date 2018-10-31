@@ -907,8 +907,34 @@ func convertPermissionsStructure(in map[string]interface{}) map[string]interface
 				val := getMap(valIF)
 				out["users"] = map[string]interface{}{"permissions": val["Level"]}
 			}
+		case "EdgesList":
+			if valIF != nil {
+				val := getMap(valIF)
+				out["edges"] = map[string]interface{}{"permissions": val["Level"]}
+			}
 
+		case "Triggers":
+			if valIF != nil {
+				val := getMap(valIF)
+				out["triggers"] = map[string]interface{}{"permissions": val["Level"]}
+			}
+		case "Timers":
+			if valIF != nil {
+				val := getMap(valIF)
+				out["timers"] = map[string]interface{}{"permissions": val["Level"]}
+			}
+		case "Deployments":
+			if valIF != nil {
+				val := getMap(valIF)
+				out["deployments"] = map[string]interface{}{"permissions": val["Level"]}
+			}
+		case "Roles":
+			if valIF != nil {
+				val := getMap(valIF)
+				out["roles"] = map[string]interface{}{"permissions": val["Level"]}
+			}
 		default:
+
 		}
 	}
 	return out

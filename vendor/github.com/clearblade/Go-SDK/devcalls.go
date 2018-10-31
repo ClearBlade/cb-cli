@@ -324,7 +324,21 @@ func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]inter
 	if allcollections, ok := permissions["allcollections"]; ok {
 		changes["allcollections"] = allcollections
 	}
-
+	if edgesList, ok := permissions["edges"]; ok {
+		changes["edges"] = edgesList
+	}
+	if triggers, ok := permissions["triggers"]; ok {
+		changes["triggers"] = triggers
+	}
+	if timers, ok := permissions["timers"]; ok {
+		changes["timers"] = timers
+	}
+	if deployments, ok := permissions["deployments"]; ok {
+		changes["deployments"] = deployments
+	}
+	if roles, ok := permissions["roles"]; ok {
+		changes["roles"] = roles
+	}
 	// Just to be safe, this is silly
 	data["changes"] = changes
 	creds, err := d.credentials()
@@ -462,6 +476,39 @@ func (d *DevClient) UpdateUser(systemKey, userId string, info map[string]interfa
 		return fmt.Errorf("Error updating user: %v", resp.Body)
 	}
 	return nil
+}
+
+//update the parameters of AutoDelete using the endpoint
+func (d *DevClient) UpdateAutoDelete(systemKey string, preamble string, size_limit int, expiry_messages int64, time_interval int, truncateStat int, panic_truncate int, autoDelete int) (bool, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return false, err
+	}
+
+	//qry := query.serialize()
+	body := map[string]interface{}{
+		"sizelimit":      size_limit,
+		"expirytime":     expiry_messages,
+		"timeperiod":     time_interval,
+		"truncate":       truncateStat,
+		"panic_truncate": panic_truncate,
+		"autoDelete":     autoDelete,
+	}
+	systemKey = ""
+
+	resp, err := post(d, preamble+systemKey, body, creds, nil)
+	if err != nil {
+		return false, fmt.Errorf("Error updating data: %s", err)
+	}
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode != 200 {
+		return false, fmt.Errorf("Error updating data: %v", resp.Body)
+	}
+
+	return true, nil
 }
 
 //AddUserToRoles assigns a role to a user
