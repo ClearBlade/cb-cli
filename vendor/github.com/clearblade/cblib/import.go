@@ -3,10 +3,11 @@ package cblib
 import (
 	"errors"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
 	"os"
 	"path/filepath"
 	"strings"
+
+	cb "github.com/clearblade/Go-SDK"
 )
 
 var (
@@ -16,15 +17,15 @@ var (
 
 func init() {
 
-	usage := 
-	`
+	usage :=
+		`
 	Import a system from your local filesystem to the ClearBlade Platform
 	`
 
-	example := 
-	`
+	example :=
+		`
 	cb-cli import 									# prompts for credentials
-	cb-cli import -importrows -importusers			# prompts for credentials, includes rows and users
+	cb-cli import -importrows=false -importusers=false			# prompts for credentials, excludes all collection-rows and users
 	`
 	myImportCommand := &SubCommand{
 		name:         "import",
@@ -32,11 +33,12 @@ func init() {
 		needsAuth:    false,
 		mustBeInRepo: true,
 		run:          doImport,
-		example:	  example,
+		example:      example,
 	}
-	// TODO CBCOMM-248 impl importrows
-	myImportCommand.flags.BoolVar(&importRows, "importrows", false, "imports all data into all collections")
-	myImportCommand.flags.BoolVar(&importUsers, "importusers", false, "imports all users into the system")
+	DEFAULT_IMPORT_ROWS := true
+	DEFAULT_IMPORT_USERS := true
+	myImportCommand.flags.BoolVar(&importRows, "importrows", DEFAULT_IMPORT_ROWS, "imports all data into all collections")
+	myImportCommand.flags.BoolVar(&importUsers, "importusers", DEFAULT_IMPORT_USERS, "imports all users into the system")
 	myImportCommand.flags.StringVar(&URL, "url", "https://platform.clearblade.com", "Clearblade Platform URL where system is hosted, ex https://platform.clearblade.com")
 	myImportCommand.flags.StringVar(&Email, "email", "", "Developer email for login to import destination")
 	myImportCommand.flags.StringVar(&Password, "password", "", "Developer password at import destination")
@@ -103,7 +105,7 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		column := columnIF.(map[string]interface{})
 		columnName := column["ColumnName"].(string)
 		if columnName == BLACKLISTED_USER_COLUMN {
-			continue;
+			continue
 		}
 		columnType := column["ColumnType"].(string)
 		if err := client.CreateUserColumn(sysKey, columnName, columnType); err != nil {
