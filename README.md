@@ -4,12 +4,6 @@
 
 The clearblade CLI tool provides easy to use commands for interacting with ClearBlade platform
 
-* You can easily 
-	* export
-	* pull 
-	* push 
-	* import 
-	* diff
 * Services can be written in editor of your choice after exporting
 * Push command allows to reflect these changes on the platform
 * Creating a mirror image of your system is easily achieved with the use of import command
