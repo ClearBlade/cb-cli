@@ -380,6 +380,17 @@ You can combine these options on a single command line just like with diff and p
 
 `cb-cli push -collection=MyCollection`
 
+# Update
+
+TODO
+
+# Create
+
+TODO
+
+# Delete
+
+TODO
 
 # Pull
 
