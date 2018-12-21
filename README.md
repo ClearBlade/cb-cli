@@ -14,6 +14,11 @@ The clearblade CLI tool provides easy to use commands for interacting with Clear
 * Push command allows to reflect these changes on the platform
 * Creating a mirror image of your system is easily achieved with the use of import command
 
+Commands  
+
+- [init](#init)
+
+
 ## File Structure
 
 Before we start making changes and pushing to platform, we need to export the system
