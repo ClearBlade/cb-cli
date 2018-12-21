@@ -14,9 +14,19 @@ The clearblade CLI tool provides easy to use commands for interacting with Clear
 * Push command allows to reflect these changes on the platform
 * Creating a mirror image of your system is easily achieved with the use of import command
 
-Commands  
+# Commands  
 
-- [init](#init)
+ - [export](#export)
+ - [import](#import)
+ - [pull](#pull)
+ - [push](#push)
+ - [target](#target)
+ - [test](#test)
+ - [update](#update)
+ - [diff](#diff)
+ - [init](#init)
+ - [create](#create)
+ - [delete](#delete)
 
 
 ## File Structure
