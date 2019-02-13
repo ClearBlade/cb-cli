@@ -1,9 +1,5 @@
 package GoSDK
 
-import (
-	"fmt"
-)
-
 func (d *DevClient) EnterProvisioningMode() (map[string]interface{}, error) {
 	creds, err := d.credentials()
 	if err != nil {
@@ -30,6 +26,5 @@ func (d *DevClient) EnterRuntimeMode(info map[string]interface{}) (map[string]in
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("DAMN: %+v\n", resp.Body)
 	return resp.Body.(map[string]interface{}), nil
 }

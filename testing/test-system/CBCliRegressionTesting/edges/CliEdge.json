@@ -1,0 +1,13 @@
+{
+    "description": "",
+    "last_seen_version": null,
+    "location": null,
+    "mac_address": null,
+    "name": "CliEdge",
+    "policy_name": null,
+    "resolver_func": null,
+    "sync_edge_tables": null,
+    "system_key": "caa1a4c60beef1bbf697c8cab354",
+    "system_secret": "CAA1A4C60BE0CEBE97A99CAAA377",
+    "token": "99C26o0m211fp9BobKb0X84W0q"
+}

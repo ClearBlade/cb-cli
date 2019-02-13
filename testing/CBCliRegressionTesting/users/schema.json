@@ -1,0 +1,13 @@
+{
+    "columns": [
+        {
+            "ColumnName": "user_id",
+            "ColumnType": "string",
+            "PK": true
+        }
+    ],
+    "permissions": {
+        "Administrator": 15,
+        "CliRole": 15
+    }
+}

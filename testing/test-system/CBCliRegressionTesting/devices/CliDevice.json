@@ -1,0 +1,10 @@
+{
+    "allow_certificate_auth": true,
+    "allow_key_auth": true,
+    "certificate": "",
+    "description": "",
+    "enabled": true,
+    "name": "CliDevice",
+    "state": "",
+    "type": ""
+}

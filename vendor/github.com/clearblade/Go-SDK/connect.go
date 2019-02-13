@@ -79,6 +79,26 @@ func (pg PostgresqlConfig) toMap() map[string]interface{} {
 func (pg PostgresqlConfig) tableName() string { return pg.Tablename }
 func (pg PostgresqlConfig) name() string      { return pg.Tablename }
 
+type MongoDBConfig struct {
+	Name, User, Password, Host, Port, DBName, Tablename string
+}
+
+func (mg MongoDBConfig) toMap() map[string]interface{} {
+	m := make(map[string]interface{})
+	m["user"] = mg.User
+	m["password"] = mg.Password
+	m["address"] = mg.Host
+	m["port"] = mg.Port
+	m["dbname"] = mg.DBName
+	m["tablename"] = mg.Tablename
+	m["dbtype"] = "MongoDB"
+	m["name"] = mg.Name
+	return m
+}
+
+func (mg MongoDBConfig) tableName() string { return mg.Tablename }
+func (mg MongoDBConfig) name() string      { return mg.Tablename }
+
 func GenerateConnectCollection(co map[string]interface{}) (connectCollection, error) {
 	dbtype, ok := co["dbtype"].(string)
 	if !ok {
@@ -107,6 +127,16 @@ func GenerateConnectCollection(co map[string]interface{}) (connectCollection, er
 		}, nil
 	case "postgresql":
 		return &PostgresqlConfig{
+			User:      co["user"].(string),
+			Password:  co["password"].(string),
+			Host:      co["address"].(string),
+			Port:      co["port"].(string),
+			DBName:    co["dbname"].(string),
+			Tablename: co["tablename"].(string),
+			Name:      co["name"].(string),
+		}, nil
+	case "MongoDB":
+		return &MongoDBConfig{
 			User:      co["user"].(string),
 			Password:  co["password"].(string),
 			Host:      co["address"].(string),

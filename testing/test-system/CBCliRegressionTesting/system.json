@@ -1,0 +1,10 @@
+{
+    "auth": true,
+    "deployments": [],
+    "description": "",
+    "messaging_url": "127.0.0.1:1883",
+    "name": "CBCliRegressionTesting",
+    "platform_url": "http://127.0.0.1:9000",
+    "system_key": "caa1a4c60beef1bbf697c8cab354",
+    "system_secret": "CAA1A4C60BE0CEBE97A99CAAA377"
+}

@@ -1,0 +1,64 @@
+{
+    "Description": "",
+    "ID": "d4a8a4c60bd282dca88efaf6bb8f01",
+    "Name": "CliRole",
+    "Permissions": {
+        "AllCollections": {
+            "Level": 0
+        },
+        "AllServices": {
+            "Level": 0
+        },
+        "CodeServices": [
+            {
+                "Level": 1,
+                "Name": "HelloWorld",
+                "SystemKey": "d4a8a4c60b86d3c79bf889b796ff01"
+            }
+        ],
+        "Collections": [
+            {
+                "Columns": [],
+                "ID": "d6a8a4c60b80cab494adc4e0e4a101",
+                "Items": [],
+                "Level": 15,
+                "Name": "TestCollection"
+            }
+        ],
+        "Deployments": {
+            "Level": 15
+        },
+        "DevicesList": {
+            "Level": 15
+        },
+        "EdgesList": {
+            "Level": 15
+        },
+        "MsgHistory": {
+            "Level": 9
+        },
+        "Portals": [
+            {
+                "Level": 5,
+                "Name": "CliPortal",
+                "SystemKey": "d4a8a4c60b86d3c79bf889b796ff01"
+            }
+        ],
+        "Push": {
+            "Level": 0
+        },
+        "Roles": {
+            "Level": 15
+        },
+        "Timers": {
+            "Level": 15
+        },
+        "Topics": [],
+        "Triggers": {
+            "Level": 15
+        },
+        "UsersList": {
+            "Level": 15
+        }
+    }
+}

@@ -1,0 +1,17 @@
+{
+    "app_id": "caa1a4c60beef1bbf697c8cab354",
+    "collection_id": "caa1a4c60bc29bf8c583809aa7ef01",
+    "items": [],
+    "name": "TestCollection",
+    "permissions": {
+        "Administrator": 15,
+        "CliRole": 15
+    },
+    "schema": [
+        {
+            "ColumnName": "item_id",
+            "ColumnType": "uuid",
+            "PK": true
+        }
+    ]
+}

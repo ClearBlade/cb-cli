@@ -163,6 +163,11 @@ func (d *DevClient) NewService(systemKey, name, code string, params []string) er
 	return d.newService(systemKey, name, code, extra)
 }
 
+//NewServiceWithBody creates a new service with a new name, code and any additional info passed in (parameters, execution_timeout, etc.)
+func (d *DevClient) NewServiceWithBody(systemKey, name, code string, extra map[string]interface{}) error {
+	return d.newService(systemKey, name, code, extra)
+}
+
 //EnableLogsForService activates logging for execution of a service
 func (d *DevClient) EnableLogsForService(systemKey, name string) error {
 	creds, err := d.credentials()

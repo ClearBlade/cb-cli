@@ -1,0 +1,13 @@
+{
+    "description": "",
+    "frequency": 86400,
+    "name": "CliTimer",
+"repeats": 10001,
+    "service_name": "HelloWorld",
+    "start_time": "2019-02-13T21:02:29.383Z",
+    "system_key": "d4a8a4c60b86d3c79bf889b796ff01",
+    "system_secret": "D4A8A4C60BEE99DC97FCCA958C8701",
+    "timer_key": "d4a8a4c60b86d3c79bf889b796ff01::CliTimer",
+    "user_id": "a8cab2a60b9abcffe392e9c5e5df01",
+    "user_token": "kfnktrzvQuWhBFxrzav5pzgJ4GOPw__wIeVJ4grJoGdFN0tkTvOK07sNSub56eLgiCATBbRfu6QVI6rfAg=="
+}
