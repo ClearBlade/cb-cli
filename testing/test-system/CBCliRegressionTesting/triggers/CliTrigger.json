@@ -1,0 +1,11 @@
+{
+    "event_definition": {
+        "def_keys": null,
+        "def_module": "User",
+        "def_name": "UserCreated",
+        "visibility": true
+    },
+    "key_value_pairs": {},
+    "name": "CliTrigger",
+    "service_name": "HelloWorld"
+}

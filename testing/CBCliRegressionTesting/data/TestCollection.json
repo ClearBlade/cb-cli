@@ -1,0 +1,17 @@
+{
+    "app_id": "d4a8a4c60b86d3c79bf889b796ff01",
+    "collection_id": "d6a8a4c60b80cab494adc4e0e4a101",
+    "items": [],
+"name": "John Doe",
+    "permissions": {
+        "Administrator": 15,
+        "CliRole": 15
+    },
+    "schema": [
+        {
+            "ColumnName": "item_id",
+            "ColumnType": "uuid",
+            "PK": true
+        }
+    ]
+}

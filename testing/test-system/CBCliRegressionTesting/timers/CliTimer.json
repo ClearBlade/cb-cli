@@ -1,0 +1,8 @@
+{
+    "description": "",
+    "frequency": 86400,
+    "name": "CliTimer",
+    "repeats": 10001,
+    "service_name": "HelloWorld",
+    "start_time": "2019-02-13T21:02:29.383Z"
+}

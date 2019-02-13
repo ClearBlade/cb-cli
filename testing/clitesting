@@ -3,7 +3,7 @@
 # Init the test system
 echo -e "\nINITIALIZING SYSTEM FOR TESTING...\n"
 sleep 2
-cb-cli init -url=https://rtp.clearblade.com -messaging-url= -system-key=94f4ac8b0bb8b2a4b3848e8b81ef01 -email=cli@clearblade.com -password=clearblade
+cb-cli init -url=http://127.0.0.1:9000 -messaging-url= -system-key=d4a8a4c60b86d3c79bf889b796ff01 -email=a@a.com -password=b
 
 # Change directory to init'd system
 cd CBCliRegressionTesting/
@@ -62,6 +62,12 @@ sed -i '' '1,/.*"repeats".*/s/.*"repeats".*/"repeats": 10001,/' timers/CliTimer.
 cb-cli update -timer=CliTimer
 sed -i '' '1,/.*"service_name".*/s/.*"service_name".*/"service_name": "HelloWorld"/' triggers/CliTrigger.json
 cb-cli update -trigger=CliTrigger
+
+
+#Test import
+echo -e "\nTESTING IMPORT SYSTEM...\n"
+sleep 2
+cb-cli import -importrows -importusers
 
 echo -e "\nALL TESTS COMPLETED...PLS CHECK PROMPT FOR ANY FAILURES...\n"
 sleep 2

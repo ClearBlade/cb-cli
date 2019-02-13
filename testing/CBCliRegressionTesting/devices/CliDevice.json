@@ -1,0 +1,14 @@
+{
+    "allow_certificate_auth": true,
+    "allow_key_auth": true,
+    "certificate": "",
+    "created_date": 1550092843,
+    "description": "",
+    "device_key": "d4a8a4c60b86d3c79bf889b796ff01 :: CliDevice",
+    "enabled": true,
+    "last_active_date": 1550092883,
+    "name": "CliDevice",
+    "state": "",
+    "system_key": "d4a8a4c60b86d3c79bf889b796ff01",
+    "type": ""
+}

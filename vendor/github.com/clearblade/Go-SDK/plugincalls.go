@@ -66,5 +66,5 @@ func (d *DevClient) DeletePlugin(systemKey, name string) (map[string]interface{}
 	if err != nil {
 		return nil, err
 	}
-	return resp.Body.(map[string]interface{}), nil
+	return nil, nil
 }

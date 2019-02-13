@@ -2,17 +2,18 @@ package cblib
 
 import (
 	"fmt"
+
 	cb "github.com/clearblade/Go-SDK"
 )
 
 func init() {
-	usage := 
-	`
+	usage :=
+		`
 	Creates a new asset locally
 	`
 
-	example := 
-	`
+	example :=
+		`
 	  cb-cli create -service=MyFancyNewService  # Creates a new code service: ./code/services/MyFancyNewServices/
 	  cb-cli create -collection=FreshCollection # Creates a new code library: ./code/libraries/FreshCollection/
 	`
@@ -22,7 +23,7 @@ func init() {
 		needsAuth:    true,
 		mustBeInRepo: true,
 		run:          doCreate,
-		example:	  example,
+		example:      example,
 	}
 	createCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to create")
 	createCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to create")
@@ -159,7 +160,7 @@ func createOneRole(systemInfo *System_meta, client *cb.DevClient) error {
 	if err != nil {
 		return err
 	}
-	return createRole(systemInfo.Key, role, client)
+	return createRole(systemInfo.Key, role, true, client)
 }
 
 func createOneTrigger(systemInfo *System_meta, client *cb.DevClient) error {

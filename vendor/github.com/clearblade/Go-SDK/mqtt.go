@@ -335,8 +335,6 @@ func getMqttTopicsWithQuery(c cbClient, systemKey string, columns []string, page
 		return nil, err
 	}
 
-	fmt.Printf("RESP IS %+v\n", resp)
-
 	results, err := convertToMapStringInterface(resp.Body.([]interface{}))
 	if err != nil {
 		return nil, err

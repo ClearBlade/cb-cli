@@ -2,62 +2,88 @@
 
 
 [[projects]]
+  digest = "1:1343a2963481a305ca4d051e84bc2abd16b601ee22ed324f8d605de1adb291b0"
   name = "github.com/bgentry/speakeasy"
   packages = ["."]
+  pruneopts = "UT"
   revision = "4aabc24848ce5fd31929f7d1e4ea74d3709c14cd"
   version = "v0.1.0"
 
 [[projects]]
+  digest = "1:7b71ab6d21ff7b43e79166dad99a1b8efbd759586880fc803a9c707afeb3ceb8"
   name = "github.com/clearblade/Go-SDK"
   packages = ["."]
-  revision = "beb71d220f8e0617a4ae5aa435bdd16fbeb703e6"
-  version = "v2.5.2"
+  pruneopts = "UT"
+  revision = "5eb8a1d1bb07099a146b1d9b0a149544cc8ab233"
+  version = "2.5.5"
 
 [[projects]]
+  digest = "1:1a58a688cb20f2c431e1a3a85347559f5ad145b92fd83d144f832906f8675fa1"
   name = "github.com/clearblade/cbjson"
   packages = ["."]
+  pruneopts = "UT"
   revision = "f1a77f1fc21cab36e0b242be1a68bfb48b583e3c"
   version = "v1.0"
 
 [[projects]]
+  digest = "1:ce7ab28302e0c9bdeb6b5311f3e7c4338d6d6ab0de6ff62e377a10bcbe957b1e"
   name = "github.com/clearblade/go-utils"
   packages = [
     ".",
     "errors",
     "errors/constants/category",
-    "uuid"
+    "uuid",
   ]
+  pruneopts = "UT"
   revision = "5817e630577596e2a403e2e5f2dd818619f6e978"
   version = "v1.1.3"
 
 [[projects]]
+  digest = "1:aaca84d372e8eb618bc516bcbf5a7e53ed542712904b73c3265b901771283d04"
   name = "github.com/clearblade/mqtt_parsing"
   packages = ["."]
+  pruneopts = "UT"
   revision = "6ae49eac0961e0ce36375012801d366fe50e472c"
   version = "v1.0"
 
 [[projects]]
+  digest = "1:f642abcb3f37fc917e339e19e17b96eb6f883ad713e637dbc33b9b9f531b56c5"
   name = "github.com/clearblade/paho.mqtt.golang"
   packages = [
     ".",
-    "packets"
+    "packets",
   ]
+  pruneopts = "UT"
   revision = "1947fce26f26f26402d3d555c032331013dee07f"
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:cf31692c14422fa27c83a05292eb5cbe0fb2775972e8f1f8446a71549bd8980b"
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ba968bfe8b2f7e042a574c888954fccecfa385b4"
+  version = "v0.8.1"
+
+[[projects]]
   branch = "master"
+  digest = "1:50095e42352dba1c6ab2cec7e03b24fb4b513123f41d4ab4dbd2627c25fe18b8"
   name = "golang.org/x/net"
   packages = [
     "internal/socks",
     "proxy",
-    "websocket"
+    "websocket",
   ]
+  pruneopts = "UT"
   revision = "c44066c5c816ec500d459a2a324a753f78531ae0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f7261decef8702e518bf8f5cc250d2975abfbae3a530e5697a9da63632660bb9"
+  input-imports = [
+    "github.com/bgentry/speakeasy",
+    "github.com/clearblade/Go-SDK",
+    "github.com/clearblade/cbjson",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
