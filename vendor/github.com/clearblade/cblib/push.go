@@ -1369,7 +1369,7 @@ func getServiceBody(service map[string]interface{}) map[string]interface{} {
 		"parameters":        make([]interface{}, 0),
 		"auto_balance":      false,
 		"auto_restart":      false,
-		"concurrency":       1,
+		"concurrency":       0,
 		"dependencies":      "",
 	}
 	if loggingEnabled, ok := service["logging_enabled"]; ok {
@@ -1390,7 +1390,7 @@ func getServiceBody(service map[string]interface{}) map[string]interface{} {
 	if autoRestart, ok := service["auto_restart"].(bool); ok {
 		ret["auto_restart"] = autoRestart
 	}
-	if concurrency, ok := service["concurrency"].(int); ok {
+	if concurrency, ok := service["concurrency"].(float64); ok {
 		ret["concurrency"] = concurrency
 	}
 	return ret
