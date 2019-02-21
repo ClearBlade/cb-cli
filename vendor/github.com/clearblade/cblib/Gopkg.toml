@@ -31,7 +31,9 @@
 
 [[constraint]]
   name = "github.com/clearblade/Go-SDK"
-  version = "2.5.5"
+  branch = "updateDataByName"
+  source = "github.com/clearblade/Go-SDK"
+  # version = "2.5.5"
 
 [[constraint]]
   name = "github.com/clearblade/cbjson"

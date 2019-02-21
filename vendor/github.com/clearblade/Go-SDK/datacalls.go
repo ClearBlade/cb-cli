@@ -258,6 +258,26 @@ func (d *DevClient) UpdateData(collection_id string, query *Query, changes map[s
 	return err
 }
 
+//UpdateDataByName mutates the values in extant rows, selecting them via a query. If the query is nil, it updates all rows
+//changes should be a map of the names of the columns, and the value you want them updated to
+
+func (u *UserClient) UpdateDataByName(system_key, collection_id string, query *Query, changes map[string]interface{}) error {
+	err := updatedataByName(u, system_key, collection_id, query, changes)
+	return err
+}
+
+func (d *DeviceClient) UpdateDataByName(system_key, collection_id string, query *Query, changes map[string]interface{}) error {
+	err := updatedataByName(d, system_key, collection_id, query, changes)
+	return err
+}
+
+//UpdateDataByName mutates the values in extant rows, selecting them via a query. If the query is nil, it updates all rows
+//changes should be a map of the names of the columns, and the value you want them updated to
+func (d *DevClient) UpdateDataByName(system_key, collection_id string, query *Query, changes map[string]interface{}) error {
+	err := updatedataByName(d, system_key, collection_id, query, changes)
+	return err
+}
+
 func updatedata(c cbClient, collection_id string, query *Query, changes map[string]interface{}) error {
 	qry := query.serialize()
 	body := map[string]interface{}{
@@ -269,6 +289,26 @@ func updatedata(c cbClient, collection_id string, query *Query, changes map[stri
 		return err
 	}
 	resp, err := put(c, _DATA_PREAMBLE+collection_id, body, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error updating data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating data: %v", resp.Body)
+	}
+	return nil
+}
+
+func updatedataByName(c cbClient, system_key, collection_name string, query *Query, changes map[string]interface{}) error {
+	qry := query.serialize()
+	body := map[string]interface{}{
+		"query": qry,
+		"$set":  changes,
+	}
+	creds, err := c.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := put(c, _DATA_NAME_PREAMBLE+system_key+"/"+collection_name, body, creds, nil)
 	if err != nil {
 		return fmt.Errorf("Error updating data: %v", err)
 	}

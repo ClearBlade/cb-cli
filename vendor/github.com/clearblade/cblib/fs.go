@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
-	"github.com/clearblade/cblib/models"
 	"io/ioutil"
 	"os"
+
+	cb "github.com/clearblade/Go-SDK"
+	"github.com/clearblade/cblib/models"
 )
 
 const SORT_KEY_CODE_SERVICE = "Name"
@@ -313,6 +314,15 @@ func writeEntity(dirName, fileName string, stuff interface{}) error {
 	return nil
 }
 
+func whitelistCollection(data map[string]interface{}, items []interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"items":       items,
+		"name":        data["name"],
+		"permissions": data["permissions"],
+		"schema":      data["schema"],
+	}
+}
+
 func writeCollection(collectionName string, data map[string]interface{}) error {
 	if err := os.MkdirAll(dataDir, 0777); err != nil {
 		return err
@@ -333,7 +343,9 @@ func writeCollection(collectionName string, data map[string]interface{}) error {
 		fmt.Println("Note: Not sorting collections by item_id. Add sort-collection=true flag if desired.")
 	}
 
-	return writeEntity(dataDir, collectionName, data)
+	fmtData := whitelistCollection(data, itemArray)
+
+	return writeEntity(dataDir, collectionName, fmtData)
 }
 
 func writeUser(email string, data map[string]interface{}) error {

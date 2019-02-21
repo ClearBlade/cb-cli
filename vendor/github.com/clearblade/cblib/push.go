@@ -1480,15 +1480,15 @@ func createLibrary(systemKey string, library map[string]interface{}, client *cb.
 
 func updateCollection(systemKey string, collection map[string]interface{}, client *cb.DevClient) error {
 	var err error
-	collection_id, ok := collection["collectionID"].(string)
+	collection_name, ok := collection["name"].(string)
 	if !ok {
-		collection_id = collection["collection_id"].(string)
+		return fmt.Errorf("No name in collection json file: %+v\n", collection)
 	}
 	items := collection["items"].([]interface{})
 	for _, row := range items {
 		query := cb.NewQuery()
 		query.EqualTo("item_id", row.(map[string]interface{})["item_id"])
-		if err = client.UpdateData(collection_id, query, row.(map[string]interface{})); err != nil {
+		if err = client.UpdateDataByName(systemKey, collection_name, query, row.(map[string]interface{})); err != nil {
 			break
 		}
 	}

@@ -1,7 +1,9 @@
 [[constraint]]
 
   name = "github.com/clearblade/cblib"
-  version = "4.1.7"
+  branch = "remove-id-from-assets"
+  source = "github.com/clearblade/cblib"
+  # version = "4.1.7"
 
 [prune]
   go-tests = true

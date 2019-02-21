@@ -10,12 +10,13 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:7b71ab6d21ff7b43e79166dad99a1b8efbd759586880fc803a9c707afeb3ceb8"
+  branch = "updateDataByName"
+  digest = "1:cf4952d099ace6b1a09a38e525cd6908883f012079a91993fdc52c31a3e221ce"
   name = "github.com/clearblade/Go-SDK"
   packages = ["."]
   pruneopts = "UT"
-  revision = "5eb8a1d1bb07099a146b1d9b0a149544cc8ab233"
-  version = "2.5.5"
+  revision = "f7b571a4f82be7a96d701453c9cb868d635a7408"
+  source = "github.com/clearblade/Go-SDK"
 
 [[projects]]
   digest = "1:1a58a688cb20f2c431e1a3a85347559f5ad145b92fd83d144f832906f8675fa1"
