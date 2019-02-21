@@ -343,9 +343,7 @@ func writeCollection(collectionName string, data map[string]interface{}) error {
 		fmt.Println("Note: Not sorting collections by item_id. Add sort-collection=true flag if desired.")
 	}
 
-	fmtData := whitelistCollection(data, itemArray)
-
-	return writeEntity(dataDir, collectionName, fmtData)
+	return writeEntity(dataDir, collectionName, whitelistCollection(data, itemArray))
 }
 
 func writeUser(email string, data map[string]interface{}) error {
@@ -448,11 +446,21 @@ func writeDevice(name string, data map[string]interface{}) error {
 	return writeEntity(devicesDir, name, data)
 }
 
+func whitelistPortal(data map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"config":       data["config"],
+		"description":  data["description"],
+		"name":         data["name"],
+		"type":         data["type"],
+		"last_updated": data["last_updated"],
+	}
+}
+
 func writePortal(name string, data map[string]interface{}) error {
 	if err := os.MkdirAll(portalsDir, 0777); err != nil {
 		return err
 	}
-	return writeEntity(portalsDir, name, data)
+	return writeEntity(portalsDir, name, whitelistPortal(data))
 }
 
 func writePlugin(name string, data map[string]interface{}) error {

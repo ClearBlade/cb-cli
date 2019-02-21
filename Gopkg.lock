@@ -27,15 +27,15 @@
   version = "v1.0"
 
 [[projects]]
-  branch = "remove-id-from-assets"
-  digest = "1:0c656f398a789ee305d599d15c5e215411430d6b43fd871e974081d3a61f5306"
+  branch = "remove-system-key-from-portal"
+  digest = "1:bb468c6e2131e17039f36b3b472e32455122d5ea94b445c6ed020ec0a9faba7a"
   name = "github.com/clearblade/cblib"
   packages = [
     ".",
     "models",
   ]
   pruneopts = "UT"
-  revision = "c6773be77deb846245f338937dac21caf810fc5e"
+  revision = "38843a9c2992d67ef6e931248c1fdf6f933b78d0"
   source = "github.com/clearblade/cblib"
 
 [[projects]]
