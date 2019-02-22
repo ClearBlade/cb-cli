@@ -65,7 +65,7 @@ func createSystem(system map[string]interface{}, client *cb.DevClient) (map[stri
 	return system, nil
 }
 
-func createRoles(systemInfo map[string]interface{}, client *cb.DevClient) error {
+func createRoles(systemInfo map[string]interface{}, collectionsInfo []CollectionInfo, client *cb.DevClient) error {
 	sysKey := systemInfo["systemKey"].(string)
 	roles, err := getRoles()
 	if err != nil {
@@ -75,7 +75,7 @@ func createRoles(systemInfo map[string]interface{}, client *cb.DevClient) error 
 		name := role["Name"].(string)
 		fmt.Printf(" %s", name)
 		//if name != "Authenticated" && name != "Administrator" && name != "Anonymous" {
-		if err := createRole(sysKey, role, false, client); err != nil {
+		if err := createRole(sysKey, role, collectionsInfo, client); err != nil {
 			return err
 		}
 		//}
@@ -292,19 +292,23 @@ func createAdaptors(systemInfo map[string]interface{}, client *cb.DevClient) err
 	return nil
 }
 
-func createCollections(systemInfo map[string]interface{}, client *cb.DevClient) error {
+func createCollections(systemInfo map[string]interface{}, client *cb.DevClient) ([]CollectionInfo, error) {
 	sysKey := systemInfo["systemKey"].(string)
 	collections, err := getCollections()
+	rtn := make([]CollectionInfo, 0)
 	if err != nil {
-		return err
+		return rtn, err
 	}
+
 	for _, collection := range collections {
 		fmt.Printf(" %s\n", collection["name"].(string))
-		if err := CreateCollection(sysKey, collection, client); err != nil {
-			return err
+		if info, err := CreateCollection(sysKey, collection, client); err != nil {
+			return rtn, err
+		} else {
+			rtn = append(rtn, info)
 		}
 	}
-	return nil
+	return rtn, nil
 }
 
 // Reads Filesystem and makes HTTP calls to platform to create edges and edge columns
@@ -599,22 +603,23 @@ func devTokenHardAuthorize() (*cb.DevClient, error) {
 func importAllAssets(systemInfo map[string]interface{}, users []map[string]interface{}, cli *cb.DevClient) error {
 
 	// Common set of calls for a complete system import
-	fmt.Printf(" Done.\nImporting roles...")
 
-	err := createRoles(systemInfo, cli)
-	if err != nil {
-		//  Don't return an err, just warn -- so we keep back compat with old systems
-		fmt.Printf("Could not create roles: %s", err.Error())
-	}
 	fmt.Printf(" Done.\nImporting users...")
 	if err := createUsers(systemInfo, users, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create users: %s", err.Error())
 	}
 	fmt.Printf(" Done.\nImporting collections...")
-	if err := createCollections(systemInfo, cli); err != nil {
+	collectionsInfo, err := createCollections(systemInfo, cli)
+	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create collections: %s", err.Error())
+	}
+	fmt.Printf(" Done.\nImporting roles...")
+	err = createRoles(systemInfo, collectionsInfo, cli)
+	if err != nil {
+		//  Don't return an err, just warn -- so we keep back compat with old systems
+		fmt.Printf("Could not create roles: %s", err.Error())
 	}
 	fmt.Printf(" Done.\nImporting code services...")
 	// Additonal modifications to the ImportIt functions

@@ -14,6 +14,7 @@ import (
 const SORT_KEY_CODE_SERVICE = "Name"
 const SORT_KEY_COLLECTION_ITEM = "item_id"
 const SORT_KEY_COLLECTION = "Name"
+const collectionNameToIdFileName = "collectionNameToId.json"
 
 var (
 	RootDirIsSet bool
@@ -103,20 +104,20 @@ func storeCBMeta(info map[string]interface{}) error {
 	return nil
 }
 
+func whitelistSystemDotJSON(jason map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"description":   jason["description"],
+		"messaging_url": jason["messaging_url"],
+		"name":          jason["name"],
+		"platform_url":  jason["platform_url"],
+		"system_key":    jason["system_key"],
+		"system_secret": jason["system_secret"],
+		"auth":          jason["auth"],
+	}
+}
+
 func storeSystemDotJSON(systemDotJSON map[string]interface{}) error {
-	delete(systemDotJSON, "services")
-	delete(systemDotJSON, "libraries")
-	delete(systemDotJSON, "timers")
-	delete(systemDotJSON, "triggers")
-	delete(systemDotJSON, "users")
-	delete(systemDotJSON, "data")
-	delete(systemDotJSON, "roles")
-	delete(systemDotJSON, "edges")
-	delete(systemDotJSON, "devices")
-	delete(systemDotJSON, "portals")
-	delete(systemDotJSON, "plugins")
-	delete(systemDotJSON, "edge_deploy")
-	marshalled, err := json.MarshalIndent(systemDotJSON, "", "    ")
+	marshalled, err := json.MarshalIndent(whitelistSystemDotJSON(systemDotJSON), "", "    ")
 	if err != nil {
 		return fmt.Errorf("Could not marshall system.json: %s", err.Error())
 	}
@@ -323,6 +324,49 @@ func whitelistCollection(data map[string]interface{}, items []interface{}) map[s
 	}
 }
 
+func writeCollectionNameToId(data map[string]interface{}) error {
+	fmt.Println("Storing collection name to ID map")
+	marshalled, err := json.MarshalIndent(data, "", "    ")
+	if err != nil {
+		return fmt.Errorf("Could not marshall %s: %s", collectionNameToIdFileName, err.Error())
+	}
+	if err = ioutil.WriteFile(rootDir+"/"+collectionNameToIdFileName, marshalled, 0666); err != nil {
+		return fmt.Errorf("Could not write to %s: %s", collectionNameToIdFileName, err.Error())
+	}
+	return nil
+}
+
+func updateCollectionNameToId(info CollectionInfo) error {
+	fmt.Println("Updating %s", collectionNameToIdFileName)
+	daMap, err := getCollectionNameToId()
+	if err != nil {
+		fmt.Println("Failed to read %s - creating new file", collectionNameToIdFileName)
+		daMap = make(map[string]interface{})
+	}
+	daMap[info.Name] = info.ID
+	return writeCollectionNameToId(daMap)
+}
+
+func getCollectionNameToId() (map[string]interface{}, error) {
+	return getDict(collectionNameToIdFileName)
+}
+
+func getCollectionNameToIdAsSlice() ([]CollectionInfo, error) {
+	rtn := make([]CollectionInfo, 0)
+	data, err := getCollectionNameToId()
+	if err != nil {
+		return rtn, err
+	}
+
+	for name, id := range data {
+		rtn = append(rtn, CollectionInfo{
+			ID:   id.(string),
+			Name: name,
+		})
+	}
+	return rtn, nil
+}
+
 func writeCollection(collectionName string, data map[string]interface{}) error {
 	if err := os.MkdirAll(dataDir, 0777); err != nil {
 		return err
@@ -378,6 +422,40 @@ func writeDeployment(name string, data map[string]interface{}) error {
 	return writeEntity(deploymentsDir, name, data)
 }
 
+func whitelistServicesPermissions(data []interface{}) []map[string]interface{} {
+	rtn := make([]map[string]interface{}, 0)
+	var mapped map[string]interface{}
+	ok := true
+	for i := 0; i < len(data); i++ {
+		if mapped, ok = data[i].(map[string]interface{}); !ok {
+			continue
+		}
+		rtn = append(rtn, map[string]interface{}{
+			"Level": mapped["Level"],
+			"Name":  mapped["Name"],
+		})
+	}
+	return rtn
+}
+
+func whitelistCollectionsPermissions(data []interface{}) []map[string]interface{} {
+	rtn := make([]map[string]interface{}, 0)
+	var mapped map[string]interface{}
+	ok := true
+	for i := 0; i < len(data); i++ {
+		if mapped, ok = data[i].(map[string]interface{}); !ok {
+			continue
+		}
+		rtn = append(rtn, map[string]interface{}{
+			"Level":   mapped["Level"],
+			"Name":    mapped["Name"],
+			"Columns": mapped["Columns"],
+			"Items":   mapped["Items"],
+		})
+	}
+	return rtn
+}
+
 func writeRole(name string, data map[string]interface{}) error {
 	if err := os.MkdirAll(rolesDir, 0777); err != nil {
 		return err
@@ -394,11 +472,15 @@ func writeRole(name string, data map[string]interface{}) error {
 	codeServices, castSuccess := permissions["CodeServices"].([]interface{})
 	if castSuccess {
 		sortByMapKey(&codeServices, SORT_KEY_CODE_SERVICE)
+		fmtServices := whitelistServicesPermissions(codeServices)
+		permissions["CodeServices"] = fmtServices
 	}
 	// Default value for a role with no collections is null
 	collections, castSuccess := permissions["Collections"].([]interface{})
 	if castSuccess {
 		sortByMapKey(&collections, SORT_KEY_COLLECTION)
+		fmtCollections := whitelistCollectionsPermissions(collections)
+		permissions["Collections"] = fmtCollections
 	}
 
 	return writeEntity(rolesDir, name, data)

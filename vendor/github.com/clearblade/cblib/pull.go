@@ -2,9 +2,10 @@ package cblib
 
 import (
 	"fmt"
+	"strings"
+
 	cb "github.com/clearblade/Go-SDK"
 	"github.com/clearblade/cblib/models"
-	"strings"
 )
 
 var (
@@ -12,15 +13,15 @@ var (
 )
 
 func init() {
-	usage := 
-	`
+	usage :=
+		`
 	Pull a ClearBlade asset from the Platform to your local filesystem. Use -sort-collections for easier version controlling of datasets.
 
 	Note: Collection rows are pulled by default.
 	`
 
-	example := 
-	`
+	example :=
+		`
 	cb-cli pull -service=Service1 									# Pulls Service1 from Platform to local filesystem
 	cb-cli pull -collection=Collection1								# Pulls Collection1 from Platform to local filesystem, with all rows, unsorted
 	cb-cli pull -collection=Collection1 -sort-collections=true		# Pulls Collection1 from Platform to local filesystem, with all rows, sorted
@@ -31,7 +32,7 @@ func init() {
 		needsAuth:    true,
 		mustBeInRepo: true,
 		run:          doPull,
-		example:	  example,
+		example:      example,
 	}
 
 	pullCommand.flags.BoolVar(&AllServices, "all-services", false, "pull all services from system")
@@ -296,23 +297,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 }
 
 func pullRole(systemKey string, roleName string, client *cb.DevClient) (map[string]interface{}, error) {
-	r, err := client.GetAllRoles(systemKey)
-	if err != nil {
-		return nil, err
-	}
-	ok := false
-	var rval map[string]interface{}
-	for _, rIF := range r {
-		r := rIF.(map[string]interface{})
-		if r["Name"].(string) == roleName {
-			ok = true
-			rval = r
-		}
-	}
-	if !ok {
-		return nil, fmt.Errorf("Role %s not found\n", roleName)
-	}
-	return rval, nil
+	return client.GetRole(systemKey, roleName)
 }
 
 func PullAndWriteRoles(systemKey string, client *cb.DevClient) error {

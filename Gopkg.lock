@@ -10,12 +10,12 @@
   version = "v0.1.0"
 
 [[projects]]
-  branch = "updateDataByName"
-  digest = "1:cf4952d099ace6b1a09a38e525cd6908883f012079a91993fdc52c31a3e221ce"
+  branch = "extension-prep"
+  digest = "1:68cc9444e07c1d16b3f344b5d17966105d1e079e9ccbcb92d6906c18c6b6225c"
   name = "github.com/clearblade/Go-SDK"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f7b571a4f82be7a96d701453c9cb868d635a7408"
+  revision = "6e85686cc3b66836392c925dec54279c1a731178"
   source = "github.com/clearblade/Go-SDK"
 
 [[projects]]
@@ -27,15 +27,15 @@
   version = "v1.0"
 
 [[projects]]
-  branch = "remove-system-key-from-portal"
-  digest = "1:bb468c6e2131e17039f36b3b472e32455122d5ea94b445c6ed020ec0a9faba7a"
+  branch = "extension-prep"
+  digest = "1:abf9487a4d0995dbdd714fa7476a0464f798a9aec12bde48efb295269e623868"
   name = "github.com/clearblade/cblib"
   packages = [
     ".",
     "models",
   ]
   pruneopts = "UT"
-  revision = "38843a9c2992d67ef6e931248c1fdf6f933b78d0"
+  revision = "c4d242dd78792a8f746be2e452a66fd00816fd35"
   source = "github.com/clearblade/cblib"
 
 [[projects]]

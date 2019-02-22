@@ -79,13 +79,21 @@ func storeRoles(roles []map[string]interface{}) {
 	systemDotJSON["roles"] = roleList
 }
 
+func makeCollectionNameToIdMap(collections []map[string]interface{}) map[string]interface{} {
+	rtn := make(map[string]interface{})
+	for i := 0; i < len(collections); i++ {
+		rtn[collections[i]["name"].(string)] = collections[i]["collection_id"]
+	}
+	return rtn
+}
+
 func pullCollections(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
 	colls, err := cli.GetAllCollections(sysMeta.Key)
 	if err != nil {
 		return nil, err
 	}
-	rval := make([]map[string]interface{}, len(colls))
-	for i, col := range colls {
+	rval := make([]map[string]interface{}, 0)
+	for _, col := range colls {
 		// Checking if collection is CB collection or different
 		// Exporting only CB collections
 		_, ok := col.(map[string]interface{})["dbtype"]
@@ -97,9 +105,15 @@ func pullCollections(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]inte
 		} else {
 			data := makeCollectionJsonConsistent(r)
 			writeCollection(r["name"].(string), data)
-			rval[i] = data
+			rval = append(rval, data)
 		}
 	}
+	collectionNameToId := makeCollectionNameToIdMap(rval)
+	err = writeCollectionNameToId(collectionNameToId)
+	if err != nil {
+		fmt.Printf("Error - Failed to write collection name to ID map; subsequent operations may fail. %+v\n", err.Error())
+	}
+
 	return rval, nil
 }
 
@@ -130,9 +144,6 @@ func PullCollection(sysMeta *System_meta, co map[string]interface{}, cli *cb.Dev
 	}
 
 	co["schema"] = columnsResp
-	if err = getRolesForCollection(co); err != nil {
-		return nil, err
-	}
 	co["items"] = []interface{}{}
 	if !isConnect && ExportRows {
 		items, err := pullCollectionData(co, cli)
@@ -165,34 +176,6 @@ func pullCollectionAndInfo(sysMeta *System_meta, id string, cli *cb.DevClient) (
 		return nil, err
 	}
 	return PullCollection(sysMeta, colInfo, cli)
-}
-
-func getRolesForCollection(collection map[string]interface{}) error {
-	colName := collection["name"].(string)
-	perms := map[string]interface{}{}
-	for _, role := range rolesInfo {
-		roleName := role["Name"].(string)
-
-		if _, ok := role["Permissions"].(map[string]interface{}); !ok {
-			continue
-		}
-		rolePerms := role["Permissions"].(map[string]interface{})
-
-		if _, ok := rolePerms["Collections"].([]interface{}); !ok {
-			continue
-		}
-		colPerms := rolePerms["Collections"].([]interface{})
-
-		//colPerms := role["Permissions"].(map[string]interface{})["Collections"].([]interface{})
-		for _, colPermIF := range colPerms {
-			colPerm := colPermIF.(map[string]interface{})
-			if colPerm["Name"].(string) == colName {
-				perms[roleName] = colPerm["Level"]
-			}
-		}
-	}
-	collection["permissions"] = perms
-	return nil
 }
 
 func pullCollectionData(collection map[string]interface{}, client *cb.DevClient) ([]interface{}, error) {
@@ -848,10 +831,6 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 	}
 
 	fmt.Printf(" Done.\n")
-
-	if err = storeDeployDotJSON(deployInfo); err != nil {
-		return err
-	}
 
 	if err = storeSystemDotJSON(systemDotJSON); err != nil {
 		return err

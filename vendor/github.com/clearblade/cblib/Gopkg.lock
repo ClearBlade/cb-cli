@@ -10,12 +10,12 @@
   version = "v0.1.0"
 
 [[projects]]
-  branch = "updateDataByName"
-  digest = "1:cf4952d099ace6b1a09a38e525cd6908883f012079a91993fdc52c31a3e221ce"
+  branch = "extension-prep"
+  digest = "1:68cc9444e07c1d16b3f344b5d17966105d1e079e9ccbcb92d6906c18c6b6225c"
   name = "github.com/clearblade/Go-SDK"
   packages = ["."]
   pruneopts = "UT"
-  revision = "f7b571a4f82be7a96d701453c9cb868d635a7408"
+  revision = "c89adb662c0e071eccc75a18fdb32ea99903d3bf"
   source = "github.com/clearblade/Go-SDK"
 
 [[projects]]

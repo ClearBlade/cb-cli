@@ -2,18 +2,19 @@ package cblib
 
 import (
 	"fmt"
+
 	cb "github.com/clearblade/Go-SDK"
 )
 
 func init() {
 
-	usage := 
-	`
+	usage :=
+		`
 	Pushes an update from local filesystem to the platform, synonymous to #push
 	`
 
-	example := 
-	`
+	example :=
+		`
 	cb-cli update -service=Service1					# Pushes a local service up to platform
 	`
 
@@ -23,7 +24,7 @@ func init() {
 		needsAuth:    true,
 		mustBeInRepo: true,
 		run:          doUpdate,
-		example:	  example,
+		example:      example,
 	}
 	updateCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to update")
 	updateCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to update")
@@ -107,7 +108,7 @@ func doUpdate(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if RoleName != "" {
 		didSomething = true
-		if err := pushOneRole(systemInfo, client); err != nil {
+		if err := pushOneRole(systemInfo, RoleName, client); err != nil {
 			return err
 		}
 	}
