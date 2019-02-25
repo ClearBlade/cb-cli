@@ -191,11 +191,6 @@ func diffUserSchema(sys *System_meta, client *cb.DevClient) error {
 	if err != nil {
 		return err
 	}
-	roles, err := pullRoles(sys.Key, client, false)
-	rolesInfo = roles
-	if err != nil {
-		return err
-	}
 	remoteSchema, err := pullUserSchemaInfo(sys.Key, client, false)
 	remoteSchema["columns"] = dumbDownSchemaColumns(remoteSchema["columns"].([]map[string]interface{}))
 	if err != nil {
@@ -213,11 +208,6 @@ type LocalFunc func(name string) (map[string]interface{}, error)
 type RemoteFunc func(key, name string, client *cb.DevClient) (map[string]interface{}, error)
 
 func diffCodeAndMeta(sys *System_meta, client *cb.DevClient, thangType, thangName string, lf LocalFunc, rf RemoteFunc) error {
-	roles, err := pullRoles(sys.Key, client, false)
-	rolesInfo = roles
-	if err != nil {
-		return err
-	}
 	localThang, err := lf(thangName)
 	if err != nil {
 		return err
@@ -229,9 +219,7 @@ func diffCodeAndMeta(sys *System_meta, client *cb.DevClient, thangType, thangNam
 	}
 	lCode := localThang["code"].(string)
 	rCode := remoteThang["code"].(string)
-	if thangType == "service" {
-		cleanService(remoteThang)
-	}
+
 	if lCode[len(lCode)-1] != '\n' {
 		lCode = lCode + "\n"
 	}
@@ -329,11 +317,6 @@ func diffLibrary(sys *System_meta, client *cb.DevClient, libraryName string) err
 }
 
 func diffCollection(sys *System_meta, client *cb.DevClient, collectionName string) error {
-	roles, err := pullRoles(sys.Key, client, false)
-	rolesInfo = roles
-	if err != nil {
-		return err
-	}
 	localCollection, err := getCollection(collectionName)
 	if err != nil {
 		return err

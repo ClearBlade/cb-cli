@@ -274,7 +274,6 @@ func writeServiceVersion(name string, data map[string]interface{}) error {
 	if err := os.MkdirAll(mySvcDir, 0777); err != nil {
 		return err
 	}
-	cleanService(data)
 	return writeEntity(mySvcDir, name, data)
 }
 
@@ -317,10 +316,9 @@ func writeEntity(dirName, fileName string, stuff interface{}) error {
 
 func whitelistCollection(data map[string]interface{}, items []interface{}) map[string]interface{} {
 	return map[string]interface{}{
-		"items":       items,
-		"name":        data["name"],
-		"permissions": data["permissions"],
-		"schema":      data["schema"],
+		"items":  items,
+		"name":   data["name"],
+		"schema": data["schema"],
 	}
 }
 
@@ -337,10 +335,10 @@ func writeCollectionNameToId(data map[string]interface{}) error {
 }
 
 func updateCollectionNameToId(info CollectionInfo) error {
-	fmt.Println("Updating %s", collectionNameToIdFileName)
+	fmt.Printf("Updating %s\n", collectionNameToIdFileName)
 	daMap, err := getCollectionNameToId()
 	if err != nil {
-		fmt.Println("Failed to read %s - creating new file", collectionNameToIdFileName)
+		fmt.Printf("Failed to read %s - creating new file\n", collectionNameToIdFileName)
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Name] = info.ID
@@ -486,6 +484,21 @@ func writeRole(name string, data map[string]interface{}) error {
 	return writeEntity(rolesDir, name, data)
 }
 
+func whitelistService(data map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"auto_balance":      data["auto_balance"],
+		"auto_restart":      data["auto_restart"],
+		"concurrency":       data["concurrency"],
+		"current_version":   data["current_version"],
+		"dependencies":      data["dependencies"],
+		"execution_timeout": data["execution_timeout"],
+		"logging_enabled":   data["logging_enabled"],
+		"name":              data["name"],
+		"params":            data["params"],
+		"run_user":          data["run_user"],
+	}
+}
+
 func writeService(name string, data map[string]interface{}) error {
 	mySvcDir := svcDir + "/" + name
 	if err := os.MkdirAll(mySvcDir, 0777); err != nil {
@@ -496,8 +509,7 @@ func writeService(name string, data map[string]interface{}) error {
 		return err
 	}
 
-	cleanService(data)
-	return writeEntity(mySvcDir, name, data)
+	return writeEntity(mySvcDir, name, whitelistService(data))
 }
 
 func writeLibrary(name string, data map[string]interface{}) error {

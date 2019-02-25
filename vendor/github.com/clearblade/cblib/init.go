@@ -3,29 +3,29 @@ package cblib
 import (
 	//"flag"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
 	"os"
 	"strings"
+
+	cb "github.com/clearblade/Go-SDK"
 )
 
 func init() {
 
-	usage := 
-	`
+	usage :=
+		`
 	Initializes your filesystem with your ClearBlade Platform System.
 
 	A new folder is created with same name as you system in your current directory.
 	`
 
-	example := 
-	`	
+	example :=
+		`	
 	cb-cli init 																					# default init, will prompt for creds	
 	cb-cli init -url=https://platform.clearblade.com -system-key=9b9eea9c0bda8896a3dab5aeec9601     # prompts for email, password
 	`
 
 	systemDotJSON = map[string]interface{}{}
 	svcCode = map[string]interface{}{}
-	rolesInfo = []map[string]interface{}{}
 	myInitCommand := &SubCommand{
 		name:            "init",
 		usage:           usage,
@@ -33,7 +33,7 @@ func init() {
 		mustBeInRepo:    false,
 		mustNotBeInRepo: false,
 		run:             doInit,
-		example:		 example,
+		example:         example,
 	}
 	myInitCommand.flags.StringVar(&URL, "url", "https://platform.clearblade.com", "Clearblade Platform URL where system is hosted, ex https://platform.clearblade.com")
 	myInitCommand.flags.StringVar(&MsgURL, "messaging-url", "platform.clearblade.com", "Clearblade messaging url for target system, ex platform.clearblade.com")
@@ -58,7 +58,7 @@ func reallyInit(cli *cb.DevClient, sysKey string) error {
 	}
 
 	if IsInRepo() {
-			SetRootDir(".")
+		SetRootDir(".")
 	} else {
 		SetRootDir(strings.Replace(sysMeta.Name, " ", "_", -1))
 		if err := setupDirectoryStructure(sysMeta); err != nil {

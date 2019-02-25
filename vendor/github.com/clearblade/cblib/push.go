@@ -815,19 +815,12 @@ func packageRoleForUpdate(roleID string, role map[string]interface{}, collection
 }
 
 func getCollectionIdByName(theNameWeWant string, collectionsInfo []CollectionInfo) (string, error) {
-	found := false
-	id := ""
 	for i := 0; i < len(collectionsInfo); i++ {
 		if collectionsInfo[i].Name == theNameWeWant {
-			found = true
-			id = collectionsInfo[i].ID
-			break
+			return collectionsInfo[i].ID, nil
 		}
 	}
-	if !found {
-		return "", fmt.Errorf("Couldn't find ID for collection name '%s'\n", theNameWeWant)
-	}
-	return id, nil
+	return "", fmt.Errorf("Couldn't find ID for collection name '%s'\n", theNameWeWant)
 }
 
 //
@@ -960,6 +953,16 @@ func convertPermissionsStructure(in map[string]interface{}, collectionsInfo []Co
 			if valIF != nil {
 				val := getMap(valIF)
 				out["roles"] = map[string]interface{}{"permissions": val["Level"]}
+			}
+		case "AllCollections":
+			if valIF != nil {
+				val := getMap(valIF)
+				out["allcollections"] = map[string]interface{}{"permissions": val["Level"]}
+			}
+		case "AllServices":
+			if valIF != nil {
+				val := getMap(valIF)
+				out["allservices"] = map[string]interface{}{"permissions": val["Level"]}
 			}
 		default:
 
@@ -1436,23 +1439,6 @@ func createService(systemKey string, service map[string]interface{}, client *cb.
 	}
 	if enableLogs(service) {
 		if err := client.EnableLogsForService(systemKey, svcName); err != nil {
-			return err
-		}
-	}
-	permissions := service["permissions"].(map[string]interface{})
-	//fetch roles again, find new id of role with same name
-	roleIds := map[string]int{}
-	for _, role := range rolesInfo {
-		for roleName, level := range permissions {
-			if role["Name"] == roleName {
-				id := role["ID"].(string)
-				roleIds[id] = int(level.(float64))
-			}
-		}
-	}
-	// now can iterate over ids instead of permission name
-	for roleId, level := range roleIds {
-		if err := client.AddServiceToRole(systemKey, svcName, roleId, level); err != nil {
 			return err
 		}
 	}

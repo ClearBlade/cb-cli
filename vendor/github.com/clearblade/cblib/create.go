@@ -161,7 +161,7 @@ func createOneUser(systemInfo *System_meta, client *cb.DevClient) error {
 func getCollectionNameToIdAsSliceWithErrorCheck() []CollectionInfo {
 	collInfo, err := getCollectionNameToIdAsSlice()
 	if err != nil {
-		fmt.Println("Warning: Unable to fetch collection info; Collection permissions will not be included: %+v\n", err.Error())
+		fmt.Printf("Warning: Unable to fetch collection info; Collection permissions will not be included: %+v\n", err.Error())
 	}
 	return collInfo
 }

@@ -3,33 +3,33 @@ package cblib
 import (
 	//"flag"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
 	"os"
 	"strings"
+
+	cb "github.com/clearblade/Go-SDK"
 )
 
 func init() {
 
-	usage := 
-	`
+	usage :=
+		`
 	Point your local system to a different remote system within a ClearBlade Platform
 	`
 
-	example := 
-	`
+	example :=
+		`
 	cb-cli target
 	cb-cli target -url=https://platform.clearblade.com -messaging-url=platform.clearblade.com -system-key=8abcd6aa0baadcd8bbe3fabca29301 -email=dev@dev.com -password=pw
 	`
 	systemDotJSON = map[string]interface{}{}
 	svcCode = map[string]interface{}{}
-	rolesInfo = []map[string]interface{}{}
 	myTargetCommand := &SubCommand{
 		name:         "target",
 		usage:        usage,
 		needsAuth:    false,
 		mustBeInRepo: true,
 		run:          doTarget,
-		example:	  example,
+		example:      example,
 	}
 	myTargetCommand.flags.StringVar(&URL, "url", "", "Clearblade platform url for target system")
 	myTargetCommand.flags.StringVar(&MsgURL, "messaging-url", "", "Clearblade messaging url for target system")

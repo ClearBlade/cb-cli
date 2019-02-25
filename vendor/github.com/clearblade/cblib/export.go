@@ -30,7 +30,6 @@ func init() {
 
 	systemDotJSON = map[string]interface{}{}
 	svcCode = map[string]interface{}{}
-	rolesInfo = []map[string]interface{}{}
 	myExportCommand := &SubCommand{
 		name:         "export",
 		usage:        usage,
@@ -69,14 +68,6 @@ func pullRoles(systemKey string, cli *cb.DevClient, writeThem bool) ([]map[strin
 		}
 	}
 	return rval, nil
-}
-
-func storeRoles(roles []map[string]interface{}) {
-	roleList := make([]string, len(roles))
-	for idx, role := range roles {
-		roleList[idx] = role["Name"].(string)
-	}
-	systemDotJSON["roles"] = roleList
 }
 
 func makeCollectionNameToIdMap(collections []map[string]interface{}) map[string]interface{} {
@@ -235,32 +226,6 @@ func pullCollectionData(collection map[string]interface{}, client *cb.DevClient)
 	return allData, nil
 }
 
-func pullUserSchemaInfo(systemKey string, cli *cb.DevClient, writeThem bool) (map[string]interface{}, error) {
-	resp, err := cli.GetUserColumns(systemKey)
-	if err != nil {
-		return nil, err
-	}
-	columns := []map[string]interface{}{}
-	for _, colIF := range resp {
-		col := colIF.(map[string]interface{})
-		if col["ColumnName"] == "email" || col["ColumnName"] == "creation_date" {
-			continue
-		}
-		columns = append(columns, col)
-	}
-	tablePerms := getUserTablePermissions()
-	schema := map[string]interface{}{
-		"columns":     columns,
-		"permissions": tablePerms,
-	}
-	if writeThem {
-		if err := writeUser("schema", schema); err != nil {
-			return nil, err
-		}
-	}
-	return schema, nil
-}
-
 func PullServices(systemKey string, cli *cb.DevClient) ([]map[string]interface{}, error) {
 	svcs, err := cli.GetServiceNames(systemKey)
 	if err != nil {
@@ -384,26 +349,7 @@ func pullSystemMeta(systemKey string, cli *cb.DevClient) (*System_meta, error) {
 	return sysMeta, nil
 }
 
-func getRolesForThing(name, key string) map[string]interface{} {
-	rval := map[string]interface{}{}
-	for _, roleInfo := range rolesInfo {
-		roleName := roleInfo["Name"].(string)
-		perms := roleInfo["Permissions"].(map[string]interface{})
-		svcPerms := perms[key]
-
-		if roleSvcs, ok := svcPerms.([]interface{}); ok {
-			for _, roleEntIF := range roleSvcs {
-				roleEnt := roleEntIF.(map[string]interface{})
-				if roleEnt["Name"].(string) == name {
-					rval[roleName] = roleEnt["Level"]
-				}
-			}
-		}
-	}
-	return rval
-}
-
-func getUserTablePermissions() map[string]interface{} {
+func getUserTablePermissions(rolesInfo []map[string]interface{}) map[string]interface{} {
 	rval := map[string]interface{}{}
 	for _, roleInfo := range rolesInfo {
 		roleName := roleInfo["Name"].(string)
@@ -414,19 +360,6 @@ func getUserTablePermissions() map[string]interface{} {
 		}
 	}
 	return rval
-}
-
-func cleanService(service map[string]interface{}) {
-	service["source"] = service["name"].(string) + ".js"
-	service["permissions"] = getRolesForThing(service["name"].(string), "CodeServices")
-	delete(service, "code")
-}
-
-func cleanServices(services []map[string]interface{}) []map[string]interface{} {
-	for _, service := range services {
-		cleanService(service)
-	}
-	return services
 }
 
 func storeMeta(meta *System_meta) {
@@ -718,12 +651,10 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 	storeMeta(sysMeta)
 	fmt.Printf(" Done.\nExporting Roles...")
 
-	roles, err := pullRoles(sysKey, cli, true)
+	_, err = pullRoles(sysKey, cli, true)
 	if err != nil {
 		return err
 	}
-	rolesInfo = roles
-	storeRoles(rolesInfo)
 
 	fmt.Printf(" Done.\nExporting Services...")
 	services, err := PullServices(sysKey, cli)
@@ -766,11 +697,11 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 		return fmt.Errorf("GetAllUsers FAILED: %s", err.Error())
 	}
 
-	userSchema, err := pullUserSchemaInfo(sysKey, cli, true)
+	fmt.Printf(" Done.\nExporting User table schema...")
+	_, err = pullUserSchemaInfo(sysKey, cli, true)
 	if err != nil {
 		return err
 	}
-	systemDotJSON["users"] = userSchema
 
 	fmt.Printf(" Done.\nExporting Edges...")
 	edges, err := PullEdges(sysMeta, cli)
@@ -790,17 +721,6 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 		return err
 	}
 	systemDotJSON["devices"] = devices
-
-	fmt.Printf(" Done.\nExporting Edge Deploy Information...")
-	deployInfo, err := pullEdgeDeployInfo(sysMeta, cli)
-	if err == nil {
-		systemDotJSON["edge_deploy"] = deployInfo
-		//return err
-	} else {
-		fmt.Printf(" Warning: error pulling edge deploy info: endpoint probably shut off: %s", err)
-		systemDotJSON["edge_deploy"] = []map[string]interface{}{}
-		deployInfo = []map[string]interface{}{}
-	}
 
 	fmt.Printf(" Done.\nExporting Portals...")
 	portals, err := PullPortals(sysMeta, cli)

@@ -78,10 +78,8 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 	}
 
 	// ??? we already have them locally
-	if r, err := pullRoles(systemInfo.Key, client, false); err != nil {
+	if _, err := pullRoles(systemInfo.Key, client, false); err != nil {
 		return err
-	} else {
-		rolesInfo = r
 	}
 
 	didSomething := false
@@ -159,7 +157,6 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 				writeRole(role, r)
 			}
 		}
-		storeRoles(roles)
 	}
 
 	if TriggerName != "" {
@@ -294,6 +291,30 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		fmt.Printf("Nothing to pull -- you must specify something to pull (ie, -service=<svc_name>)\n")
 	}
 	return nil
+}
+
+func pullUserSchemaInfo(systemKey string, cli *cb.DevClient, writeThem bool) (map[string]interface{}, error) {
+	resp, err := cli.GetUserColumns(systemKey)
+	if err != nil {
+		return nil, err
+	}
+	columns := []map[string]interface{}{}
+	for _, colIF := range resp {
+		col := colIF.(map[string]interface{})
+		if col["ColumnName"] == "email" || col["ColumnName"] == "creation_date" {
+			continue
+		}
+		columns = append(columns, col)
+	}
+	schema := map[string]interface{}{
+		"columns": columns,
+	}
+	if writeThem {
+		if err := writeUser("schema", schema); err != nil {
+			return nil, err
+		}
+	}
+	return schema, nil
 }
 
 func pullRole(systemKey string, roleName string, client *cb.DevClient) (map[string]interface{}, error) {

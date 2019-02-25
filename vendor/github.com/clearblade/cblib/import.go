@@ -81,7 +81,7 @@ func createRoles(systemInfo map[string]interface{}, collectionsInfo []Collection
 		//}
 	}
 	// ids were created on import for the new roles, grab those
-	rolesInfo, err = pullRoles(sysKey, client, false) // global :(
+	_, err = pullRoles(sysKey, client, false)
 	if err != nil {
 		return err
 	}
@@ -95,11 +95,9 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 	sysKey := systemInfo["systemKey"].(string)
 	sysSec := systemInfo["systemSecret"].(string)
 	userCols := []interface{}{}
-	userPerms := map[string]interface{}{}
 	userSchema, err := getUserSchema()
 	if err == nil {
 		userCols = userSchema["columns"].([]interface{})
-		userPerms = userSchema["permissions"].(map[string]interface{})
 	}
 	for _, columnIF := range userCols {
 		column := columnIF.(map[string]interface{})
@@ -112,22 +110,6 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 			return fmt.Errorf("Could not create user column %s: %s", columnName, err.Error())
 		}
 	}
-	// same thing as with code services, we need role ID not name
-	roleIds := map[string]int{}
-	for _, role := range rolesInfo {
-		for roleName, level := range userPerms {
-			if role["Name"] == roleName {
-				id := role["ID"].(string)
-				roleIds[id] = int(level.(float64))
-			}
-		}
-	}
-
-	for roleID, level := range roleIds {
-		if err := client.AddGenericPermissionToRole(sysKey, roleID, "users", level); err != nil {
-			return err
-		}
-	}
 
 	if !importUsers {
 		return nil
@@ -138,7 +120,8 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		fmt.Printf(" %s", user["email"].(string))
 		userId, err := createUser(sysKey, sysSec, user, client)
 		if err != nil {
-			return err
+			// don't return an error because we don't want to stop other users from being created
+			fmt.Printf("Error: Failed to create user %s - %s", user["email"].(string), err.Error())
 		}
 
 		if len(userCols) == 0 {
@@ -149,9 +132,11 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		for _, columnIF := range userCols {
 			column := columnIF.(map[string]interface{})
 			columnName := column["ColumnName"].(string)
-			if userVal, ok := user[columnName]; ok {
-				if userVal != nil {
-					updates[columnName] = userVal
+			if columnName != "user_id" {
+				if userVal, ok := user[columnName]; ok {
+					if userVal != nil {
+						updates[columnName] = userVal
+					}
 				}
 			}
 		}
@@ -161,7 +146,8 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		}
 
 		if err := client.UpdateUser(sysKey, userId, updates); err != nil {
-			return fmt.Errorf("Could not update user: %s", err.Error())
+			// don't return an error because we don't want to stop other users from being updated
+			fmt.Printf("Could not update user: %s", err.Error())
 		}
 	}
 
@@ -604,11 +590,6 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 
 	// Common set of calls for a complete system import
 
-	fmt.Printf(" Done.\nImporting users...")
-	if err := createUsers(systemInfo, users, cli); err != nil {
-		//  Don't return an err, just warn -- so we keep back compat with old systems
-		fmt.Printf("Could not create users: %s", err.Error())
-	}
 	fmt.Printf(" Done.\nImporting collections...")
 	collectionsInfo, err := createCollections(systemInfo, cli)
 	if err != nil {
@@ -620,6 +601,11 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create roles: %s", err.Error())
+	}
+	fmt.Printf(" Done.\nImporting users...")
+	if err := createUsers(systemInfo, users, cli); err != nil {
+		//  Don't return an err, just warn -- so we keep back compat with old systems
+		fmt.Printf("Could not create users: %s", err.Error())
 	}
 	fmt.Printf(" Done.\nImporting code services...")
 	// Additonal modifications to the ImportIt functions
@@ -677,11 +663,6 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create plugins: %s", err.Error())
-	}
-	fmt.Printf(" Done.\nImporting edge deploy information...")
-	if err := createAllEdgeDeployment(systemInfo, cli); err != nil {
-		fmt.Printf(" Warning: Error creating edge deploy info. Endpoint probably shut off: %s", err)
-		//return fmt.Errorf("Could not create edge deploy information: %s", err.Error())
 	}
 	fmt.Printf(" Done. \nImporting adaptors...")
 	if err := createAdaptors(systemInfo, cli); err != nil {

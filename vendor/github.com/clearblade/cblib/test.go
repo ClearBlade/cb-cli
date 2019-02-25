@@ -2,31 +2,31 @@ package cblib
 
 import (
 	"fmt"
+
 	cb "github.com/clearblade/Go-SDK"
 	"github.com/clearblade/cbjson"
 )
 
 func init() {
-	usage := 
-	`
+	usage :=
+		`
 	Test an executable ClearBlade Asset, or send an MQTT message.
 	`
 
-	example := 
-	`
+	example :=
+		`
 	cb-cli test -service=MyService
 	cb-cli test -topic=mqtt_topic -payload=dat_payload
 	`
 	systemDotJSON = map[string]interface{}{}
 	svcCode = map[string]interface{}{}
-	rolesInfo = []map[string]interface{}{}
 	myTestCommand := &SubCommand{
 		name:         "test",
 		usage:        usage,
 		run:          doTest,
 		needsAuth:    true,
 		mustBeInRepo: true,
-		example:	  example,
+		example:      example,
 	}
 	myTestCommand.flags.StringVar(&ServiceName, "service", "", "name of service to test")
 	myTestCommand.flags.StringVar(&Params, "params", "", "params to service in json stringified format")
