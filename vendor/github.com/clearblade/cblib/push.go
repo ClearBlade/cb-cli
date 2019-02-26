@@ -802,6 +802,9 @@ func createRole(systemKey string, role map[string]interface{}, collectionsInfo [
 	if err := client.UpdateRole(systemKey, role["Name"].(string), updateRoleBody); err != nil {
 		return err
 	}
+	if err := updateRoleNameToId(RoleInfo{ID: roleID, Name: roleName}); err != nil {
+		fmt.Printf("Error - Failed to update %s - subsequent operations may fail", roleNameToIdFileName)
+	}
 	return nil
 }
 
@@ -1538,6 +1541,11 @@ type CollectionInfo struct {
 	Name string
 }
 
+type RoleInfo struct {
+	ID   string
+	Name string
+}
+
 func CreateCollection(systemKey string, collection map[string]interface{}, client *cb.DevClient) (CollectionInfo, error) {
 	collectionName := collection["name"].(string)
 	isConnect := isConnectCollection(collection)
@@ -1724,7 +1732,10 @@ func createAdaptor(adap *models.Adaptor) error {
 
 func updateRole(systemKey string, role map[string]interface{}, collectionsInfo []CollectionInfo, client *cb.DevClient) error {
 	roleName := role["Name"].(string)
-	roleID := role["ID"].(string)
+	roleID, err := getRoleIdByName(roleName)
+	if err != nil {
+		return fmt.Errorf("Error updating role: %s", err.Error())
+	}
 	updateRoleBody, err := packageRoleForUpdate(roleID, role, collectionsInfo)
 	if err != nil {
 		return err

@@ -57,15 +57,20 @@ func pullRoles(systemKey string, cli *cb.DevClient, writeThem bool) ([]map[strin
 	if err != nil {
 		return nil, err
 	}
-	rval := make([]map[string]interface{}, len(r))
-	for idx, rIF := range r {
+	rval := make([]map[string]interface{}, 0)
+	for _, rIF := range r {
 		thisRole := rIF.(map[string]interface{})
-		rval[idx] = thisRole
+		rval = append(rval, thisRole)
 		if writeThem {
 			if err := writeRole(thisRole["Name"].(string), thisRole); err != nil {
 				return nil, err
 			}
 		}
+	}
+	rMap := makeRoleNameToIdMap(rval)
+	err = writeRoleNameToId(rMap)
+	if err != nil {
+		fmt.Printf("Error - Failed to write collection name to ID map; subsequent operations may fail. %+v\n", err.Error())
 	}
 	return rval, nil
 }
@@ -74,6 +79,14 @@ func makeCollectionNameToIdMap(collections []map[string]interface{}) map[string]
 	rtn := make(map[string]interface{})
 	for i := 0; i < len(collections); i++ {
 		rtn[collections[i]["name"].(string)] = collections[i]["collection_id"]
+	}
+	return rtn
+}
+
+func makeRoleNameToIdMap(roles []map[string]interface{}) map[string]interface{} {
+	rtn := make(map[string]interface{})
+	for i := 0; i < len(roles); i++ {
+		rtn[roles[i]["Name"].(string)] = roles[i]["ID"]
 	}
 	return rtn
 }
@@ -295,12 +308,6 @@ func pullTimers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface
 	timers := []map[string]interface{}{}
 	for _, timer := range theTimers {
 		thisTimer := timer.(map[string]interface{})
-		// lotsa system and user dependent stuff to get rid of...
-		delete(thisTimer, "system_key")
-		delete(thisTimer, "system_secret")
-		delete(thisTimer, "timer_key")
-		delete(thisTimer, "user_id")
-		delete(thisTimer, "user_token")
 		timers = append(timers, thisTimer)
 		err = writeTimer(thisTimer["name"].(string), thisTimer)
 		if err != nil {
@@ -405,22 +412,6 @@ func PullEdges(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{
 	for i := 0; i < len(allEdges); i++ {
 		currentEdge := allEdges[i].(map[string]interface{})
 		fmt.Printf(" %s", currentEdge["name"].(string))
-		delete(currentEdge, "edge_key")
-		delete(currentEdge, "isConnected")
-		delete(currentEdge, "novi_system_key")
-		delete(currentEdge, "broker_auth_port")
-		delete(currentEdge, "broker_port")
-		delete(currentEdge, "broker_tls_port")
-		delete(currentEdge, "broker_ws_auth_port")
-		delete(currentEdge, "broker_ws_port")
-		delete(currentEdge, "broker_wss_port")
-		delete(currentEdge, "communication_style")
-		delete(currentEdge, "first_talked")
-		delete(currentEdge, "last_talked")
-		delete(currentEdge, "local_addr")
-		delete(currentEdge, "local_port")
-		delete(currentEdge, "public_addr")
-		delete(currentEdge, "public_port")
 		err = writeEdge(currentEdge["name"].(string), currentEdge)
 		if err != nil {
 			return nil, err
@@ -495,12 +486,6 @@ func PullDevices(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interfac
 	for i := 0; i < len(allDevices); i++ {
 		currentDevice := allDevices[i].(map[string]interface{})
 		fmt.Printf(" %s", currentDevice["name"].(string))
-		delete(currentDevice, "device_key")
-		delete(currentDevice, "system_key")
-		delete(currentDevice, "last_active_date")
-		delete(currentDevice, "__HostId__")
-		delete(currentDevice, "created_date")
-		delete(currentDevice, "last_active_date")
 		err = writeDevice(currentDevice["name"].(string), currentDevice)
 		if err != nil {
 			return nil, err
