@@ -42,7 +42,14 @@ func init() {
 	pullCommand.flags.BoolVar(&AllPortals, "all-portals", false, "pull all portals from system")
 	pullCommand.flags.BoolVar(&AllPlugins, "all-plugins", false, "pull all plugins from system")
 	pullCommand.flags.BoolVar(&AllAdaptors, "all-adapters", false, "pull all adapters from system")
+	pullCommand.flags.BoolVar(&AllDeployments, "all-deployments", false, "pull all deployments from system")
+	pullCommand.flags.BoolVar(&AllCollections, "all-collections", false, "pull all collections from system")
+	pullCommand.flags.BoolVar(&AllRoles, "all-roles", false, "pull all roles from system")
+	pullCommand.flags.BoolVar(&AllUsers, "all-users", false, "pull all users from system")
 	pullCommand.flags.BoolVar(&UserSchema, "userschema", false, "pull user table schema")
+	pullCommand.flags.BoolVar(&AllAssets, "all", false, "pull all assets from system")
+	pullCommand.flags.BoolVar(&AllTriggers, "all-triggers", false, "pull all triggers from system")
+	pullCommand.flags.BoolVar(&AllTimers, "all-timers", false, "pull all timers from system")
 
 	pullCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to pull")
 	pullCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to pull")
@@ -58,6 +65,7 @@ func init() {
 	pullCommand.flags.StringVar(&PortalName, "portal", "", "Name of portal to pull")
 	pullCommand.flags.StringVar(&PluginName, "plugin", "", "Name of plugin to pull")
 	pullCommand.flags.StringVar(&AdaptorName, "adapter", "", "Name of adapter to pull")
+	pullCommand.flags.StringVar(&DeploymentName, "deployment", "", "Name of deployment to pull")
 
 	AddCommand("pull", pullCommand)
 }
@@ -74,17 +82,17 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 	// since we dont have an endpoint to determine this
 	client, err = checkIfTokenHasExpired(client, systemInfo.Key)
 	if err != nil {
-		return fmt.Errorf("Re-auth failed: %s", err)
+		return fmt.Errorf("Re-auth failed: %s\n", err)
 	}
 
 	// ??? we already have them locally
-	if _, err := pullRoles(systemInfo.Key, client, false); err != nil {
+	if _, err := PullAndWriteRoles(systemInfo.Key, client, false); err != nil {
 		return err
 	}
 
 	didSomething := false
 
-	if AllServices {
+	if AllServices || AllAssets {
 		didSomething = true
 		fmt.Printf("Pulling all services:")
 		if _, err := PullServices(systemInfo.Key, client); err != nil {
@@ -101,7 +109,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllLibraries {
+	if AllLibraries || AllAssets {
 		didSomething = true
 		fmt.Printf("Pulling all libraries:")
 		if _, err := PullLibraries(systemInfo, client); err != nil {
@@ -120,6 +128,15 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if AllCollections || AllAssets {
+		didSomething = true
+		ExportRows = true
+		fmt.Printf("Pulling all collections:")
+		if _, err := pullCollections(systemInfo, client); err != nil {
+			fmt.Printf("Error: Failed to pull all collections - %s\n", err.Error())
+		}
+	}
+
 	if CollectionName != "" {
 		didSomething = true
 		ExportRows = true
@@ -130,6 +147,17 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if AllUsers || AllAssets {
+		didSomething = true
+		fmt.Println("Pulling all users:")
+		if err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client); err != nil {
+			fmt.Printf("Error: Failed to pull all users - %s\n", err.Error())
+		}
+		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
+			fmt.Printf("Error: Failed to pull user schema - %s\n", err.Error())
+		}
+	}
+
 	if User != "" {
 		didSomething = true
 		fmt.Printf("Pulling user %+s\n", User)
@@ -137,10 +165,16 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		if err != nil {
 			return err
 		}
-		if col, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
+		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
 			return err
-		} else {
-			writeUserSchema(col)
+		}
+	}
+
+	if AllRoles || AllAssets {
+		didSomething = true
+		fmt.Println("Pulling all roles:")
+		if _, err := PullAndWriteRoles(systemInfo.Key, client, true); err != nil {
+			fmt.Printf("Error: Failed to pull all roles - %s\n", err.Error())
 		}
 	}
 
@@ -159,12 +193,28 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if AllTriggers || AllAssets {
+		didSomething = true
+		fmt.Println("Pulling all triggers:")
+		if _, err := PullAndWriteTriggers(systemInfo, client); err != nil {
+			fmt.Printf("Error: Failed to pull all triggers - %s\n", err.Error())
+		}
+	}
+
 	if TriggerName != "" {
 		didSomething = true
 		fmt.Printf("Pulling trigger %+s\n", TriggerName)
 		err := PullAndWriteTrigger(systemInfo.Key, TriggerName, client)
 		if err != nil {
 			return err
+		}
+	}
+
+	if AllTimers || AllAssets {
+		didSomething = true
+		fmt.Println("Pulling all timers:")
+		if _, err := PullAndWriteTimers(systemInfo, client); err != nil {
+			fmt.Printf("Error: Failed to pull all timers - %s\n", err.Error())
 		}
 	}
 
@@ -177,7 +227,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllDevices {
+	if AllDevices || AllAssets {
 		didSomething = true
 		fmt.Printf("Pulling all devices:")
 		if _, err := PullDevices(systemInfo, client); err != nil {
@@ -202,7 +252,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllEdges {
+	if AllEdges || AllAssets {
 		didSomething = true
 		fmt.Printf("Pulling all edges:")
 		if _, err := PullEdges(systemInfo, client); err != nil {
@@ -227,7 +277,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllPortals {
+	if AllPortals || AllAssets {
 		didSomething = true
 		fmt.Printf("Pulling all portals:")
 		if _, err := PullPortals(systemInfo, client); err != nil {
@@ -244,7 +294,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllPlugins {
+	if AllPlugins || AllAssets {
 		didSomething = true
 		fmt.Printf("Pulling all plugins:")
 		if _, err := PullPlugins(systemInfo, client); err != nil {
@@ -261,7 +311,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllAdaptors {
+	if AllAdaptors || AllAssets {
 		didSomething = true
 		fmt.Printf("Pulling all adaptors:")
 		if err := backupAndCleanDirectory(adaptorsDir); err != nil {
@@ -269,7 +319,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 		if err := PullAdaptors(systemInfo, client); err != nil {
 			if restoreErr := restoreBackupDirectory(adaptorsDir); restoreErr != nil {
-				fmt.Printf("Failed to restore backup directory; %s", restoreErr.Error())
+				fmt.Printf("Failed to restore backup directory; %s\n", restoreErr.Error())
 			}
 			return err
 		}
@@ -284,6 +334,22 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		fmt.Printf("Pulling adaptor %+s\n", AdaptorName)
 		if err = PullAndWriteAdaptor(systemInfo.Key, AdaptorName, client); err != nil {
 			return err
+		}
+	}
+
+	if AllDeployments || AllAssets {
+		didSomething = true
+		fmt.Printf("Pulling all deployments:")
+		if _, err = pullDeployments(systemInfo, client); err != nil {
+			fmt.Printf("Error - Failed to pull all deployments: %s\n", err.Error())
+		}
+	}
+
+	if DeploymentName != "" {
+		didSomething = true
+		fmt.Printf("Pulling deployment %+s\n", DeploymentName)
+		if _, err = pullAndWriteDeployment(systemInfo, client, DeploymentName); err != nil {
+			fmt.Printf("Error - Failed to pull deployment '%s': %s\n", DeploymentName, err.Error())
 		}
 	}
 
@@ -310,7 +376,7 @@ func pullUserSchemaInfo(systemKey string, cli *cb.DevClient, writeThem bool) (ma
 		"columns": columns,
 	}
 	if writeThem {
-		if err := writeUser("schema", schema); err != nil {
+		if err := writeUserSchema(schema); err != nil {
 			return nil, err
 		}
 	}
@@ -321,20 +387,22 @@ func pullRole(systemKey string, roleName string, client *cb.DevClient) (map[stri
 	return client.GetRole(systemKey, roleName)
 }
 
-func PullAndWriteRoles(systemKey string, client *cb.DevClient) error {
-	r, err := client.GetAllRoles(systemKey)
+func PullAndWriteRoles(systemKey string, cli *cb.DevClient, writeThem bool) ([]map[string]interface{}, error) {
+	r, err := cli.GetAllRoles(systemKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	var roleMap map[string]interface{}
-	for i := 0; i < len(r); i++ {
-		roleMap = r[i].(map[string]interface{})
-		err = writeRole(roleMap["Name"].(string), roleMap)
-		if err != nil {
-			return err
+	rval := make([]map[string]interface{}, 0)
+	for _, rIF := range r {
+		thisRole := rIF.(map[string]interface{})
+		rval = append(rval, thisRole)
+		if writeThem {
+			if err := writeRole(thisRole["Name"].(string), thisRole); err != nil {
+				return nil, err
+			}
 		}
 	}
-	return nil
+	return rval, nil
 }
 
 func PullAndWriteService(systemKey string, serviceName string, client *cb.DevClient) error {
@@ -474,19 +542,23 @@ func PullAndWriteTrigger(systemKey, trigName string, client *cb.DevClient) error
 	return nil
 }
 
-func PullAndWriteTriggers(sysMeta *System_meta, client *cb.DevClient) error {
-	if trigs, err := pullTriggers(sysMeta, client); err != nil {
-		return err
-	} else {
-		for i := 0; i < len(trigs); i++ {
-			stripTriggerFields(trigs[i])
-			err = writeTrigger(trigs[i]["name"].(string), trigs[i])
-			if err != nil {
-				return err
-			}
+func PullAndWriteTriggers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
+	trigs, err := cli.GetEventHandlers(sysMeta.Key)
+	if err != nil {
+		return nil, fmt.Errorf("Could not pull triggers out of system %s: %s", sysMeta.Key, err.Error())
+	}
+	triggers := []map[string]interface{}{}
+	for _, trig := range trigs {
+		thisTrig := trig.(map[string]interface{})
+		delete(thisTrig, "system_key")
+		delete(thisTrig, "system_secret")
+		triggers = append(triggers, thisTrig)
+		err = writeTrigger(thisTrig["name"].(string), thisTrig)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return triggers, nil
 }
 
 func PullAndWriteTimer(systemKey, timerName string, client *cb.DevClient) error {
@@ -501,12 +573,21 @@ func PullAndWriteTimer(systemKey, timerName string, client *cb.DevClient) error 
 	return nil
 }
 
-func PullAndWriteTimers(sysMeta *System_meta, client *cb.DevClient) error {
-	_, err := pullTimers(sysMeta, client)
+func PullAndWriteTimers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
+	theTimers, err := cli.GetTimers(sysMeta.Key)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("Could not pull timers out of system %s: %s", sysMeta.Key, err.Error())
 	}
-	return nil
+	timers := []map[string]interface{}{}
+	for _, timer := range theTimers {
+		thisTimer := timer.(map[string]interface{})
+		timers = append(timers, thisTimer)
+		err = writeTimer(thisTimer["name"].(string), thisTimer)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return timers, nil
 }
 
 func PullAndWritePortal(systemKey, name string, client *cb.DevClient) error {

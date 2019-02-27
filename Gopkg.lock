@@ -28,14 +28,14 @@
 
 [[projects]]
   branch = "extension-prep"
-  digest = "1:1d2f67186b1c4e1d224b66bde58048802beab2ef34a2fc6645bbfb6408c2e7b8"
+  digest = "1:12977dd9dd620ce9043d006572c29eb7069bfc4716e44791ea4ac9f730b58b38"
   name = "github.com/clearblade/cblib"
   packages = [
     ".",
     "models",
   ]
   pruneopts = "UT"
-  revision = "562dee658e3abf0003b2d09131992d058ee5567c"
+  revision = "739829f2e55f4a4030ec8acdda76eddd7bd27161"
   source = "github.com/clearblade/cblib"
 
 [[projects]]

@@ -376,7 +376,7 @@ func diffRole(sys *System_meta, client *cb.DevClient, roleName string) error {
 		return err
 	}
 
-	daRoles, err := pullRoles(sys.Key, client, false)
+	daRoles, err := PullAndWriteRoles(sys.Key, client, false)
 	if err != nil {
 		return err
 	}

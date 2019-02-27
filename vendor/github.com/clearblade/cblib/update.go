@@ -80,7 +80,7 @@ func doUpdate(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if CollectionName != "" {
 		didSomething = true
-		if err := pushOneCollection(systemInfo, client); err != nil {
+		if err := pushOneCollection(systemInfo, client, CollectionName); err != nil {
 			return err
 		}
 	}
@@ -94,7 +94,7 @@ func doUpdate(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if User != "" {
 		didSomething = true
-		if err := pushOneUser(systemInfo, client); err != nil {
+		if err := pushOneUser(systemInfo, client, User); err != nil {
 			return err
 		}
 	}
@@ -115,14 +115,14 @@ func doUpdate(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if TriggerName != "" {
 		didSomething = true
-		if err := pushOneTrigger(systemInfo, client); err != nil {
+		if err := pushOneTrigger(systemInfo, client, TriggerName); err != nil {
 			return err
 		}
 	}
 
 	if TimerName != "" {
 		didSomething = true
-		if err := pushOneTimer(systemInfo, client); err != nil {
+		if err := pushOneTimer(systemInfo, client, TimerName); err != nil {
 			return err
 		}
 	}

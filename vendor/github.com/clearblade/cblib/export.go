@@ -52,29 +52,6 @@ func init() {
 	AddCommand("export", myExportCommand)
 }
 
-func pullRoles(systemKey string, cli *cb.DevClient, writeThem bool) ([]map[string]interface{}, error) {
-	r, err := cli.GetAllRoles(systemKey)
-	if err != nil {
-		return nil, err
-	}
-	rval := make([]map[string]interface{}, 0)
-	for _, rIF := range r {
-		thisRole := rIF.(map[string]interface{})
-		rval = append(rval, thisRole)
-		if writeThem {
-			if err := writeRole(thisRole["Name"].(string), thisRole); err != nil {
-				return nil, err
-			}
-		}
-	}
-	rMap := makeRoleNameToIdMap(rval)
-	err = writeRoleNameToId(rMap)
-	if err != nil {
-		fmt.Printf("Error - Failed to write collection name to ID map; subsequent operations may fail. %+v\n", err.Error())
-	}
-	return rval, nil
-}
-
 func makeCollectionNameToIdMap(collections []map[string]interface{}) map[string]interface{} {
 	rtn := make(map[string]interface{})
 	for i := 0; i < len(collections); i++ {
@@ -111,11 +88,6 @@ func pullCollections(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]inte
 			writeCollection(r["name"].(string), data)
 			rval = append(rval, data)
 		}
-	}
-	collectionNameToId := makeCollectionNameToIdMap(rval)
-	err = writeCollectionNameToId(collectionNameToId)
-	if err != nil {
-		fmt.Printf("Error - Failed to write collection name to ID map; subsequent operations may fail. %+v\n", err.Error())
 	}
 
 	return rval, nil
@@ -281,40 +253,15 @@ func PullLibraries(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interf
 	return libraries, nil
 }
 
-func pullTriggers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
-	trigs, err := cli.GetEventHandlers(sysMeta.Key)
+func pullAndWriteDeployment(sysMeta *System_meta, cli *cb.DevClient, name string) (map[string]interface{}, error) {
+	deploymentDetails, err := cli.GetDeploymentByName(sysMeta.Key, name)
 	if err != nil {
-		return nil, fmt.Errorf("Could not pull triggers out of system %s: %s", sysMeta.Key, err.Error())
+		return nil, err
 	}
-	triggers := []map[string]interface{}{}
-	for _, trig := range trigs {
-		thisTrig := trig.(map[string]interface{})
-		delete(thisTrig, "system_key")
-		delete(thisTrig, "system_secret")
-		triggers = append(triggers, thisTrig)
-		err = writeTrigger(thisTrig["name"].(string), thisTrig)
-		if err != nil {
-			return nil, err
-		}
+	if err = writeDeployment(deploymentDetails["name"].(string), deploymentDetails); err != nil {
+		return nil, err
 	}
-	return triggers, nil
-}
-
-func pullTimers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
-	theTimers, err := cli.GetTimers(sysMeta.Key)
-	if err != nil {
-		return nil, fmt.Errorf("Could not pull timers out of system %s: %s", sysMeta.Key, err.Error())
-	}
-	timers := []map[string]interface{}{}
-	for _, timer := range theTimers {
-		thisTimer := timer.(map[string]interface{})
-		timers = append(timers, thisTimer)
-		err = writeTimer(thisTimer["name"].(string), thisTimer)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return timers, nil
+	return deploymentDetails, nil
 }
 
 func pullDeployments(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
@@ -327,14 +274,11 @@ func pullDeployments(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]inte
 
 		deploymentSummary := deploymentIF.(map[string]interface{})
 		deplName := deploymentSummary["name"].(string)
-		deploymentDetails, err := cli.GetDeploymentByName(sysMeta.Key, deplName)
+		deploymentDetails, err := pullAndWriteDeployment(sysMeta, cli, deplName)
 		if err != nil {
 			return nil, err
 		}
 		deployments = append(deployments, deploymentDetails)
-		if err = writeDeployment(deploymentDetails["name"].(string), deploymentDetails); err != nil {
-			return nil, err
-		}
 	}
 	return deployments, nil
 }
@@ -636,7 +580,7 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 	storeMeta(sysMeta)
 	fmt.Printf(" Done.\nExporting Roles...")
 
-	_, err = pullRoles(sysKey, cli, true)
+	_, err = PullAndWriteRoles(sysKey, cli, true)
 	if err != nil {
 		return err
 	}
@@ -656,14 +600,14 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 	systemDotJSON["libraries"] = libraries
 
 	fmt.Printf(" Done.\nExporting Triggers...")
-	if triggers, err := pullTriggers(sysMeta, cli); err != nil {
+	if triggers, err := PullAndWriteTriggers(sysMeta, cli); err != nil {
 		return err
 	} else {
 		systemDotJSON["triggers"] = triggers
 	}
 
 	fmt.Printf(" Done.\nExporting Timers...")
-	if timers, err := pullTimers(sysMeta, cli); err != nil {
+	if timers, err := PullAndWriteTimers(sysMeta, cli); err != nil {
 		return err
 	} else {
 		systemDotJSON["timers"] = timers
@@ -729,8 +673,7 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 
 	fmt.Printf(" Done.\nExporting Deployments...")
 	if deployments, err := pullDeployments(sysMeta, cli); err != nil {
-		fmt.Printf("Warning: Could not pull deployments. Might not yet be implemented on your version of the platform: %s ", err)
-		//return err
+		fmt.Printf("Warning: Could not pull deployments: %s", err.Error())
 	} else {
 		systemDotJSON["deployments"] = deployments
 	}

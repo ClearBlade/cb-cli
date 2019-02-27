@@ -3,7 +3,6 @@ package cblib
 import (
 	//"fmt"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -11,6 +10,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	cb "github.com/clearblade/Go-SDK"
 )
 
 const BACKUP_DIRECTORY_SUFFIX = "_cb_bak"
@@ -322,7 +323,7 @@ func IsInRepo() bool {
 
 func FoundSystemDotJSON() bool {
 	if _, err := getDict("system.json"); err == nil {
-			return true
+		return true
 	}
 	return false
 
@@ -330,7 +331,7 @@ func FoundSystemDotJSON() bool {
 
 func FoundCBMeta() bool {
 	if _, err := getDict(".cbmeta"); err == nil {
-			return true
+		return true
 	}
 	return false
 
@@ -339,9 +340,53 @@ func FoundCBMeta() bool {
 // These keys are generated upon GET, and not representative of the data model
 // If we store to filesystem with these keys, the corresponding PUT/POST for portal fails
 func removeBlacklistedPortalKeys(portal map[string]interface{}) map[string]interface{} {
-	var blacklist=[]string{"permissions","plugins"}
+	var blacklist = []string{"permissions", "plugins"}
 	for _, key := range blacklist {
-		delete(portal,key)
+		delete(portal, key)
 	}
 	return portal
+}
+
+type ColumnDiff struct {
+	add    []map[string]interface{}
+	remove []map[string]interface{}
+}
+
+func isDefaultColumn(defaultColumns []string, colName string) bool {
+	for i := 0; i < len(defaultColumns); i++ {
+		if defaultColumns[i] == colName {
+			return true
+		}
+	}
+	return false
+}
+
+func findDiff(columnListA []map[string]interface{}, columnListB []map[string]interface{}, defaultColumns []string) []map[string]interface{} {
+	rtn := make([]map[string]interface{}, 0)
+	for i := 0; i < len(columnListA); i++ {
+		colName := columnListA[i]["ColumnName"].(string)
+		// skip the column if it's a default
+		if !isDefaultColumn(defaultColumns, colName) {
+			found := false
+			for j := 0; j < len(columnListB); j++ {
+				if colName == columnListB[j]["ColumnName"].(string) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				rtn = append(rtn, columnListA[i])
+			}
+		}
+
+	}
+	return rtn
+}
+
+func compareColumns(localColumnSchema []map[string]interface{}, backendColumnSchema []map[string]interface{}, defaultColumns []string) ColumnDiff {
+	diff := ColumnDiff{
+		add:    findDiff(localColumnSchema, backendColumnSchema, defaultColumns),
+		remove: findDiff(backendColumnSchema, localColumnSchema, defaultColumns),
+	}
+	return diff
 }

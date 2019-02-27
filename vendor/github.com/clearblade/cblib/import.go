@@ -81,7 +81,7 @@ func createRoles(systemInfo map[string]interface{}, collectionsInfo []Collection
 		//}
 	}
 	// ids were created on import for the new roles, grab those
-	_, err = pullRoles(sysKey, client, false)
+	_, err = PullAndWriteRoles(sysKey, client, true)
 	if err != nil {
 		return err
 	}
@@ -122,6 +122,12 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		if err != nil {
 			// don't return an error because we don't want to stop other users from being created
 			fmt.Printf("Error: Failed to create user %s - %s", user["email"].(string), err.Error())
+		}
+		if err := updateUserEmailToId(UserInfo{
+			UserID: userId,
+			Email:  user["email"].(string),
+		}); err != nil {
+			fmt.Printf("Error - Failed to update user email to ID map; subsequent operations may fail. %+v\n", err.Error())
 		}
 
 		if len(userCols) == 0 {

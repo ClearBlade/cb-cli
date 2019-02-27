@@ -16,6 +16,7 @@ const SORT_KEY_COLLECTION_ITEM = "item_id"
 const SORT_KEY_COLLECTION = "Name"
 const collectionNameToIdFileName = "collectionNameToId.json"
 const roleNameToIdFileName = "roleNameToId.json"
+const userEmailToIdFileName = "userEmailToId.json"
 
 var (
 	RootDirIsSet bool
@@ -324,7 +325,6 @@ func whitelistCollection(data map[string]interface{}, items []interface{}) map[s
 }
 
 func writeCollectionNameToId(data map[string]interface{}) error {
-	fmt.Println("Storing collection name to ID map")
 	return writeIdMap(data, collectionNameToIdFileName)
 }
 
@@ -340,15 +340,13 @@ func writeIdMap(data map[string]interface{}, fileName string) error {
 }
 
 func writeRoleNameToId(data map[string]interface{}) error {
-	fmt.Println("Storing role name to ID map")
 	return writeIdMap(data, roleNameToIdFileName)
 }
 
 func updateRoleNameToId(info RoleInfo) error {
-	fmt.Printf("Updating %s\n", roleNameToIdFileName)
-	daMap, err := getCollectionNameToId()
+	daMap, err := getRoleNameToId()
 	if err != nil {
-		fmt.Printf("Failed to read %s - creating new file\n", roleNameToIdFileName)
+		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", roleNameToIdFileName, err.Error())
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Name] = info.ID
@@ -356,7 +354,7 @@ func updateRoleNameToId(info RoleInfo) error {
 }
 
 func getRoleNameToId() (map[string]interface{}, error) {
-	return getDict(roleNameToIdFileName)
+	return getDict(rootDir + "/" + roleNameToIdFileName)
 }
 
 func getRoleIdByName(name string) (string, error) {
@@ -372,10 +370,9 @@ func getRoleIdByName(name string) (string, error) {
 }
 
 func updateCollectionNameToId(info CollectionInfo) error {
-	fmt.Printf("Updating %s\n", collectionNameToIdFileName)
 	daMap, err := getCollectionNameToId()
 	if err != nil {
-		fmt.Printf("Failed to read %s - creating new file\n", collectionNameToIdFileName)
+		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", collectionNameToIdFileName, err.Error())
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Name] = info.ID
@@ -383,7 +380,7 @@ func updateCollectionNameToId(info CollectionInfo) error {
 }
 
 func getCollectionNameToId() (map[string]interface{}, error) {
-	return getDict(collectionNameToIdFileName)
+	return getDict(rootDir + "/" + collectionNameToIdFileName)
 }
 
 func getCollectionNameToIdAsSlice() ([]CollectionInfo, error) {
@@ -400,6 +397,41 @@ func getCollectionNameToIdAsSlice() ([]CollectionInfo, error) {
 		})
 	}
 	return rtn, nil
+}
+
+type UserInfo struct {
+	Email  string
+	UserID string
+}
+
+func getUserEmailToId() (map[string]interface{}, error) {
+	return getDict(rootDir + "/" + userEmailToIdFileName)
+}
+
+func updateUserEmailToId(info UserInfo) error {
+	daMap, err := getUserEmailToId()
+	if err != nil {
+		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", userEmailToIdFileName, err.Error())
+		daMap = make(map[string]interface{})
+	}
+	daMap[info.Email] = info.UserID
+	return writeUserEmailToId(daMap)
+}
+
+func writeUserEmailToId(data map[string]interface{}) error {
+	return writeIdMap(data, userEmailToIdFileName)
+}
+
+func getUserIdByEmail(email string) (string, error) {
+	m, err := getUserEmailToId()
+	if err != nil {
+		return "", err
+	}
+	if val, ok := m[email].(string); !ok {
+		return "", fmt.Errorf("No user with email '%s'", email)
+	} else {
+		return val, nil
+	}
 }
 
 func writeCollection(collectionName string, data map[string]interface{}) error {
@@ -421,14 +453,30 @@ func writeCollection(collectionName string, data map[string]interface{}) error {
 	} else {
 		fmt.Println("Note: Not sorting collections by item_id. Add sort-collection=true flag if desired.")
 	}
+	err := updateCollectionNameToId(CollectionInfo{
+		ID:   data["collection_id"].(string),
+		Name: data["name"].(string),
+	})
+	if err != nil {
+		fmt.Printf("Error - Failed to write collection name to ID map; subsequent operations may fail. %+v\n", err.Error())
+	}
 
 	return writeEntity(dataDir, collectionName, whitelistCollection(data, itemArray))
+}
+
+func blacklistUser(data map[string]interface{}) {
+	delete(data, "creation_date")
+	delete(data, "user_id")
 }
 
 func writeUser(email string, data map[string]interface{}) error {
 	if err := os.MkdirAll(usersDir, 0777); err != nil {
 		return err
 	}
+	if err := updateUserEmailToId(UserInfo{Email: email, UserID: data["user_id"].(string)}); err != nil {
+		fmt.Printf("Error - Failed to write user email to ID map; subsequent operations may fail. %+v\n", err.Error())
+	}
+	blacklistUser(data)
 	return writeEntity(usersDir, email, data)
 }
 
@@ -575,7 +623,13 @@ func writeRole(name string, data map[string]interface{}) error {
 		fmtPortals := whitelistPortalsPermissions(portals)
 		permissions["Portals"] = fmtPortals
 	}
-
+	err := updateRoleNameToId(RoleInfo{
+		ID:   data["ID"].(string),
+		Name: data["Name"].(string),
+	})
+	if err != nil {
+		fmt.Printf("Error - Failed to write role name to ID map; subsequent operations may fail. %+v\n", err.Error())
+	}
 	return writeEntity(rolesDir, name, whitelistRole(data))
 }
 
@@ -584,7 +638,6 @@ func whitelistService(data map[string]interface{}) map[string]interface{} {
 		"auto_balance":      data["auto_balance"],
 		"auto_restart":      data["auto_restart"],
 		"concurrency":       data["concurrency"],
-		"current_version":   data["current_version"],
 		"dependencies":      data["dependencies"],
 		"execution_timeout": data["execution_timeout"],
 		"logging_enabled":   data["logging_enabled"],
@@ -911,6 +964,19 @@ func getUserSchema() (map[string]interface{}, error) {
 
 func getRole(name string) (map[string]interface{}, error) {
 	return getObject(rolesDir, name+".json")
+}
+
+func getFullUserObject(email string) (map[string]interface{}, error) {
+	u, err := getObject(usersDir, email+".json")
+	if err != nil {
+		return nil, nil
+	}
+	id, err := getUserIdByEmail(email)
+	if err != nil {
+		return nil, nil
+	}
+	u["user_id"] = id
+	return u, nil
 }
 
 func getUser(email string) (map[string]interface{}, error) {

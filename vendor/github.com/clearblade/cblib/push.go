@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"time"
 
@@ -46,6 +45,12 @@ func init() {
 	pushCommand.flags.BoolVar(&AllPortals, "all-portals", false, "push all of the local portals")
 	pushCommand.flags.BoolVar(&AllPlugins, "all-plugins", false, "push all of the local plugins")
 	pushCommand.flags.BoolVar(&AllAdaptors, "all-adapters", false, "push all of the local adapters")
+	pushCommand.flags.BoolVar(&AllCollections, "all-collections", false, "push all of the local collections")
+	pushCommand.flags.BoolVar(&AllRoles, "all-roles", false, "push all of the local roles")
+	pushCommand.flags.BoolVar(&AllUsers, "all-users", false, "push all of the local users")
+	pushCommand.flags.BoolVar(&AllAssets, "all", false, "push all of the local assets")
+	pushCommand.flags.BoolVar(&AllTriggers, "all-triggers", false, "push all of the local triggers")
+	pushCommand.flags.BoolVar(&AllTimers, "all-timers", false, "push all of the local timers")
 
 	pushCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to push")
 	pushCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to push")
@@ -87,81 +92,48 @@ func pushOneService(systemInfo *System_meta, client *cb.DevClient) error {
 	return updateService(systemInfo.Key, service, client)
 }
 
-/* Sample schema defintion - Keys not to be changed. Only the value
-   e.g dont change "columns" or "ColumnName" etc tag names
-{
-    "columns": [
-        {
-            "ColumnName": "name",
-            "ColumnType": "string",
-            "PK": false
-        },
-        {
-            "ColumnName": "city",
-            "ColumnType": "string",
-            "PK": false
-        }
-    ],
-    "permissions": {}
-} */
 func pushUserSchema(systemInfo *System_meta, client *cb.DevClient) error {
 	fmt.Printf("Pushing user schema\n")
-	exists := false
 	userschema, err := getUserSchema()
 	if err != nil {
 		return err
 	}
-	userColumns, _ := client.GetUserColumns(systemInfo.Key)
-	typedSchema, ok := userschema["columns"].([]interface{})
+	userColumns, err := client.GetUserColumns(systemInfo.Key)
+	if err != nil {
+		return fmt.Errorf("Error fetching user columns: %s", err.Error())
+	}
+
+	localSchema, ok := userschema["columns"].([]interface{})
 	if !ok {
 		return fmt.Errorf("Error in schema definition. Pls check the format of schema...\n")
 	}
-	// If user removes column from schema.json,
-	// we check it by comparing length of columns in
-	// json file and no of columns on system.
-	// len(userColumns) - 2 is done because there exist 2 columns
-	// by default : Email & Date
-	// We only want to check for columns added from schema
-	if len(typedSchema) < len(userColumns)-2 {
-		for i := 2; i < len(userColumns); i++ {
-			exists = false
-			existingColumn := userColumns[i].(map[string]interface{})["ColumnName"].(string)
-			for j := 0; j < len(typedSchema); j++ {
-				if typedSchema[j].(map[string]interface{})["ColumnName"].(string) == existingColumn {
-					exists = true
-					break
-				}
-			}
-			if exists == false {
-				if err := client.DeleteUserColumn(systemInfo.Key, existingColumn); err != nil {
-					return fmt.Errorf("User schema could not be updated. Deletion of column(s) failed: %s", err)
-				}
-			}
+
+	diff := getDiffForColumnInterfaces(localSchema, userColumns, DefaultUserColumns)
+	for i := 0; i < len(diff.remove); i++ {
+		if err := client.DeleteUserColumn(systemInfo.Key, diff.remove[i]["ColumnName"].(string)); err != nil {
+			return fmt.Errorf("User schema could not be updated. Deletion of column(s) failed: %s", err)
 		}
-	} else {
-		// Loop to add columns to system
-		// Inner loop is used to check if column exists
-		// If column exists, insertion does not work
-		for i := 0; i < len(typedSchema); i++ {
-			exists = false
-			data := typedSchema[i].(map[string]interface{})
-			columnName := data["ColumnName"].(string)
-			columnType := data["ColumnType"].(string)
-			for j := 2; j < len(userColumns); j++ {
-				existingColumn := userColumns[j].(map[string]interface{})["ColumnName"].(string)
-				if existingColumn == columnName {
-					exists = true
-					break
-				}
-			}
-			if exists == false {
-				if err := client.CreateUserColumn(systemInfo.Key, columnName, columnType); err != nil {
-					return fmt.Errorf("User schema could not be updated: %s", err)
-				}
-			}
+	}
+	for i := 0; i < len(diff.add); i++ {
+		if err := client.CreateUserColumn(systemInfo.Key, diff.add[i]["ColumnName"].(string), diff.add[i]["ColumnType"].(string)); err != nil {
+			return fmt.Errorf("Failed to create user column '%s': %s", diff.add[i]["ColumnName"].(string), err.Error())
 		}
 	}
 	return nil
+}
+
+func getDiffForColumnInterfaces(localSchemaInterfaces, backendSchemaInterfaces []interface{}, defaultColumns []string) ColumnDiff {
+	localSchema := make([]map[string]interface{}, 0)
+	for i := 0; i < len(localSchemaInterfaces); i++ {
+		localSchema = append(localSchema, localSchemaInterfaces[i].(map[string]interface{}))
+	}
+
+	backendSchema := make([]map[string]interface{}, 0)
+	for i := 0; i < len(backendSchemaInterfaces); i++ {
+		backendSchema = append(backendSchema, backendSchemaInterfaces[i].(map[string]interface{}))
+	}
+
+	return compareColumns(localSchema, backendSchema, defaultColumns)
 }
 
 func pushEdgesSchema(systemInfo *System_meta, client *cb.DevClient) error {
@@ -171,59 +143,25 @@ func pushEdgesSchema(systemInfo *System_meta, client *cb.DevClient) error {
 		return err
 	}
 	allEdgeColumns, err := client.GetEdgeColumns(systemInfo.Key)
-
-	// lets get rid of the default edge columns
-	customEdgeColumns := []interface{}{}
-	sort.Strings(DefaultEdgeColumns)
-	for _, col := range allEdgeColumns {
-		colName := col.(map[string]interface{})["ColumnName"].(string)
-		if i := sort.SearchStrings(DefaultEdgeColumns, colName); DefaultEdgeColumns[i] != colName {
-			customEdgeColumns = append(customEdgeColumns, col)
-		}
-	}
 	if err != nil {
 		return err
 	}
-	typedSchema, ok := edgeschema["columns"].([]interface{})
+
+	typedLocalSchema, ok := edgeschema["columns"].([]interface{})
 	if !ok {
-		return fmt.Errorf("Error in schema definition. Please verify the format of the schema.json\n")
+		return fmt.Errorf("Error in schema definition. Please verify the format of the schema.json. Value is: %+v - %+v\n", edgeschema["columns"], ok)
 	}
 
-	//first lets delete any columns that are no longer present in schema.json
-	for _, existCol := range customEdgeColumns {
-		existColName := existCol.(map[string]interface{})["ColumnName"].(string)
-		found := false
-		for _, schemaCol := range typedSchema {
-			schemaColName := schemaCol.(map[string]interface{})["ColumnName"].(string)
-			if existColName == schemaColName {
-				found = true
-			}
-		}
-		if !found {
-			if err := client.DeleteEdgeColumn(systemInfo.Key, existColName); err != nil {
-				return fmt.Errorf("Unable to delete column '%s': %s", existColName, err.Error())
-			}
+	diff := getDiffForColumnInterfaces(typedLocalSchema, allEdgeColumns, DefaultEdgeColumns)
+
+	for i := 0; i < len(diff.remove); i++ {
+		if err := client.DeleteEdgeColumn(systemInfo.Key, diff.remove[i]["ColumnName"].(string)); err != nil {
+			return fmt.Errorf("Unable to delete column '%s': %s", diff.remove[i]["ColumnName"].(string), err.Error())
 		}
 	}
-
-	//now add any new columns
-	for _, schemaCol := range typedSchema {
-		schemaColName := schemaCol.(map[string]interface{})["ColumnName"].(string)
-		found := false
-		for _, existCol := range customEdgeColumns {
-			existColName := existCol.(map[string]interface{})["ColumnName"].(string)
-			if existColName == schemaColName {
-				found = true
-			}
-		}
-		if !found {
-			colType := schemaCol.(map[string]interface{})["ColumnType"].(string)
-			if colType == "" {
-				return fmt.Errorf("You must provide a type for column '%s'", schemaColName)
-			}
-			if err := client.CreateEdgeColumn(systemInfo.Key, schemaColName, colType); err != nil {
-				return fmt.Errorf("Unable to create column '%s': %s", schemaColName, err.Error())
-			}
+	for i := 0; i < len(diff.add); i++ {
+		if err := client.CreateEdgeColumn(systemInfo.Key, diff.add[i]["ColumnName"].(string), diff.add[i]["ColumnType"].(string)); err != nil {
+			return fmt.Errorf("Unable to create column '%s': %s", diff.add[i]["ColumnName"].(string), err.Error())
 		}
 	}
 
@@ -242,59 +180,23 @@ func pushDevicesSchema(systemInfo *System_meta, client *cb.DevClient) error {
 	}
 	DeviceSchemaPresent = true
 	allDeviceColumns, err := client.GetDeviceColumns(systemInfo.Key)
-
-	// lets get rid of the default edge columns
-	customDeviceColumns := []interface{}{}
-	sort.Strings(DefaultDeviceColumns)
-	for _, col := range allDeviceColumns {
-		colName := col.(map[string]interface{})["ColumnName"].(string)
-		if i := sort.SearchStrings(DefaultDeviceColumns, colName); DefaultDeviceColumns[i] != colName {
-			customDeviceColumns = append(customDeviceColumns, col)
-		}
-	}
 	if err != nil {
 		return err
 	}
-	typedSchema, ok := deviceSchema["columns"].([]interface{})
+	localSchema, ok := deviceSchema["columns"].([]interface{})
 	if !ok {
 		return fmt.Errorf("Error in schema definition. Please verify the format of the schema.json\n")
 	}
 
-	//first lets delete any columns that are no longer present in schema.json
-	for _, existCol := range customDeviceColumns {
-		existColName := existCol.(map[string]interface{})["ColumnName"].(string)
-		found := false
-		for _, schemaCol := range typedSchema {
-			schemaColName := schemaCol.(map[string]interface{})["ColumnName"].(string)
-			if existColName == schemaColName {
-				found = true
-			}
-		}
-		if !found {
-			if err := client.DeleteDeviceColumn(systemInfo.Key, existColName); err != nil {
-				return fmt.Errorf("Unable to delete column '%s': %s", existColName, err.Error())
-			}
+	diff := getDiffForColumnInterfaces(localSchema, allDeviceColumns, DefaultDeviceColumns)
+	for i := 0; i < len(diff.remove); i++ {
+		if err := client.DeleteDeviceColumn(systemInfo.Key, diff.remove[i]["ColumnName"].(string)); err != nil {
+			return fmt.Errorf("Unable to delete column '%s': %s", diff.remove[i]["ColumnName"].(string), err.Error())
 		}
 	}
-
-	//now add any new columns
-	for _, schemaCol := range typedSchema {
-		schemaColName := schemaCol.(map[string]interface{})["ColumnName"].(string)
-		found := false
-		for _, existCol := range customDeviceColumns {
-			existColName := existCol.(map[string]interface{})["ColumnName"].(string)
-			if existColName == schemaColName {
-				found = true
-			}
-		}
-		if !found {
-			colType := schemaCol.(map[string]interface{})["ColumnType"].(string)
-			if colType == "" {
-				return fmt.Errorf("You must provide a type for column '%s'", schemaColName)
-			}
-			if err := client.CreateDeviceColumn(systemInfo.Key, schemaColName, colType); err != nil {
-				return fmt.Errorf("Unable to create column '%s': %s", schemaColName, err.Error())
-			}
+	for i := 0; i < len(diff.add); i++ {
+		if err := client.CreateDeviceColumn(systemInfo.Key, diff.add[i]["ColumnName"].(string), diff.add[i]["ColumnType"].(string)); err != nil {
+			return fmt.Errorf("Unable to create column '%s': %s", diff.add[i]["ColumnName"].(string), err.Error())
 		}
 	}
 
@@ -302,9 +204,23 @@ func pushDevicesSchema(systemInfo *System_meta, client *cb.DevClient) error {
 
 }
 
-func pushOneCollection(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing collection %s\n", CollectionName)
-	collection, err := getCollection(CollectionName)
+func pushAllCollections(systemInfo *System_meta, client *cb.DevClient) error {
+	allColls, err := getCollections()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(allColls); i++ {
+		err := pushOneCollection(systemInfo, client, allColls[i]["name"].(string))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func pushOneCollection(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing collection %s\n", name)
+	collection, err := getCollection(name)
 	if err != nil {
 		fmt.Printf("error is %+v\n", err)
 		return err
@@ -330,8 +246,22 @@ func pushOneCollectionById(systemInfo *System_meta, client *cb.DevClient) error 
 	return fmt.Errorf("Collection with collectionID %+s not found.", CollectionId)
 }
 
-func pushOneUser(systemInfo *System_meta, client *cb.DevClient) error {
-	user, err := getUser(User)
+func pushUsers(systemInfo *System_meta, client *cb.DevClient) error {
+	users, err := getUsers()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(users); i++ {
+		// todo: make getUser accept user object so that it doesn't refetch from the FS
+		if err := pushOneUser(systemInfo, client, users[i]["email"].(string)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func pushOneUser(systemInfo *System_meta, client *cb.DevClient, email string) error {
+	user, err := getFullUserObject(email)
 	if err != nil {
 		return err
 	}
@@ -356,6 +286,19 @@ func pushOneUserById(systemInfo *System_meta, client *cb.DevClient) error {
 	return fmt.Errorf("User with user_id %+s not found.", UserId)
 }
 
+func pushRoles(systemInfo *System_meta, client *cb.DevClient) error {
+	allRoles, err := getRoles()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(allRoles); i++ {
+		if err := pushOneRole(systemInfo, allRoles[i]["Name"].(string), client); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func pushOneRole(systemInfo *System_meta, name string, client *cb.DevClient) error {
 	fmt.Printf("Pushing role %s\n", name)
 	role, err := getRole(name)
@@ -365,18 +308,44 @@ func pushOneRole(systemInfo *System_meta, name string, client *cb.DevClient) err
 	return updateRole(systemInfo.Key, role, getCollectionNameToIdAsSliceWithErrorCheck(), client)
 }
 
-func pushOneTrigger(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing trigger %+s\n", TriggerName)
-	trigger, err := getTrigger(TriggerName)
+func pushTriggers(systemInfo *System_meta, client *cb.DevClient) error {
+	allTriggers, err := getTriggers()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(allTriggers); i++ {
+		if err := pushOneTrigger(systemInfo, client, allTriggers[i]["name"].(string)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func pushOneTrigger(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing trigger %+s\n", name)
+	trigger, err := getTrigger(name)
 	if err != nil {
 		return err
 	}
 	return updateTrigger(systemInfo.Key, trigger, client)
 }
 
-func pushOneTimer(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing timer %+s\n", TimerName)
-	timer, err := getTimer(TimerName)
+func pushTimers(systemInfo *System_meta, client *cb.DevClient) error {
+	allTimers, err := getTimers()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(allTimers); i++ {
+		if err := pushOneTimer(systemInfo, client, allTimers[i]["name"].(string)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func pushOneTimer(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing timer %+s\n", name)
+	timer, err := getTimer(name)
 	if err != nil {
 		return err
 	}
@@ -612,35 +581,11 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	didSomething := false
 
-	if AllServices {
+	if AllServices || AllAssets {
 		didSomething = true
 		if err := pushAllServices(systemInfo, client); err != nil {
 			return err
 		}
-	}
-
-	// Adding code to update user schema when pushed to system
-	if UserSchema {
-		didSomething = true
-		if err := pushUserSchema(systemInfo, client); err != nil {
-			return err
-		}
-	}
-
-	if EdgeSchema {
-		didSomething = true
-		if err := pushEdgesSchema(systemInfo, client); err != nil {
-			return err
-		}
-	}
-
-	if DeviceSchema {
-		didSomething = true
-		if err := pushDevicesSchema(systemInfo, client); err != nil {
-			return err
-		}
-	} else {
-		DeviceSchemaPresent = false
 	}
 
 	if ServiceName != "" {
@@ -650,7 +595,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllLibraries {
+	if AllLibraries || AllAssets {
 		didSomething = true
 		if err := pushAllLibraries(systemInfo, client); err != nil {
 			return err
@@ -664,16 +609,44 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if AllCollections || AllAssets {
+		didSomething = true
+		if err := pushAllCollections(systemInfo, client); err != nil {
+			return err
+		}
+	}
+
 	if CollectionName != "" {
 		didSomething = true
-		if err := pushOneCollection(systemInfo, client); err != nil {
+		if err := pushOneCollection(systemInfo, client, CollectionName); err != nil {
+			return err
+		}
+	}
+
+	if UserSchema || AllAssets {
+		didSomething = true
+		if err := pushUserSchema(systemInfo, client); err != nil {
+			return err
+		}
+	}
+
+	if AllUsers || AllAssets {
+		didSomething = true
+		if err := pushUsers(systemInfo, client); err != nil {
 			return err
 		}
 	}
 
 	if User != "" {
 		didSomething = true
-		if err := pushOneUser(systemInfo, client); err != nil {
+		if err := pushOneUser(systemInfo, client, User); err != nil {
+			return err
+		}
+	}
+
+	if AllRoles || AllAssets {
+		didSomething = true
+		if err := pushRoles(systemInfo, client); err != nil {
 			return err
 		}
 	}
@@ -685,21 +658,44 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if AllTriggers || AllAssets {
+		didSomething = true
+		if err := pushTriggers(systemInfo, client); err != nil {
+			return err
+		}
+	}
+
 	if TriggerName != "" {
 		didSomething = true
-		if err := pushOneTrigger(systemInfo, client); err != nil {
+		if err := pushOneTrigger(systemInfo, client, TriggerName); err != nil {
+			return err
+		}
+	}
+
+	if AllTimers || AllAssets {
+		didSomething = true
+		if err := pushTimers(systemInfo, client); err != nil {
 			return err
 		}
 	}
 
 	if TimerName != "" {
 		didSomething = true
-		if err := pushOneTimer(systemInfo, client); err != nil {
+		if err := pushOneTimer(systemInfo, client, TimerName); err != nil {
 			return err
 		}
 	}
 
-	if AllDevices {
+	if DeviceSchema || AllAssets {
+		didSomething = true
+		if err := pushDevicesSchema(systemInfo, client); err != nil {
+			return err
+		}
+	} else {
+		DeviceSchemaPresent = false
+	}
+
+	if AllDevices || AllAssets {
 		didSomething = true
 		if err := pushAllDevices(systemInfo, client); err != nil {
 			return err
@@ -713,7 +709,14 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllEdges {
+	if EdgeSchema || AllAssets {
+		didSomething = true
+		if err := pushEdgesSchema(systemInfo, client); err != nil {
+			return err
+		}
+	}
+
+	if AllEdges || AllAssets {
 		didSomething = true
 		if err := pushAllEdges(systemInfo, client); err != nil {
 			return err
@@ -727,7 +730,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllPortals {
+	if AllPortals || AllAssets {
 		didSomething = true
 		if err := pushAllPortals(systemInfo, client); err != nil {
 			return err
@@ -741,7 +744,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllPlugins {
+	if AllPlugins || AllAssets {
 		didSomething = true
 		if err := pushAllPlugins(systemInfo, client); err != nil {
 			return err
@@ -755,7 +758,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if AllAdaptors {
+	if AllAdaptors || AllAssets {
 		didSomething = true
 		if err := pushAllAdaptors(systemInfo, client); err != nil {
 			return err
@@ -1010,6 +1013,9 @@ func updateUser(systemKey string, user map[string]interface{}, client *cb.DevCli
 	if id, ok := user["user_id"].(string); !ok {
 		return fmt.Errorf("Missing user id %+v", user)
 	} else {
+		// todo: implement modifying user roles with CLI. need to send backend the correct format of -
+		// {roles: {add: ["roleName"], delete: ["roleName2"]}}
+		delete(user, "roles")
 		return client.UpdateUser(systemKey, id, user)
 	}
 }
@@ -1025,6 +1031,12 @@ func createUser(systemKey string, systemSecret string, user map[string]interface
 		return "", fmt.Errorf("Could not create user %s: %s", email, err.Error())
 	}
 	userId := newUser["user_id"].(string)
+	if err := updateUserEmailToId(UserInfo{
+		UserID: userId,
+		Email:  email,
+	}); err != nil {
+		fmt.Printf("Error - Failed to update user email to ID map; subsequent operations may fail. %+v\n", err.Error())
+	}
 	niceRoles := mungeRoles(user["roles"].([]interface{}))
 	if len(niceRoles) > 0 {
 		if err := client.AddUserToRoles(systemKey, userId, niceRoles); err != nil {
@@ -1520,13 +1532,10 @@ func updateCollection(systemKey string, collection map[string]interface{}, clien
 		} else {
 			if strings.Contains(strings.ToUpper(text), "Y") {
 				collection["name"] = collName
-				if info, err := CreateCollection(systemKey, collection, client); err != nil {
+				if _, err := CreateCollection(systemKey, collection, client); err != nil {
 					return fmt.Errorf("Could not create collection %s: %s", collName, err.Error())
 				} else {
 					fmt.Printf("Successfully created new collection %s\n", collName)
-					if err := updateCollectionNameToId(info); err != nil {
-						fmt.Printf("Error - Failed to update %s - subsequent operations may fail", collectionNameToIdFileName)
-					}
 				}
 			} else {
 				fmt.Printf("Collection will not be created.\n")
@@ -1573,6 +1582,10 @@ func CreateCollection(systemKey string, collection map[string]interface{}, clien
 	}
 	if isConnect {
 		return myInfo, nil
+	}
+
+	if err := updateCollectionNameToId(myInfo); err != nil {
+		fmt.Printf("Error - Failed to update %s - subsequent operations may fail", collectionNameToIdFileName)
 	}
 
 	columns := collection["schema"].([]interface{})
