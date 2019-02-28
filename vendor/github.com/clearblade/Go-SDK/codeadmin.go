@@ -131,6 +131,11 @@ func (d *DevClient) UpdateServiceWithLibraries(systemKey, name, code, deps strin
 	return d.updateService(systemKey, name, code, extra)
 }
 
+//UpdateServiceWithBody updates a service code and any additional info passed in (parameters, execution_timeout, etc.)
+func (d *DevClient) UpdateServiceWithBody(systemKey, name, code string, extra map[string]interface{}) (error, map[string]interface{}) {
+	return d.updateService(systemKey, name, code, extra)
+}
+
 func (d *DevClient) updateService(sysKey, name, code string, extra map[string]interface{}) (error, map[string]interface{}) {
 	creds, err := d.credentials()
 	if err != nil {

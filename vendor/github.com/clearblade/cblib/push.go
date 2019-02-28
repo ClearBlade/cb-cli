@@ -1330,13 +1330,9 @@ func updateService(systemKey string, service map[string]interface{}, client *cb.
 		svcName = ServiceName
 	}
 	svcCode := service["code"].(string)
-	svcDeps := service["dependencies"].(string)
-	svcParams := []string{}
-	for _, params := range service["params"].([]interface{}) {
-		svcParams = append(svcParams, params.(string))
-	}
 
-	err, body := client.UpdateServiceWithLibraries(systemKey, svcName, svcCode, svcDeps, svcParams)
+	extra := getServiceBody(service)
+	err, body := client.UpdateServiceWithBody(systemKey, svcName, svcCode, extra)
 	if err != nil {
 		fmt.Printf("Could not find service %s\n", svcName)
 		fmt.Printf("Would you like to create a new service named %s? (Y/n)", svcName)
