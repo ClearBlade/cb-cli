@@ -51,6 +51,7 @@ func init() {
 	pushCommand.flags.BoolVar(&AllAssets, "all", false, "push all of the local assets")
 	pushCommand.flags.BoolVar(&AllTriggers, "all-triggers", false, "push all of the local triggers")
 	pushCommand.flags.BoolVar(&AllTimers, "all-timers", false, "push all of the local timers")
+	pushCommand.flags.BoolVar(&AllDeployments, "all-deployments", false, "push all of the local deployments")
 
 	pushCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to push")
 	pushCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to push")
@@ -64,6 +65,7 @@ func init() {
 	pushCommand.flags.StringVar(&PortalName, "portal", "", "Name of portal to push")
 	pushCommand.flags.StringVar(&PluginName, "plugin", "", "Name of plugin to push")
 	pushCommand.flags.StringVar(&AdaptorName, "adapter", "", "Name of adapter to push")
+	pushCommand.flags.StringVar(&DeploymentName, "deployment", "", "Name of deployment to push")
 
 	pushCommand.flags.IntVar(&DataPageSize, "data-page-size", DataPageSizeDefault, "Number of rows in a collection to push/import at a time")
 
@@ -108,32 +110,34 @@ func pushUserSchema(systemInfo *System_meta, client *cb.DevClient) error {
 		return fmt.Errorf("Error in schema definition. Pls check the format of schema...\n")
 	}
 
-	diff := getDiffForColumnInterfaces(localSchema, userColumns, DefaultUserColumns)
+	diff := getDiffForColumns(localSchema, userColumns, DefaultUserColumns)
 	for i := 0; i < len(diff.remove); i++ {
-		if err := client.DeleteUserColumn(systemInfo.Key, diff.remove[i]["ColumnName"].(string)); err != nil {
+		if err := client.DeleteUserColumn(systemInfo.Key, diff.remove[i].(map[string]interface{})["ColumnName"].(string)); err != nil {
 			return fmt.Errorf("User schema could not be updated. Deletion of column(s) failed: %s", err)
 		}
 	}
 	for i := 0; i < len(diff.add); i++ {
-		if err := client.CreateUserColumn(systemInfo.Key, diff.add[i]["ColumnName"].(string), diff.add[i]["ColumnType"].(string)); err != nil {
-			return fmt.Errorf("Failed to create user column '%s': %s", diff.add[i]["ColumnName"].(string), err.Error())
+		if err := client.CreateUserColumn(systemInfo.Key, diff.add[i].(map[string]interface{})["ColumnName"].(string), diff.add[i].(map[string]interface{})["ColumnType"].(string)); err != nil {
+			return fmt.Errorf("Failed to create user column '%s': %s", diff.add[i].(map[string]interface{})["ColumnName"].(string), err.Error())
 		}
 	}
 	return nil
 }
 
-func getDiffForColumnInterfaces(localSchemaInterfaces, backendSchemaInterfaces []interface{}, defaultColumns []string) ColumnDiff {
-	localSchema := make([]map[string]interface{}, 0)
-	for i := 0; i < len(localSchemaInterfaces); i++ {
-		localSchema = append(localSchema, localSchemaInterfaces[i].(map[string]interface{}))
-	}
+func getDiffForColumns(localSchemaInterfaces, backendSchemaInterfaces []interface{}, defaultColumns []string) ListDiff {
+	return compareLists(localSchemaInterfaces, backendSchemaInterfaces, columnExists(defaultColumns))
+}
 
-	backendSchema := make([]map[string]interface{}, 0)
-	for i := 0; i < len(backendSchemaInterfaces); i++ {
-		backendSchema = append(backendSchema, backendSchemaInterfaces[i].(map[string]interface{}))
+func columnExists(defaultColumns []string) func(colA interface{}, colB interface{}) bool {
+	return func(colA interface{}, colB interface{}) bool {
+		if isDefaultColumn(defaultColumns, colA.(map[string]interface{})["ColumnName"].(string)) {
+			return true
+		}
+		if colA.(map[string]interface{})["ColumnName"].(string) == colB.(map[string]interface{})["ColumnName"].(string) {
+			return true
+		}
+		return false
 	}
-
-	return compareColumns(localSchema, backendSchema, defaultColumns)
 }
 
 func pushEdgesSchema(systemInfo *System_meta, client *cb.DevClient) error {
@@ -152,16 +156,16 @@ func pushEdgesSchema(systemInfo *System_meta, client *cb.DevClient) error {
 		return fmt.Errorf("Error in schema definition. Please verify the format of the schema.json. Value is: %+v - %+v\n", edgeschema["columns"], ok)
 	}
 
-	diff := getDiffForColumnInterfaces(typedLocalSchema, allEdgeColumns, DefaultEdgeColumns)
+	diff := getDiffForColumns(typedLocalSchema, allEdgeColumns, DefaultEdgeColumns)
 
 	for i := 0; i < len(diff.remove); i++ {
-		if err := client.DeleteEdgeColumn(systemInfo.Key, diff.remove[i]["ColumnName"].(string)); err != nil {
-			return fmt.Errorf("Unable to delete column '%s': %s", diff.remove[i]["ColumnName"].(string), err.Error())
+		if err := client.DeleteEdgeColumn(systemInfo.Key, diff.remove[i].(map[string]interface{})["ColumnName"].(string)); err != nil {
+			return fmt.Errorf("Unable to delete column '%s': %s", diff.remove[i].(map[string]interface{})["ColumnName"].(string), err.Error())
 		}
 	}
 	for i := 0; i < len(diff.add); i++ {
-		if err := client.CreateEdgeColumn(systemInfo.Key, diff.add[i]["ColumnName"].(string), diff.add[i]["ColumnType"].(string)); err != nil {
-			return fmt.Errorf("Unable to create column '%s': %s", diff.add[i]["ColumnName"].(string), err.Error())
+		if err := client.CreateEdgeColumn(systemInfo.Key, diff.add[i].(map[string]interface{})["ColumnName"].(string), diff.add[i].(map[string]interface{})["ColumnType"].(string)); err != nil {
+			return fmt.Errorf("Unable to create column '%s': %s", diff.add[i].(map[string]interface{})["ColumnName"].(string), err.Error())
 		}
 	}
 
@@ -188,15 +192,15 @@ func pushDevicesSchema(systemInfo *System_meta, client *cb.DevClient) error {
 		return fmt.Errorf("Error in schema definition. Please verify the format of the schema.json\n")
 	}
 
-	diff := getDiffForColumnInterfaces(localSchema, allDeviceColumns, DefaultDeviceColumns)
+	diff := getDiffForColumns(localSchema, allDeviceColumns, DefaultDeviceColumns)
 	for i := 0; i < len(diff.remove); i++ {
-		if err := client.DeleteDeviceColumn(systemInfo.Key, diff.remove[i]["ColumnName"].(string)); err != nil {
-			return fmt.Errorf("Unable to delete column '%s': %s", diff.remove[i]["ColumnName"].(string), err.Error())
+		if err := client.DeleteDeviceColumn(systemInfo.Key, diff.remove[i].(map[string]interface{})["ColumnName"].(string)); err != nil {
+			return fmt.Errorf("Unable to delete column '%s': %s", diff.remove[i].(map[string]interface{})["ColumnName"].(string), err.Error())
 		}
 	}
 	for i := 0; i < len(diff.add); i++ {
-		if err := client.CreateDeviceColumn(systemInfo.Key, diff.add[i]["ColumnName"].(string), diff.add[i]["ColumnType"].(string)); err != nil {
-			return fmt.Errorf("Unable to create column '%s': %s", diff.add[i]["ColumnName"].(string), err.Error())
+		if err := client.CreateDeviceColumn(systemInfo.Key, diff.add[i].(map[string]interface{})["ColumnName"].(string), diff.add[i].(map[string]interface{})["ColumnType"].(string)); err != nil {
+			return fmt.Errorf("Unable to create column '%s': %s", diff.add[i].(map[string]interface{})["ColumnName"].(string), err.Error())
 		}
 	}
 
@@ -772,11 +776,89 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if AllDeployments || AllAssets {
+		didSomething = true
+		if err := pushDeployments(systemInfo, client); err != nil {
+			return err
+		}
+	}
+
+	if DeploymentName != "" {
+		didSomething = true
+		if err := pushDeployment(systemInfo, client, DeploymentName); err != nil {
+			return err
+		}
+	}
+
 	if !didSomething {
 		fmt.Printf("Nothing to push -- you must specify something to push (ie, -service=<svc_name>)\n")
 	}
 
 	return nil
+}
+
+func pushDeployments(systemInfo *System_meta, cli *cb.DevClient) error {
+	deps, err := getDeployments()
+	if err != nil {
+		return err
+	}
+	for i := 0; i < len(deps); i++ {
+		err := pushDeployment(systemInfo, cli, deps[i]["name"].(string))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func pushDeployment(systemInfo *System_meta, cli *cb.DevClient, name string) error {
+	dep, err := getDeployment(name)
+	if err != nil {
+		return err
+	}
+	return updateDeployment(systemInfo, cli, name, dep)
+}
+
+func updateDeployment(systemInfo *System_meta, cli *cb.DevClient, name string, dep map[string]interface{}) error {
+	// fetch deployment
+	backendDep, err := cli.GetDeploymentByName(systemInfo.Key, name)
+	if err != nil {
+		return err
+	}
+
+	// diff backend deployment and local deployment
+	theDiff := diffDeployments(dep, backendDep)
+	fmt.Printf("send this: %+v\n", theDiff)
+	if _, err := cli.UpdateDeploymentByName(systemInfo.Key, name, theDiff); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func diffDeployments(localDep map[string]interface{}, backendDep map[string]interface{}) map[string]interface{} {
+	assetDiff := compareLists(localDep["assets"].([]interface{}), backendDep["assets"].([]interface{}), isAssetMatch)
+	edgeDiff := compareLists(localDep["edges"].([]interface{}), backendDep["edges"].([]interface{}), isEdgeMatch)
+	return map[string]interface{}{
+		"assets": map[string]interface{}{
+			"add":    assetDiff.add,
+			"remove": assetDiff.remove,
+		},
+		"edges": map[string]interface{}{
+			"add":    edgeDiff.add,
+			"remove": edgeDiff.remove,
+		},
+	}
+}
+
+func isEdgeMatch(edgeA interface{}, edgeB interface{}) bool {
+	return edgeA.(string) == edgeB.(string)
+}
+
+func isAssetMatch(assetA interface{}, assetB interface{}) bool {
+	typedA := assetA.(map[string]interface{})
+	typedB := assetB.(map[string]interface{})
+	return typedA["asset_class"].(string) == typedB["asset_class"].(string) && typedA["asset_id"].(string) == typedB["asset_id"].(string) && typedA["sync"].(bool) == typedB["sync"].(bool)
 }
 
 func createRole(systemKey string, role map[string]interface{}, collectionsInfo []CollectionInfo, client *cb.DevClient) error {
@@ -1382,7 +1464,7 @@ func updateService(systemKey string, service map[string]interface{}, client *cb.
 		svcParams = append(svcParams, params.(string))
 	}
 
-	err, body := client.UpdateServiceWithLibraries(systemKey, svcName, svcCode, svcDeps, svcParams)
+	err, _ := client.UpdateServiceWithLibraries(systemKey, svcName, svcCode, svcDeps, svcParams)
 	if err != nil {
 		fmt.Printf("Could not find service %s\n", svcName)
 		fmt.Printf("Would you like to create a new service named %s? (Y/n)", svcName)
@@ -1400,10 +1482,6 @@ func updateService(systemKey string, service map[string]interface{}, client *cb.
 				fmt.Printf("Service will not be created.\n")
 			}
 		}
-	}
-	if body != nil {
-		service["current_version"] = body["version_number"]
-		writeServiceVersion(svcName, service)
 	}
 	return nil
 }
@@ -1508,7 +1586,6 @@ func createLibrary(systemKey string, library map[string]interface{}, client *cb.
 }
 
 func updateCollection(systemKey string, collection map[string]interface{}, client *cb.DevClient) error {
-	var err error
 	collection_name, ok := collection["name"].(string)
 	if !ok {
 		return fmt.Errorf("No name in collection json file: %+v\n", collection)
@@ -1517,29 +1594,8 @@ func updateCollection(systemKey string, collection map[string]interface{}, clien
 	for _, row := range items {
 		query := cb.NewQuery()
 		query.EqualTo("item_id", row.(map[string]interface{})["item_id"])
-		if err = client.UpdateDataByName(systemKey, collection_name, query, row.(map[string]interface{})); err != nil {
-			break
-		}
-	}
-	if err != nil {
-		collName := collection["name"].(string)
-		fmt.Printf("Error updating collection %s.\n", collName)
-		collName = collName + "2"
-		fmt.Printf("Would you like to create a new collection named %s? (Y/n)", collName)
-		reader := bufio.NewReader(os.Stdin)
-		if text, err := reader.ReadString('\n'); err != nil {
-			return err
-		} else {
-			if strings.Contains(strings.ToUpper(text), "Y") {
-				collection["name"] = collName
-				if _, err := CreateCollection(systemKey, collection, client); err != nil {
-					return fmt.Errorf("Could not create collection %s: %s", collName, err.Error())
-				} else {
-					fmt.Printf("Successfully created new collection %s\n", collName)
-				}
-			} else {
-				fmt.Printf("Collection will not be created.\n")
-			}
+		if err := client.UpdateDataByName(systemKey, collection_name, query, row.(map[string]interface{})); err != nil {
+			fmt.Printf("Error updating item '%s' - %s", row.(map[string]interface{})["item_id"], err.Error())
 		}
 	}
 	return nil

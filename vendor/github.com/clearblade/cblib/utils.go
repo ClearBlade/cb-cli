@@ -347,9 +347,9 @@ func removeBlacklistedPortalKeys(portal map[string]interface{}) map[string]inter
 	return portal
 }
 
-type ColumnDiff struct {
-	add    []map[string]interface{}
-	remove []map[string]interface{}
+type ListDiff struct {
+	add    []interface{}
+	remove []interface{}
 }
 
 func isDefaultColumn(defaultColumns []string, colName string) bool {
@@ -361,32 +361,27 @@ func isDefaultColumn(defaultColumns []string, colName string) bool {
 	return false
 }
 
-func findDiff(columnListA []map[string]interface{}, columnListB []map[string]interface{}, defaultColumns []string) []map[string]interface{} {
-	rtn := make([]map[string]interface{}, 0)
-	for i := 0; i < len(columnListA); i++ {
-		colName := columnListA[i]["ColumnName"].(string)
-		// skip the column if it's a default
-		if !isDefaultColumn(defaultColumns, colName) {
-			found := false
-			for j := 0; j < len(columnListB); j++ {
-				if colName == columnListB[j]["ColumnName"].(string) {
-					found = true
-					break
-				}
-			}
-			if !found {
-				rtn = append(rtn, columnListA[i])
+func findDiff(listA []interface{}, listB []interface{}, isMatch func(interface{}, interface{}) bool) []interface{} {
+	rtn := make([]interface{}, 0)
+	for i := 0; i < len(listA); i++ {
+		found := false
+		for j := 0; j < len(listB); j++ {
+			if isMatch(listA[i], listB[j]) {
+				found = true
+				break
 			}
 		}
-
+		if !found {
+			rtn = append(rtn, listA[i])
+		}
 	}
 	return rtn
 }
 
-func compareColumns(localColumnSchema []map[string]interface{}, backendColumnSchema []map[string]interface{}, defaultColumns []string) ColumnDiff {
-	diff := ColumnDiff{
-		add:    findDiff(localColumnSchema, backendColumnSchema, defaultColumns),
-		remove: findDiff(backendColumnSchema, localColumnSchema, defaultColumns),
+func compareLists(localList []interface{}, backendList []interface{}, isMatch func(interface{}, interface{}) bool) ListDiff {
+	diff := ListDiff{
+		add:    findDiff(localList, backendList, isMatch),
+		remove: findDiff(backendList, localList, isMatch),
 	}
 	return diff
 }
