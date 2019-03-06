@@ -80,7 +80,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:ece338c951f4410f9ea21b56ea12f933ffb085672fe868ab57254d1536f384f7"
+  digest = "1:7b9fdf110cdbe98f41436d1d3b6e0c648920dab6f36a399a8e688c70ae3c7c92"
   name = "golang.org/x/net"
   packages = [
     "internal/socks",
@@ -88,7 +88,7 @@
     "websocket",
   ]
   pruneopts = "UT"
-  revision = "8a410e7b638dca158bf9e766925842f6651ff828"
+  revision = "16b79f2e4e95ea23b2bf9903c9809ff7b013ce85"
 
 [solve-meta]
   analyzer-name = "dep"
