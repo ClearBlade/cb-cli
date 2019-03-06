@@ -33,29 +33,17 @@ func (d *DevClient) InsertData(collection_id string, data interface{}) error {
 
 //CreateData is an alias for InsertData, but returns a response value, it should be a slice of strings representing the item ids (if not using an external datastore)
 func (d *DevClient) CreateData(collection_id string, data interface{}) ([]interface{}, error) {
-	resp, err := insertdata(d, collection_id, data)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	return insertdata(d, collection_id, data)
 }
 
 //CreateData is an alias for InsertData, but returns a response value, it should be a slice of strings representing the item ids (if not using an external datastore)
 func (u *UserClient) CreateData(collection_id string, data interface{}) ([]interface{}, error) {
-	resp, err := insertdata(u, collection_id, data)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	return insertdata(u, collection_id, data)
 }
 
 //CreateData is an alias for InsertData, but returns a response value, it should be a slice of strings representing the item ids (if not using an external datastore)
 func (d *DeviceClient) CreateData(collection_id string, data interface{}) ([]interface{}, error) {
-	resp, err := insertdata(d, collection_id, data)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	return insertdata(d, collection_id, data)
 }
 
 func insertdata(c cbClient, collection_id string, data interface{}) ([]interface{}, error) {
@@ -276,19 +264,16 @@ func (d *DevClient) UpdateDataByName(system_key, collection_name string, query *
 	return updatedataByName(d, system_key, collection_name, query, changes)
 }
 
-func (u *UserClient) CreateDataByName(system_key, collection_name string, item map[string]interface{}) error {
-	err := createDataByName(u, system_key, collection_name, item)
-	return err
+func (u *UserClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+	return createDataByName(u, system_key, collection_name, item)
 }
 
-func (d *DeviceClient) CreateDataByName(system_key, collection_name string, item map[string]interface{}) error {
-	err := createDataByName(d, system_key, collection_name, item)
-	return err
+func (d *DeviceClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+	return createDataByName(d, system_key, collection_name, item)
 }
 
-func (d *DevClient) CreateDataByName(system_key, collection_name string, item map[string]interface{}) error {
-	err := createDataByName(d, system_key, collection_name, item)
-	return err
+func (d *DevClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+	return createDataByName(d, system_key, collection_name, item)
 }
 
 func updatedata(c cbClient, collection_id string, query *Query, changes map[string]interface{}) error {
@@ -346,7 +331,7 @@ func updatedataByName(c cbClient, system_key, collection_name string, query *Que
 	}
 }
 
-func createDataByName(c cbClient, system_key, collection_name string, item map[string]interface{}) error {
+func createDataByName(c cbClient, system_key, collection_name string, item interface{}) error {
 	creds, err := c.credentials()
 	if err != nil {
 		return err
