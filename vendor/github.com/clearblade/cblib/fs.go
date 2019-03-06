@@ -14,9 +14,9 @@ import (
 const SORT_KEY_CODE_SERVICE = "Name"
 const SORT_KEY_COLLECTION_ITEM = "item_id"
 const SORT_KEY_COLLECTION = "Name"
-const collectionNameToIdFileName = "collectionNameToId.json"
-const roleNameToIdFileName = "roleNameToId.json"
-const userEmailToIdFileName = "userEmailToId.json"
+const collectionNameToIdFileName = "collections.json"
+const roleNameToIdFileName = "roles.json"
+const userEmailToIdFileName = "users.json"
 
 var (
 	RootDirIsSet bool
@@ -35,7 +35,8 @@ var (
 	pluginsDir     string
 	adaptorsDir    string
 	deploymentsDir string
-	arrDir         [13]string //this is used to set up the directory structure for a system
+	mapNameToIdDir string
+	arrDir         [14]string //this is used to set up the directory structure for a system
 )
 
 func SetRootDir(theRootDir string) {
@@ -56,6 +57,7 @@ func SetRootDir(theRootDir string) {
 	pluginsDir = rootDir + "/plugins"
 	adaptorsDir = rootDir + "/adapters"
 	deploymentsDir = rootDir + "/deployments"
+	mapNameToIdDir = rootDir + "/map-name-to-id"
 	arrDir[0] = svcDir
 	arrDir[1] = libDir
 	arrDir[2] = dataDir
@@ -69,6 +71,7 @@ func SetRootDir(theRootDir string) {
 	arrDir[10] = pluginsDir
 	arrDir[11] = adaptorsDir
 	arrDir[12] = deploymentsDir
+	arrDir[13] = mapNameToIdDir
 }
 
 func setupDirectoryStructure(sys *System_meta) error {
@@ -82,6 +85,10 @@ func setupDirectoryStructure(sys *System_meta) error {
 		}
 	}
 	return nil
+}
+
+func getNameToIdFullFilePath(fileName string) string {
+	return mapNameToIdDir + "/" + fileName
 }
 
 func cleanUpDirectories(sys *System_meta) error {
@@ -317,7 +324,7 @@ func whitelistCollection(data map[string]interface{}, items []interface{}) map[s
 }
 
 func writeCollectionNameToId(data map[string]interface{}) error {
-	return writeIdMap(data, collectionNameToIdFileName)
+	return writeIdMap(data, getNameToIdFullFilePath(collectionNameToIdFileName))
 }
 
 func writeIdMap(data map[string]interface{}, fileName string) error {
@@ -325,20 +332,20 @@ func writeIdMap(data map[string]interface{}, fileName string) error {
 	if err != nil {
 		return fmt.Errorf("Could not marshall %s: %s", fileName, err.Error())
 	}
-	if err = ioutil.WriteFile(rootDir+"/"+fileName, marshalled, 0666); err != nil {
+	if err = ioutil.WriteFile(fileName, marshalled, 0666); err != nil {
 		return fmt.Errorf("Could not write to %s: %s", fileName, err.Error())
 	}
 	return nil
 }
 
 func writeRoleNameToId(data map[string]interface{}) error {
-	return writeIdMap(data, roleNameToIdFileName)
+	return writeIdMap(data, getNameToIdFullFilePath(roleNameToIdFileName))
 }
 
 func updateRoleNameToId(info RoleInfo) error {
 	daMap, err := getRoleNameToId()
 	if err != nil {
-		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", roleNameToIdFileName, err.Error())
+		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", getNameToIdFullFilePath(roleNameToIdFileName), err.Error())
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Name] = info.ID
@@ -346,7 +353,7 @@ func updateRoleNameToId(info RoleInfo) error {
 }
 
 func getRoleNameToId() (map[string]interface{}, error) {
-	return getDict(rootDir + "/" + roleNameToIdFileName)
+	return getDict(getNameToIdFullFilePath(roleNameToIdFileName))
 }
 
 func getRoleIdByName(name string) (string, error) {
@@ -364,7 +371,7 @@ func getRoleIdByName(name string) (string, error) {
 func updateCollectionNameToId(info CollectionInfo) error {
 	daMap, err := getCollectionNameToId()
 	if err != nil {
-		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", collectionNameToIdFileName, err.Error())
+		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", getNameToIdFullFilePath(collectionNameToIdFileName), err.Error())
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Name] = info.ID
@@ -372,7 +379,7 @@ func updateCollectionNameToId(info CollectionInfo) error {
 }
 
 func getCollectionNameToId() (map[string]interface{}, error) {
-	return getDict(rootDir + "/" + collectionNameToIdFileName)
+	return getDict(getNameToIdFullFilePath(collectionNameToIdFileName))
 }
 
 func getCollectionNameToIdAsSlice() ([]CollectionInfo, error) {
@@ -397,13 +404,13 @@ type UserInfo struct {
 }
 
 func getUserEmailToId() (map[string]interface{}, error) {
-	return getDict(rootDir + "/" + userEmailToIdFileName)
+	return getDict(getNameToIdFullFilePath(userEmailToIdFileName))
 }
 
 func updateUserEmailToId(info UserInfo) error {
 	daMap, err := getUserEmailToId()
 	if err != nil {
-		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", userEmailToIdFileName, err.Error())
+		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", getNameToIdFullFilePath(userEmailToIdFileName), err.Error())
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Email] = info.UserID
@@ -411,7 +418,7 @@ func updateUserEmailToId(info UserInfo) error {
 }
 
 func writeUserEmailToId(data map[string]interface{}) error {
-	return writeIdMap(data, userEmailToIdFileName)
+	return writeIdMap(data, getNameToIdFullFilePath(userEmailToIdFileName))
 }
 
 func getUserIdByEmail(email string) (string, error) {

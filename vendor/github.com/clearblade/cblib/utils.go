@@ -365,6 +365,9 @@ func findDiff(listA []interface{}, listB []interface{}, isMatch func(interface{}
 	rtn := make([]interface{}, 0)
 	for i := 0; i < len(listA); i++ {
 		found := false
+		if len(listB) == 0 {
+			found = true
+		}
 		for j := 0; j < len(listB); j++ {
 			if isMatch(listA[i], listB[j]) {
 				found = true

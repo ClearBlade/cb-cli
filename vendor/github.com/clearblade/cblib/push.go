@@ -158,7 +158,6 @@ func pushEdgesSchema(systemInfo *System_meta, client *cb.DevClient) error {
 	}
 
 	diff := getDiffForColumns(typedLocalSchema, allEdgeColumns, DefaultEdgeColumns)
-
 	for i := 0; i < len(diff.remove); i++ {
 		if err := client.DeleteEdgeColumn(systemInfo.Key, diff.remove[i].(map[string]interface{})["ColumnName"].(string)); err != nil {
 			return fmt.Errorf("Unable to delete column '%s': %s", diff.remove[i].(map[string]interface{})["ColumnName"].(string), err.Error())
@@ -935,7 +934,7 @@ func createRole(systemKey string, role map[string]interface{}, collectionsInfo [
 		return err
 	}
 	if err := updateRoleNameToId(RoleInfo{ID: roleID, Name: roleName}); err != nil {
-		fmt.Printf("Error - Failed to update %s - subsequent operations may fail", roleNameToIdFileName)
+		fmt.Printf("Error - Failed to update %s - subsequent operations may fail", getNameToIdFullFilePath(roleNameToIdFileName))
 	}
 	return nil
 }
@@ -1696,7 +1695,7 @@ func CreateCollection(systemKey string, collection map[string]interface{}, clien
 	}
 
 	if err := updateCollectionNameToId(myInfo); err != nil {
-		fmt.Printf("Error - Failed to update %s - subsequent operations may fail", collectionNameToIdFileName)
+		fmt.Printf("Error - Failed to update %s - subsequent operations may fail", getNameToIdFullFilePath(collectionNameToIdFileName))
 	}
 
 	columns := collection["schema"].([]interface{})
