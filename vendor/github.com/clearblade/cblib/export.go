@@ -93,15 +93,31 @@ func pullCollections(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]inte
 	return rval, nil
 }
 
+func pullAndWriteCollectionColumns(sysMeta *System_meta, cli *cb.DevClient, name string) ([]interface{}, error) {
+	columnsResp, err := pullCollectionColumns(sysMeta, cli, name)
+	if err != nil {
+		return nil, err
+	}
+
+	err = updateCollectionSchema(name, columnsResp)
+	if err != nil {
+		return nil, err
+	}
+	return columnsResp, nil
+}
+
+func pullCollectionColumns(sysMeta *System_meta, cli *cb.DevClient, name string) ([]interface{}, error) {
+	return cli.GetColumnsByCollectionName(sysMeta.Key, name)
+}
+
 func PullCollection(sysMeta *System_meta, co map[string]interface{}, cli *cb.DevClient) (map[string]interface{}, error) {
-	id := co["collectionID"].(string)
 	isConnect := isConnectCollection(co)
 	var columnsResp []interface{}
 	var err error
 	if isConnect {
 		columnsResp = []interface{}{}
 	} else {
-		columnsResp, err = cli.GetColumns(id, sysMeta.Key, sysMeta.Secret)
+		columnsResp, err = pullCollectionColumns(sysMeta, cli, co["name"].(string))
 		if err != nil {
 			return nil, err
 		}

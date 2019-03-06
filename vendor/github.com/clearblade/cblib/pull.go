@@ -51,6 +51,7 @@ func init() {
 	pullCommand.flags.BoolVar(&AllTriggers, "all-triggers", false, "pull all triggers from system")
 	pullCommand.flags.BoolVar(&AllTimers, "all-timers", false, "pull all timers from system")
 
+	pullCommand.flags.StringVar(&CollectionSchema, "collectionschema", "", "Name of collection schema to pull")
 	pullCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to pull")
 	pullCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to pull")
 	pullCommand.flags.StringVar(&CollectionName, "collection", "", "Name of collection to pull")
@@ -134,6 +135,14 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		fmt.Printf("Pulling all collections:")
 		if _, err := pullCollections(systemInfo, client); err != nil {
 			fmt.Printf("Error: Failed to pull all collections - %s\n", err.Error())
+		}
+	}
+
+	if CollectionSchema != "" {
+		didSomething = true
+		fmt.Printf("Pulling collection schema for %s\n", CollectionSchema)
+		if _, err := pullAndWriteCollectionColumns(systemInfo, client, CollectionSchema); err != nil {
+			return err
 		}
 	}
 

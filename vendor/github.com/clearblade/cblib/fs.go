@@ -426,6 +426,24 @@ func getUserIdByEmail(email string) (string, error) {
 	}
 }
 
+func updateCollectionSchema(collectionName string, schema []interface{}) error {
+	collInfo, err := getCollection(collectionName)
+	if err != nil {
+		return err
+	}
+	collInfo["schema"] = schema
+	collsInfo, err := getCollectionNameToIdAsSlice()
+	if err != nil {
+		return err
+	}
+	id, err := getCollectionIdByName(collectionName, collsInfo)
+	if err != nil {
+		return err
+	}
+	collInfo["collection_id"] = id
+	return writeCollection(collectionName, collInfo)
+}
+
 func writeCollection(collectionName string, data map[string]interface{}) error {
 	if err := os.MkdirAll(dataDir, 0777); err != nil {
 		return err

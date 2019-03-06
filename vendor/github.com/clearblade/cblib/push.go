@@ -53,6 +53,7 @@ func init() {
 	pushCommand.flags.BoolVar(&AllTimers, "all-timers", false, "push all of the local timers")
 	pushCommand.flags.BoolVar(&AllDeployments, "all-deployments", false, "push all of the local deployments")
 
+	pushCommand.flags.StringVar(&CollectionSchema, "collectionschema", "", "Name of collection schema to push")
 	pushCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to push")
 	pushCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to push")
 	pushCommand.flags.StringVar(&CollectionName, "collection", "", "Name of collection to push")
@@ -229,7 +230,7 @@ func pushOneCollection(systemInfo *System_meta, client *cb.DevClient, name strin
 		fmt.Printf("error is %+v\n", err)
 		return err
 	}
-	return updateCollection(systemInfo.Key, collection, client)
+	return updateCollection(systemInfo, collection, client)
 }
 
 func pushOneCollectionById(systemInfo *System_meta, client *cb.DevClient) error {
@@ -244,7 +245,7 @@ func pushOneCollectionById(systemInfo *System_meta, client *cb.DevClient) error 
 			continue
 		}
 		if id == CollectionId {
-			return updateCollection(systemInfo.Key, collection, client)
+			return updateCollection(systemInfo, collection, client)
 		}
 	}
 	return fmt.Errorf("Collection with collectionID %+s not found.", CollectionId)
@@ -620,6 +621,13 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if CollectionSchema != "" {
+		didSomething = true
+		if err := pushCollectionSchema(systemInfo, client, CollectionSchema); err != nil {
+			return err
+		}
+	}
+
 	if CollectionName != "" {
 		didSomething = true
 		if err := pushOneCollection(systemInfo, client, CollectionName); err != nil {
@@ -792,6 +800,45 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if !didSomething {
 		fmt.Printf("Nothing to push -- you must specify something to push (ie, -service=<svc_name>)\n")
+	}
+
+	return nil
+}
+
+func pushCollectionSchema(systemInfo *System_meta, cli *cb.DevClient, name string) error {
+	fmt.Printf("Pushing collection schema for '%s'\n", name)
+	allCollectionsInfo, err := getCollectionNameToIdAsSlice()
+	if err != nil {
+		return err
+	}
+	collID, err := getCollectionIdByName(name, allCollectionsInfo)
+	if err != nil {
+		return err
+	}
+	localCollInfo, err := getCollection(name)
+	if err != nil {
+		return err
+	}
+
+	backendSchema, err := cli.GetColumnsByCollectionName(systemInfo.Key, name)
+	if err != nil {
+		return err
+	}
+	localSchema, ok := localCollInfo["schema"].([]interface{})
+	if !ok {
+		return fmt.Errorf("Error in schema definition. Please verify the format of the schema.json\n")
+	}
+
+	diff := getDiffForColumns(localSchema, backendSchema, DefaultCollectionColumns)
+	for i := 0; i < len(diff.remove); i++ {
+		if err := cli.DeleteColumn(collID, diff.remove[i].(map[string]interface{})["ColumnName"].(string)); err != nil {
+			return fmt.Errorf("Unable to delete column '%s': %s", diff.remove[i].(map[string]interface{})["ColumnName"].(string), err.Error())
+		}
+	}
+	for i := 0; i < len(diff.add); i++ {
+		if err := cli.AddColumn(collID, diff.add[i].(map[string]interface{})["ColumnName"].(string), diff.add[i].(map[string]interface{})["ColumnType"].(string)); err != nil {
+			return fmt.Errorf("Unable to create column '%s': %s", diff.add[i].(map[string]interface{})["ColumnName"].(string), err.Error())
+		}
 	}
 
 	return nil
@@ -1585,17 +1632,29 @@ func createLibrary(systemKey string, library map[string]interface{}, client *cb.
 	return nil
 }
 
-func updateCollection(systemKey string, collection map[string]interface{}, client *cb.DevClient) error {
+func updateCollection(meta *System_meta, collection map[string]interface{}, client *cb.DevClient) error {
 	collection_name, ok := collection["name"].(string)
 	if !ok {
 		return fmt.Errorf("No name in collection json file: %+v\n", collection)
 	}
+	// here's our workflow for updating a collection:
+	// 1) diff and update the collection schema
+	// 2) attempt to update all of our items
+	// 3) if update fails, we assume the item doesn't exist, so we create the item
+	if err := pushCollectionSchema(meta, client, collection_name); err != nil {
+		return err
+	}
+
 	items := collection["items"].([]interface{})
 	for _, row := range items {
 		query := cb.NewQuery()
 		query.EqualTo("item_id", row.(map[string]interface{})["item_id"])
-		if err := client.UpdateDataByName(systemKey, collection_name, query, row.(map[string]interface{})); err != nil {
-			fmt.Printf("Error updating item '%s' - %s", row.(map[string]interface{})["item_id"], err.Error())
+		if resp, err := client.UpdateDataByName(meta.Key, collection_name, query, row.(map[string]interface{})); err != nil {
+			fmt.Printf("Error updating item '%s'. Skipping. Error is - %s\n", row.(map[string]interface{})["item_id"], err.Error())
+		} else if resp.Count == 0 {
+			if err := client.CreateDataByName(meta.Key, collection_name, row.(map[string]interface{})); err != nil {
+				return fmt.Errorf("Failed to create item. Error is - %s", err.Error())
+			}
 		}
 	}
 	return nil
