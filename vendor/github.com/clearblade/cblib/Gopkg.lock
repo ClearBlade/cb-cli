@@ -11,11 +11,11 @@
 
 [[projects]]
   branch = "extension-prep"
-  digest = "1:511d4af84b13946c10f82e88e5d74c91e31dd4dd64555173301e406e0e2dfd1d"
+  digest = "1:dddcd76d66f9cfefb13e7f729d95e1f04c67b7575ba6b7cc2700d058ae8d8f28"
   name = "github.com/clearblade/Go-SDK"
   packages = ["."]
   pruneopts = "UT"
-  revision = "8aa68c563d0d120ae7b0fed6efd0ed9feb254ff0"
+  revision = "bab21415ff64402a131a42f5080e808a24f5dd06"
   source = "github.com/clearblade/Go-SDK"
 
 [[projects]]
@@ -68,7 +68,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:50095e42352dba1c6ab2cec7e03b24fb4b513123f41d4ab4dbd2627c25fe18b8"
+  digest = "1:7b9fdf110cdbe98f41436d1d3b6e0c648920dab6f36a399a8e688c70ae3c7c92"
   name = "golang.org/x/net"
   packages = [
     "internal/socks",
@@ -76,7 +76,7 @@
     "websocket",
   ]
   pruneopts = "UT"
-  revision = "c44066c5c816ec500d459a2a324a753f78531ae0"
+  revision = "16b79f2e4e95ea23b2bf9903c9809ff7b013ce85"
 
 [solve-meta]
   analyzer-name = "dep"

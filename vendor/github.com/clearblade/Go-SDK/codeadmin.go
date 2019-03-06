@@ -121,33 +121,38 @@ func (d *DevClient) SetServiceEffectiveUser(systemKey, name, userid string) erro
 }
 
 //UpdateService facillitates changes to the service's code
-func (d *DevClient) UpdateService(systemKey, name, code string, params []string) (error, map[string]interface{}) {
+func (d *DevClient) UpdateService(systemKey, name, code string, params []string) (map[string]interface{}, error) {
 	extra := map[string]interface{}{"code": code, "name": name, "parameters": params}
 	return d.updateService(systemKey, name, code, extra)
 }
 
-func (d *DevClient) UpdateServiceWithLibraries(systemKey, name, code, deps string, params []string) (error, map[string]interface{}) {
+func (d *DevClient) UpdateServiceWithLibraries(systemKey, name, code, deps string, params []string) (map[string]interface{}, error) {
 	extra := map[string]interface{}{"code": code, "name": name, "parameters": params, "dependencies": deps}
 	return d.updateService(systemKey, name, code, extra)
 }
 
-func (d *DevClient) updateService(sysKey, name, code string, extra map[string]interface{}) (error, map[string]interface{}) {
+//UpdateServiceWithBody updates a service code and any additional info passed in (parameters, execution_timeout, etc.)
+func (d *DevClient) UpdateServiceWithBody(systemKey, name, code string, extra map[string]interface{}) (map[string]interface{}, error) {
+	return d.updateService(systemKey, name, code, extra)
+}
+
+func (d *DevClient) updateService(sysKey, name, code string, extra map[string]interface{}) (map[string]interface{}, error) {
 	creds, err := d.credentials()
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 	resp, err := put(d, _CODE_ADMIN_PREAMBLE+"/"+sysKey+"/"+name, extra, creds, nil)
 	if err != nil {
-		return fmt.Errorf("Error updating service: %v\n", err), nil
+		return nil, fmt.Errorf("Error updating service: %v\n", err)
 	}
 	body, ok := resp.Body.(map[string]interface{})
 	if !ok {
-		return fmt.Errorf("Service not created. First create service..."), nil
+		return nil, fmt.Errorf("Service not created. First create service...")
 	}
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error updating service: %v\n", resp.Body), nil
+		return nil, fmt.Errorf("Error updating service: %v\n", resp.Body)
 	}
-	return nil, body
+	return body, nil
 }
 
 //NewServiceWithLibraries creates a new service with the specified code, params, and libraries/dependencies.
