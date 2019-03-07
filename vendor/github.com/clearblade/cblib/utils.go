@@ -404,3 +404,7 @@ func convertInterfaceSliceToStringSlice(ifaces []interface{}) []string {
 	}
 	return rtn
 }
+
+func logError(err string) {
+	fmt.Printf("[Error] %s\n", err)
+}

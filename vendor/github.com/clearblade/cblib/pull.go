@@ -97,7 +97,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling all services:")
 		if _, err := PullServices(systemInfo.Key, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull services. %s", err.Error()))
 		}
 		fmt.Printf("\n")
 	}
@@ -106,7 +106,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling service %+s\n", ServiceName)
 		if err := PullAndWriteService(systemInfo.Key, ServiceName, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull service. %s", err.Error()))
 		}
 	}
 
@@ -114,7 +114,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling all libraries:")
 		if _, err := PullLibraries(systemInfo, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull libraries. %s", err.Error()))
 		}
 		fmt.Printf("\n")
 	}
@@ -123,7 +123,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling library %s\n", LibraryName)
 		if lib, err := pullLibrary(systemInfo.Key, LibraryName, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull library. %s", err.Error()))
 		} else {
 			writeLibrary(lib["name"].(string), lib)
 		}
@@ -134,7 +134,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		ExportRows = true
 		fmt.Printf("Pulling all collections:")
 		if _, err := pullCollections(systemInfo, client); err != nil {
-			fmt.Printf("Error: Failed to pull all collections - %s\n", err.Error())
+			logError(fmt.Sprintf("Failed to pull all collections. %s", err.Error()))
 		}
 	}
 
@@ -142,7 +142,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling collection schema for %s\n", CollectionSchema)
 		if _, err := pullAndWriteCollectionColumns(systemInfo, client, CollectionSchema); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull collection schema. %s", err.Error()))
 		}
 	}
 
@@ -152,7 +152,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		fmt.Printf("Pulling collection %+s\n", CollectionName)
 		err := PullAndWriteCollection(systemInfo, CollectionName, client)
 		if err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull collection. %s", err.Error()))
 		}
 	}
 
@@ -172,9 +172,10 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		fmt.Printf("Pulling user %+s\n", User)
 		err := PullAndWriteUsers(systemInfo.Key, User, client)
 		if err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull users. %s", err.Error()))
 		}
 		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
+			logError(fmt.Sprintf("Failed to pull user schema. %s", err.Error()))
 			return err
 		}
 	}
@@ -183,7 +184,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Println("Pulling all roles:")
 		if _, err := PullAndWriteRoles(systemInfo.Key, client, true); err != nil {
-			fmt.Printf("Error: Failed to pull all roles - %s\n", err.Error())
+			logError(fmt.Sprintf("Failed to pull all roles. %s", err.Error()))
 		}
 	}
 
@@ -194,7 +195,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		for _, role := range splitRoles {
 			fmt.Printf("Pulling role %+s\n", role)
 			if r, err := pullRole(systemInfo.Key, role, client); err != nil {
-				return err
+				logError(fmt.Sprintf("Failed to pull role. %s", err.Error()))
 			} else {
 				roles = append(roles, r)
 				writeRole(role, r)
@@ -206,7 +207,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Println("Pulling all triggers:")
 		if _, err := PullAndWriteTriggers(systemInfo, client); err != nil {
-			fmt.Printf("Error: Failed to pull all triggers - %s\n", err.Error())
+			logError(fmt.Sprintf("Failed to pull all triggers. %s", err.Error()))
 		}
 	}
 
@@ -215,7 +216,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		fmt.Printf("Pulling trigger %+s\n", TriggerName)
 		err := PullAndWriteTrigger(systemInfo.Key, TriggerName, client)
 		if err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull trigger. %s", err.Error()))
 		}
 	}
 
@@ -223,7 +224,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Println("Pulling all timers:")
 		if _, err := PullAndWriteTimers(systemInfo, client); err != nil {
-			fmt.Printf("Error: Failed to pull all timers - %s\n", err.Error())
+			logError(fmt.Sprintf("Failed to pull all timers. %s", err.Error()))
 		}
 	}
 
@@ -232,7 +233,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		fmt.Printf("Pulling timer %+s\n", TimerName)
 		err := PullAndWriteTimer(systemInfo.Key, TimerName, client)
 		if err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull timer. %s", err.Error()))
 		}
 	}
 
@@ -240,10 +241,10 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling all devices:")
 		if _, err := PullDevices(systemInfo, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull all devices. %s", err.Error()))
 		}
 		if _, err := pullDevicesSchema(systemInfo.Key, client, true); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull device schema. %s", err.Error()))
 		}
 		fmt.Printf("\n")
 	}
@@ -252,10 +253,10 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling device %+s\n", DeviceName)
 		if device, err := pullDevice(systemInfo.Key, DeviceName, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull device. %s", err.Error()))
 		} else {
 			if _, err := pullDevicesSchema(systemInfo.Key, client, true); err != nil {
-				return err
+				logError(fmt.Sprintf("Failed to pull device schema. %s", err.Error()))
 			}
 			writeDevice(DeviceName, device)
 		}
@@ -265,10 +266,10 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling all edges:")
 		if _, err := PullEdges(systemInfo, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull all edges. %s", err.Error()))
 		}
 		if _, err := pullEdgesSchema(systemInfo.Key, client, true); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull edge schema. %s", err.Error()))
 		}
 		fmt.Printf("\n")
 	}
@@ -277,12 +278,12 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling edge %+s\n", EdgeName)
 		if edge, err := pullEdge(systemInfo.Key, EdgeName, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull edge. %s", err.Error()))
 		} else {
 			writeEdge(EdgeName, edge)
 		}
 		if _, err := pullEdgesSchema(systemInfo.Key, client, true); err != nil {
-			fmt.Printf("\nNo custom columns to pull and create schema.json from... Continuing...\n")
+			logError(fmt.Sprintf("Failed to pull edge schema. %s", err.Error()))
 		}
 	}
 
@@ -290,7 +291,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling all portals:")
 		if _, err := PullPortals(systemInfo, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull all portals. %s", err.Error()))
 		}
 		fmt.Printf("\n")
 	}
@@ -299,7 +300,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling portal %+s\n", PortalName)
 		if err := PullAndWritePortal(systemInfo.Key, PortalName, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull portal. %s", err.Error()))
 		}
 	}
 
@@ -307,7 +308,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling all plugins:")
 		if _, err := PullPlugins(systemInfo, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull all plugins. %s", err.Error()))
 		}
 		fmt.Printf("\n")
 	}
@@ -316,13 +317,13 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling plugin %+s\n", PluginName)
 		if err = PullAndWritePlugin(systemInfo.Key, PluginName, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull plugin. %s", err.Error()))
 		}
 	}
 
 	if AllAdaptors || AllAssets {
 		didSomething = true
-		fmt.Printf("Pulling all adaptors:")
+		fmt.Printf("Pulling all adapters:")
 		if err := backupAndCleanDirectory(adaptorsDir); err != nil {
 			return err
 		}
@@ -330,6 +331,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 			if restoreErr := restoreBackupDirectory(adaptorsDir); restoreErr != nil {
 				fmt.Printf("Failed to restore backup directory; %s\n", restoreErr.Error())
 			}
+			logError(fmt.Sprintf("Failed to pull all adapters. %s", err.Error()))
 			return err
 		}
 		if err := removeBackupDirectory(adaptorsDir); err != nil {
@@ -340,9 +342,9 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if AdaptorName != "" {
 		didSomething = true
-		fmt.Printf("Pulling adaptor %+s\n", AdaptorName)
+		fmt.Printf("Pulling adapter %+s\n", AdaptorName)
 		if err = PullAndWriteAdaptor(systemInfo.Key, AdaptorName, client); err != nil {
-			return err
+			logError(fmt.Sprintf("Failed to pull adapter. %s", err.Error()))
 		}
 	}
 
@@ -350,7 +352,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling all deployments:")
 		if _, err = pullDeployments(systemInfo, client); err != nil {
-			fmt.Printf("Error - Failed to pull all deployments: %s\n", err.Error())
+			logError(fmt.Sprintf("Failed to pull all deployments. %s", err.Error()))
 		}
 	}
 
@@ -358,7 +360,7 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		didSomething = true
 		fmt.Printf("Pulling deployment %+s\n", DeploymentName)
 		if _, err = pullAndWriteDeployment(systemInfo, client, DeploymentName); err != nil {
-			fmt.Printf("Error - Failed to pull deployment '%s': %s\n", DeploymentName, err.Error())
+			logError(fmt.Sprintf("Failed to pull deployment. %s", err.Error()))
 		}
 	}
 
