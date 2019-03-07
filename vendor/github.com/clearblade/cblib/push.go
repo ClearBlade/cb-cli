@@ -126,19 +126,16 @@ func pushUserSchema(systemInfo *System_meta, client *cb.DevClient) error {
 }
 
 func getDiffForColumns(localSchemaInterfaces, backendSchemaInterfaces []interface{}, defaultColumns []string) ListDiff {
-	return compareLists(localSchemaInterfaces, backendSchemaInterfaces, columnExists(defaultColumns))
+	return compareLists(localSchemaInterfaces, backendSchemaInterfaces, columnExists, func(a interface{}) bool {
+		return isDefaultColumn(defaultColumns, a.(map[string]interface{})["ColumnName"].(string))
+	})
 }
 
-func columnExists(defaultColumns []string) func(colA interface{}, colB interface{}) bool {
-	return func(colA interface{}, colB interface{}) bool {
-		if isDefaultColumn(defaultColumns, colA.(map[string]interface{})["ColumnName"].(string)) {
-			return true
-		}
-		if colA.(map[string]interface{})["ColumnName"].(string) == colB.(map[string]interface{})["ColumnName"].(string) {
-			return true
-		}
-		return false
+func columnExists(colA interface{}, colB interface{}) bool {
+	if colA.(map[string]interface{})["ColumnName"].(string) == colB.(map[string]interface{})["ColumnName"].(string) {
+		return true
 	}
+	return false
 }
 
 func pushEdgesSchema(systemInfo *System_meta, client *cb.DevClient) error {
@@ -883,8 +880,8 @@ func updateDeployment(systemInfo *System_meta, cli *cb.DevClient, name string, d
 }
 
 func diffDeployments(localDep map[string]interface{}, backendDep map[string]interface{}) map[string]interface{} {
-	assetDiff := compareLists(localDep["assets"].([]interface{}), backendDep["assets"].([]interface{}), isAssetMatch)
-	edgeDiff := compareLists(localDep["edges"].([]interface{}), backendDep["edges"].([]interface{}), isEdgeMatch)
+	assetDiff := compareLists(localDep["assets"].([]interface{}), backendDep["assets"].([]interface{}), isAssetMatch, func(a interface{}) bool { return false })
+	edgeDiff := compareLists(localDep["edges"].([]interface{}), backendDep["edges"].([]interface{}), isEdgeMatch, func(a interface{}) bool { return false })
 	return map[string]interface{}{
 		"assets": map[string]interface{}{
 			"add":    assetDiff.add,
@@ -1141,9 +1138,16 @@ func updateUser(systemKey string, user map[string]interface{}, client *cb.DevCli
 	if id, ok := user["user_id"].(string); !ok {
 		return fmt.Errorf("Missing user id %+v", user)
 	} else {
-		// todo: implement modifying user roles with CLI. need to send backend the correct format of -
-		// {roles: {add: ["roleName"], delete: ["roleName2"]}}
-		delete(user, "roles")
+		localRoles := user["roles"]
+		backendUserRoles, err := client.GetUserRoles(systemKey, id)
+		if err != nil {
+			return err
+		}
+		roleDiff := diffRoles(localRoles.([]interface{}), convertStringSliceToInterfaceSlice(backendUserRoles))
+		user["roles"] = map[string]interface{}{
+			"add":    convertInterfaceSliceToStringSlice(roleDiff.add),
+			"delete": convertInterfaceSliceToStringSlice(roleDiff.remove),
+		}
 		return client.UpdateUser(systemKey, id, user)
 	}
 }
@@ -1165,13 +1169,25 @@ func createUser(systemKey string, systemSecret string, user map[string]interface
 	}); err != nil {
 		fmt.Printf("Error - Failed to update user email to ID map; subsequent operations may fail. %+v\n", err.Error())
 	}
-	niceRoles := mungeRoles(user["roles"].([]interface{}))
-	if len(niceRoles) > 0 {
-		if err := client.AddUserToRoles(systemKey, userId, niceRoles); err != nil {
+
+	defaultRoles := convertStringSliceToInterfaceSlice([]string{"Authenticated"})
+	roleDiff := diffRoles(user["roles"].([]interface{}), defaultRoles)
+	if len(roleDiff.add) > 0 || len(roleDiff.remove) > 0 {
+		add := convertInterfaceSliceToStringSlice(roleDiff.add)
+		remove := convertInterfaceSliceToStringSlice(roleDiff.remove)
+		if err := client.UpdateUserRoles(systemKey, userId, add, remove); err != nil {
 			return "", err
 		}
 	}
 	return userId, nil
+}
+
+func diffRoles(local, backend []interface{}) ListDiff {
+	return compareLists(local, backend, roleExists, func(a interface{}) bool { return false })
+}
+
+func roleExists(a interface{}, b interface{}) bool {
+	return a == b
 }
 
 func createTrigger(sysKey string, trigger map[string]interface{}, client *cb.DevClient) (map[string]interface{}, error) {

@@ -345,7 +345,6 @@ func writeRoleNameToId(data map[string]interface{}) error {
 func updateRoleNameToId(info RoleInfo) error {
 	daMap, err := getRoleNameToId()
 	if err != nil {
-		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", getNameToIdFullFilePath(roleNameToIdFileName), err.Error())
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Name] = info.ID
@@ -371,7 +370,6 @@ func getRoleIdByName(name string) (string, error) {
 func updateCollectionNameToId(info CollectionInfo) error {
 	daMap, err := getCollectionNameToId()
 	if err != nil {
-		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", getNameToIdFullFilePath(collectionNameToIdFileName), err.Error())
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Name] = info.ID
@@ -410,7 +408,6 @@ func getUserEmailToId() (map[string]interface{}, error) {
 func updateUserEmailToId(info UserInfo) error {
 	daMap, err := getUserEmailToId()
 	if err != nil {
-		fmt.Printf("\nWarning: Failed to read %s - creating new file. Error is - %s\n", getNameToIdFullFilePath(userEmailToIdFileName), err.Error())
 		daMap = make(map[string]interface{})
 	}
 	daMap[info.Email] = info.UserID

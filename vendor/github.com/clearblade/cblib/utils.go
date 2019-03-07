@@ -361,15 +361,15 @@ func isDefaultColumn(defaultColumns []string, colName string) bool {
 	return false
 }
 
-func findDiff(listA []interface{}, listB []interface{}, isMatch func(interface{}, interface{}) bool) []interface{} {
+func findDiff(listA []interface{}, listB []interface{}, isMatch func(interface{}, interface{}) bool, isDefaultColumnCb func(interface{}) bool) []interface{} {
 	rtn := make([]interface{}, 0)
 	for i := 0; i < len(listA); i++ {
 		found := false
-		if len(listB) == 0 {
+		if isDefaultColumnCb(listA[i]) {
 			found = true
 		}
 		for j := 0; j < len(listB); j++ {
-			if isMatch(listA[i], listB[j]) {
+			if !isDefaultColumnCb(listB[j]) && isMatch(listA[i], listB[j]) {
 				found = true
 				break
 			}
@@ -381,10 +381,26 @@ func findDiff(listA []interface{}, listB []interface{}, isMatch func(interface{}
 	return rtn
 }
 
-func compareLists(localList []interface{}, backendList []interface{}, isMatch func(interface{}, interface{}) bool) ListDiff {
+func compareLists(localList []interface{}, backendList []interface{}, isMatch func(interface{}, interface{}) bool, isDefaultColumnCb func(interface{}) bool) ListDiff {
 	diff := ListDiff{
-		add:    findDiff(localList, backendList, isMatch),
-		remove: findDiff(backendList, localList, isMatch),
+		add:    findDiff(localList, backendList, isMatch, isDefaultColumnCb),
+		remove: findDiff(backendList, localList, isMatch, isDefaultColumnCb),
 	}
 	return diff
+}
+
+func convertStringSliceToInterfaceSlice(strs []string) []interface{} {
+	rtn := make([]interface{}, len(strs))
+	for i, s := range strs {
+		rtn[i] = s
+	}
+	return rtn
+}
+
+func convertInterfaceSliceToStringSlice(ifaces []interface{}) []string {
+	rtn := make([]string, len(ifaces))
+	for i, s := range ifaces {
+		rtn[i] = s.(string)
+	}
+	return rtn
 }

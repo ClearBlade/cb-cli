@@ -160,18 +160,6 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 	return nil
 }
 
-func mungeRoles(roles []interface{}) []string {
-	rval := []string{}
-	for _, role := range roles {
-		roleStr := role.(string)
-		if roleStr == "Authenticated" { // This automagically happens when user auth'd
-			continue
-		}
-		rval = append(rval, roleStr)
-	}
-	return rval
-}
-
 func unMungeRoles(roles []string) []interface{} {
 	rval := []interface{}{}
 
