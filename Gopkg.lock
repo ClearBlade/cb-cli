@@ -11,11 +11,11 @@
 
 [[projects]]
   branch = "extension-prep"
-  digest = "1:dddcd76d66f9cfefb13e7f729d95e1f04c67b7575ba6b7cc2700d058ae8d8f28"
+  digest = "1:0a71c8f94cfefec4f4fec63f2510e5d6df483617767d75a1df025a56068b93fd"
   name = "github.com/clearblade/Go-SDK"
   packages = ["."]
   pruneopts = "UT"
-  revision = "bab21415ff64402a131a42f5080e808a24f5dd06"
+  revision = "c094aa30ae68a717b27eed21f19a58c96a2b48a1"
   source = "github.com/clearblade/Go-SDK"
 
 [[projects]]
@@ -28,14 +28,14 @@
 
 [[projects]]
   branch = "extension-prep"
-  digest = "1:c7a1dc937ab8addce5026813efe1288f61ee07132414d916f4ae7589b89ba849"
+  digest = "1:a576377f8fd78e5bdd3f6a70df7610fc955544ce6e4ba4e5b26935b33b40ccc7"
   name = "github.com/clearblade/cblib"
   packages = [
     ".",
     "models",
   ]
   pruneopts = "UT"
-  revision = "477659de1caf466e263d71c0c83aff9a944fe109"
+  revision = "bd701287f72939ef4a6dd5965ee35f825d3ab0e8"
   source = "github.com/clearblade/cblib"
 
 [[projects]]

@@ -141,6 +141,7 @@ func (d *DevClient) updateService(sysKey, name, code string, extra map[string]in
 	if err != nil {
 		return nil, err
 	}
+	extra["code"] = code
 	resp, err := put(d, _CODE_ADMIN_PREAMBLE+"/"+sysKey+"/"+name, extra, creds, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error updating service: %v\n", err)

@@ -423,12 +423,7 @@ func PullAndWriteService(systemKey string, serviceName string, client *cb.DevCli
 }
 
 func pullService(systemKey string, serviceName string, client *cb.DevClient) (map[string]interface{}, error) {
-	if service, err := client.GetServiceRaw(systemKey, serviceName); err != nil {
-		return nil, err
-	} else {
-		service["code"] = strings.Replace(service["code"].(string), "\\n", "\n", -1)
-		return service, nil
-	}
+	return client.GetServiceRaw(systemKey, serviceName)
 }
 
 func PullAndWriteLibrary(systemKey string, libraryName string, client *cb.DevClient) error {
