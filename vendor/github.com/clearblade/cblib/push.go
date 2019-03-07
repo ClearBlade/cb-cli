@@ -1544,7 +1544,7 @@ func getServiceBody(service map[string]interface{}) map[string]interface{} {
 	if executionTimeout, ok := service["execution_timeout"].(float64); ok {
 		ret["execution_timeout"] = executionTimeout
 	}
-	if parameters, ok := service["parameters"].([]interface{}); ok {
+	if parameters, ok := service["params"].([]interface{}); ok { // GET for a service returns 'params' but POST/PUT expect 'parameters'
 		ret["parameters"] = mkSvcParams(parameters)
 	}
 	if dependencies, ok := service["dependencies"].(string); ok {
