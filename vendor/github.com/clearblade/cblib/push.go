@@ -1603,7 +1603,7 @@ func updateLibrary(systemKey string, library map[string]interface{}, client *cb.
 	}
 	delete(library, "name")
 	delete(library, "version")
-	data, err := client.UpdateLibrary(systemKey, libName, library)
+	_, err := client.UpdateLibrary(systemKey, libName, library)
 	if err != nil {
 		fmt.Printf("Could not find library %s\n", libName)
 		fmt.Printf("Would you like to create a new library named %s? (Y/n)", libName)
@@ -1623,10 +1623,6 @@ func updateLibrary(systemKey string, library map[string]interface{}, client *cb.
 			}
 		}
 	}
-	delete(library, "code")
-	library["version"] = data["version"]
-	library["name"] = libName
-	writeLibraryVersion(libName, library)
 	return nil
 }
 

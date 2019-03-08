@@ -259,9 +259,14 @@ func PullLibraries(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interf
 		if thisLib["visibility"] == "global" {
 			continue
 		}
-		fmt.Printf(" %s", thisLib["name"].(string))
-		libraries = append(libraries, thisLib)
-		err = writeLibrary(thisLib["name"].(string), thisLib)
+		// call the individual endpoint to retrieve the properly formatted code
+		realLib, err := cli.GetLibrary(sysMeta.Key, thisLib["name"].(string))
+		if err != nil {
+			return nil, err
+		}
+		fmt.Printf(" %s", realLib["name"].(string))
+		libraries = append(libraries, realLib)
+		err = writeLibrary(realLib["name"].(string), realLib)
 		if err != nil {
 			return nil, err
 		}
