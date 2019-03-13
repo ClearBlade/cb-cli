@@ -57,7 +57,9 @@ func init() {
 	pushCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to push")
 	pushCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to push")
 	pushCommand.flags.StringVar(&CollectionName, "collection", "", "Name of collection to push")
+	pushCommand.flags.StringVar(&CollectionId, "collectionID", "", "Unique id of collection to update. -collection flag is preferred")
 	pushCommand.flags.StringVar(&User, "user", "", "Name of user to push")
+	pushCommand.flags.StringVar(&UserId, "userID", "", "Unique id of user to update. -user flag is preferred")
 	pushCommand.flags.StringVar(&RoleName, "role", "", "Name of role to push")
 	pushCommand.flags.StringVar(&TriggerName, "trigger", "", "Name of trigger to push")
 	pushCommand.flags.StringVar(&TimerName, "timer", "", "Name of timer to push")
@@ -86,9 +88,9 @@ func checkPushArgsAndFlags(args []string) error {
 	return nil
 }
 
-func pushOneService(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing service %+s\n", ServiceName)
-	service, err := getService(ServiceName)
+func pushOneService(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing service %+s\n", name)
+	service, err := getService(name)
 	if err != nil {
 		return err
 	}
@@ -229,8 +231,8 @@ func pushOneCollection(systemInfo *System_meta, client *cb.DevClient, name strin
 	return updateCollection(systemInfo, collection, client)
 }
 
-func pushOneCollectionById(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing collection with collectionID %s\n", CollectionId)
+func pushOneCollectionById(systemInfo *System_meta, client *cb.DevClient, wantedId string) error {
+	fmt.Printf("Pushing collection with collectionID %s\n", wantedId)
 	collections, err := getCollections()
 	if err != nil {
 		return err
@@ -240,11 +242,11 @@ func pushOneCollectionById(systemInfo *System_meta, client *cb.DevClient) error 
 		if !ok {
 			continue
 		}
-		if id == CollectionId {
+		if id == wantedId {
 			return updateCollection(systemInfo, collection, client)
 		}
 	}
-	return fmt.Errorf("Collection with collectionID %+s not found.", CollectionId)
+	return fmt.Errorf("Collection with collectionID %+s not found.", wantedId)
 }
 
 func pushUsers(systemInfo *System_meta, client *cb.DevClient) error {
@@ -269,8 +271,8 @@ func pushOneUser(systemInfo *System_meta, client *cb.DevClient, email string) er
 	return updateUser(systemInfo.Key, user, client)
 }
 
-func pushOneUserById(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing user with user_id %s\n", UserId)
+func pushOneUserById(systemInfo *System_meta, client *cb.DevClient, wantedId string) error {
+	fmt.Printf("Pushing user with user_id %s\n", wantedId)
 	users, err := getUsers()
 	if err != nil {
 		return err
@@ -280,11 +282,11 @@ func pushOneUserById(systemInfo *System_meta, client *cb.DevClient) error {
 		if !ok {
 			continue
 		}
-		if id == UserId {
+		if id == wantedId {
 			return updateUser(systemInfo.Key, user, client)
 		}
 	}
-	return fmt.Errorf("User with user_id %+s not found.", UserId)
+	return fmt.Errorf("User with user_id %+s not found.", wantedId)
 }
 
 func pushRoles(systemInfo *System_meta, client *cb.DevClient) error {
@@ -293,14 +295,14 @@ func pushRoles(systemInfo *System_meta, client *cb.DevClient) error {
 		return err
 	}
 	for i := 0; i < len(allRoles); i++ {
-		if err := pushOneRole(systemInfo, allRoles[i]["Name"].(string), client); err != nil {
+		if err := pushOneRole(systemInfo, client, allRoles[i]["Name"].(string)); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func pushOneRole(systemInfo *System_meta, name string, client *cb.DevClient) error {
+func pushOneRole(systemInfo *System_meta, client *cb.DevClient, name string) error {
 	fmt.Printf("Pushing role %s\n", name)
 	role, err := getRole(name)
 	if err != nil {
@@ -353,9 +355,9 @@ func pushOneTimer(systemInfo *System_meta, client *cb.DevClient, name string) er
 	return updateTimer(systemInfo.Key, timer, client)
 }
 
-func pushOneDevice(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing device %+s\n", DeviceName)
-	device, err := getDevice(DeviceName)
+func pushOneDevice(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing device %+s\n", name)
+	device, err := getDevice(name)
 	if err != nil {
 		return err
 	}
@@ -430,9 +432,9 @@ func pushAllDevices(systemInfo *System_meta, client *cb.DevClient) error {
 	return nil
 }
 
-func pushOneEdge(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing edge %+s\n", EdgeName)
-	edge, err := getEdge(EdgeName)
+func pushOneEdge(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing edge %+s\n", name)
+	edge, err := getEdge(name)
 	if err != nil {
 		return err
 	}
@@ -453,9 +455,9 @@ func pushAllEdges(systemInfo *System_meta, client *cb.DevClient) error {
 	return nil
 }
 
-func pushOnePortal(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing portal %+s\n", PortalName)
-	portal, err := getPortal(PortalName)
+func pushOnePortal(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing portal %+s\n", name)
+	portal, err := getPortal(name)
 	if err != nil {
 		return err
 	}
@@ -476,9 +478,9 @@ func pushAllPortals(systemInfo *System_meta, client *cb.DevClient) error {
 	return nil
 }
 
-func pushOnePlugin(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing portal %+s\n", PluginName)
-	plugin, err := getPlugin(PluginName)
+func pushOnePlugin(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing portal %+s\n", name)
+	plugin, err := getPlugin(name)
 	if err != nil {
 		return err
 	}
@@ -499,10 +501,10 @@ func pushAllPlugins(systemInfo *System_meta, client *cb.DevClient) error {
 	return nil
 }
 
-func pushOneAdaptor(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing adaptor %+s\n", PluginName)
+func pushOneAdaptor(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing adaptor %+s\n", name)
 	sysKey := systemInfo.Key
-	adaptor, err := getAdaptor(sysKey, AdaptorName, client)
+	adaptor, err := getAdaptor(sysKey, name, client)
 	if err != nil {
 		return err
 	}
@@ -539,10 +541,10 @@ func pushAllServices(systemInfo *System_meta, client *cb.DevClient) error {
 	return nil
 }
 
-func pushOneLibrary(systemInfo *System_meta, client *cb.DevClient) error {
-	fmt.Printf("Pushing library %+s\n", LibraryName)
+func pushOneLibrary(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing library %+s\n", name)
 
-	library, err := getLibrary(LibraryName)
+	library, err := getLibrary(name)
 	if err != nil {
 		return err
 	}
@@ -591,7 +593,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if ServiceName != "" {
 		didSomething = true
-		if err := pushOneService(systemInfo, client); err != nil {
+		if err := pushOneService(systemInfo, client, ServiceName); err != nil {
 			return err
 		}
 	}
@@ -605,7 +607,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if LibraryName != "" {
 		didSomething = true
-		if err := pushOneLibrary(systemInfo, client); err != nil {
+		if err := pushOneLibrary(systemInfo, client, LibraryName); err != nil {
 			return err
 		}
 	}
@@ -631,6 +633,13 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if CollectionId != "" {
+		didSomething = true
+		if err := pushOneCollectionById(systemInfo, client, CollectionId); err != nil {
+			return err
+		}
+	}
+
 	if UserSchema || AllAssets {
 		didSomething = true
 		if err := pushUserSchema(systemInfo, client); err != nil {
@@ -652,6 +661,13 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if UserId != "" {
+		didSomething = true
+		if err := pushOneUserById(systemInfo, client, UserId); err != nil {
+			return err
+		}
+	}
+
 	if AllRoles || AllAssets {
 		didSomething = true
 		if err := pushRoles(systemInfo, client); err != nil {
@@ -661,7 +677,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if RoleName != "" {
 		didSomething = true
-		if err := pushOneRole(systemInfo, RoleName, client); err != nil {
+		if err := pushOneRole(systemInfo, client, RoleName); err != nil {
 			return err
 		}
 	}
@@ -712,7 +728,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if DeviceName != "" {
 		didSomething = true
-		if err := pushOneDevice(systemInfo, client); err != nil {
+		if err := pushOneDevice(systemInfo, client, DeviceName); err != nil {
 			return err
 		}
 	}
@@ -733,7 +749,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if EdgeName != "" {
 		didSomething = true
-		if err := pushOneEdge(systemInfo, client); err != nil {
+		if err := pushOneEdge(systemInfo, client, EdgeName); err != nil {
 			return err
 		}
 	}
@@ -747,7 +763,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if PortalName != "" {
 		didSomething = true
-		if err := pushOnePortal(systemInfo, client); err != nil {
+		if err := pushOnePortal(systemInfo, client, PortalName); err != nil {
 			return err
 		}
 	}
@@ -761,7 +777,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if PluginName != "" {
 		didSomething = true
-		if err := pushOnePlugin(systemInfo, client); err != nil {
+		if err := pushOnePlugin(systemInfo, client, PluginName); err != nil {
 			return err
 		}
 	}
@@ -775,7 +791,7 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 
 	if AdaptorName != "" {
 		didSomething = true
-		if err := pushOneAdaptor(systemInfo, client); err != nil {
+		if err := pushOneAdaptor(systemInfo, client, AdaptorName); err != nil {
 			return err
 		}
 	}

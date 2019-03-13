@@ -2,7 +2,6 @@ package cblib
 
 import (
 	"fmt"
-	"strings"
 
 	cb "github.com/clearblade/Go-SDK"
 	"github.com/clearblade/cblib/models"
@@ -86,283 +85,10 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		return fmt.Errorf("Re-auth failed: %s\n", err)
 	}
 
-	// ??? we already have them locally
-	if _, err := PullAndWriteRoles(systemInfo.Key, client, false); err != nil {
-		return err
-	}
-
-	didSomething := false
-
-	if AllServices || AllAssets {
-		didSomething = true
-		fmt.Printf("Pulling all services:")
-		if _, err := PullServices(systemInfo.Key, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull services. %s", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if ServiceName != "" {
-		didSomething = true
-		fmt.Printf("Pulling service %+s\n", ServiceName)
-		if err := PullAndWriteService(systemInfo.Key, ServiceName, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull service. %s", err.Error()))
-		}
-	}
-
-	if AllLibraries || AllAssets {
-		didSomething = true
-		fmt.Printf("Pulling all libraries:")
-		if _, err := PullLibraries(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull libraries. %s", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if LibraryName != "" {
-		didSomething = true
-		fmt.Printf("Pulling library %s\n", LibraryName)
-		if lib, err := pullLibrary(systemInfo.Key, LibraryName, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull library. %s", err.Error()))
-		} else {
-			writeLibrary(lib["name"].(string), lib)
-		}
-	}
-
-	if AllCollections || AllAssets {
-		didSomething = true
-		ExportRows = true
-		fmt.Printf("Pulling all collections:")
-		if _, err := pullCollections(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all collections. %s", err.Error()))
-		}
-	}
-
-	if CollectionSchema != "" {
-		didSomething = true
-		fmt.Printf("Pulling collection schema for %s\n", CollectionSchema)
-		if _, err := pullAndWriteCollectionColumns(systemInfo, client, CollectionSchema); err != nil {
-			logError(fmt.Sprintf("Failed to pull collection schema. %s", err.Error()))
-		}
-	}
-
-	if CollectionName != "" {
-		didSomething = true
-		ExportRows = true
-		fmt.Printf("Pulling collection %+s\n", CollectionName)
-		err := PullAndWriteCollection(systemInfo, CollectionName, client)
-		if err != nil {
-			logError(fmt.Sprintf("Failed to pull collection. %s", err.Error()))
-		}
-	}
-
-	if AllUsers || AllAssets {
-		didSomething = true
-		fmt.Println("Pulling all users:")
-		if err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client); err != nil {
-			fmt.Printf("Error: Failed to pull all users - %s\n", err.Error())
-		}
-		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
-			fmt.Printf("Error: Failed to pull user schema - %s\n", err.Error())
-		}
-	}
-
-	if User != "" {
-		didSomething = true
-		fmt.Printf("Pulling user %+s\n", User)
-		err := PullAndWriteUsers(systemInfo.Key, User, client)
-		if err != nil {
-			logError(fmt.Sprintf("Failed to pull users. %s", err.Error()))
-		}
-		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull user schema. %s", err.Error()))
-			return err
-		}
-	}
-
-	if AllRoles || AllAssets {
-		didSomething = true
-		fmt.Println("Pulling all roles:")
-		if _, err := PullAndWriteRoles(systemInfo.Key, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull all roles. %s", err.Error()))
-		}
-	}
-
-	if RoleName != "" {
-		didSomething = true
-		roles := make([]map[string]interface{}, 0)
-		splitRoles := strings.Split(RoleName, ",")
-		for _, role := range splitRoles {
-			fmt.Printf("Pulling role %+s\n", role)
-			if r, err := pullRole(systemInfo.Key, role, client); err != nil {
-				logError(fmt.Sprintf("Failed to pull role. %s", err.Error()))
-			} else {
-				roles = append(roles, r)
-				writeRole(role, r)
-			}
-		}
-	}
-
-	if AllTriggers || AllAssets {
-		didSomething = true
-		fmt.Println("Pulling all triggers:")
-		if _, err := PullAndWriteTriggers(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all triggers. %s", err.Error()))
-		}
-	}
-
-	if TriggerName != "" {
-		didSomething = true
-		fmt.Printf("Pulling trigger %+s\n", TriggerName)
-		err := PullAndWriteTrigger(systemInfo.Key, TriggerName, client)
-		if err != nil {
-			logError(fmt.Sprintf("Failed to pull trigger. %s", err.Error()))
-		}
-	}
-
-	if AllTimers || AllAssets {
-		didSomething = true
-		fmt.Println("Pulling all timers:")
-		if _, err := PullAndWriteTimers(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all timers. %s", err.Error()))
-		}
-	}
-
-	if TimerName != "" {
-		didSomething = true
-		fmt.Printf("Pulling timer %+s\n", TimerName)
-		err := PullAndWriteTimer(systemInfo.Key, TimerName, client)
-		if err != nil {
-			logError(fmt.Sprintf("Failed to pull timer. %s", err.Error()))
-		}
-	}
-
-	if AllDevices || AllAssets {
-		didSomething = true
-		fmt.Printf("Pulling all devices:")
-		if _, err := PullDevices(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all devices. %s", err.Error()))
-		}
-		if _, err := pullDevicesSchema(systemInfo.Key, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull device schema. %s", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if DeviceName != "" {
-		didSomething = true
-		fmt.Printf("Pulling device %+s\n", DeviceName)
-		if device, err := pullDevice(systemInfo.Key, DeviceName, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull device. %s", err.Error()))
-		} else {
-			if _, err := pullDevicesSchema(systemInfo.Key, client, true); err != nil {
-				logError(fmt.Sprintf("Failed to pull device schema. %s", err.Error()))
-			}
-			writeDevice(DeviceName, device)
-		}
-	}
-
-	if AllEdges || AllAssets {
-		didSomething = true
-		fmt.Printf("Pulling all edges:")
-		if _, err := PullEdges(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all edges. %s", err.Error()))
-		}
-		if _, err := pullEdgesSchema(systemInfo.Key, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull edge schema. %s", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if EdgeName != "" {
-		didSomething = true
-		fmt.Printf("Pulling edge %+s\n", EdgeName)
-		if edge, err := pullEdge(systemInfo.Key, EdgeName, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull edge. %s", err.Error()))
-		} else {
-			writeEdge(EdgeName, edge)
-		}
-		if _, err := pullEdgesSchema(systemInfo.Key, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull edge schema. %s", err.Error()))
-		}
-	}
-
-	if AllPortals || AllAssets {
-		didSomething = true
-		fmt.Printf("Pulling all portals:")
-		if _, err := PullPortals(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all portals. %s", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if PortalName != "" {
-		didSomething = true
-		fmt.Printf("Pulling portal %+s\n", PortalName)
-		if err := PullAndWritePortal(systemInfo.Key, PortalName, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull portal. %s", err.Error()))
-		}
-	}
-
-	if AllPlugins || AllAssets {
-		didSomething = true
-		fmt.Printf("Pulling all plugins:")
-		if _, err := PullPlugins(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all plugins. %s", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if PluginName != "" {
-		didSomething = true
-		fmt.Printf("Pulling plugin %+s\n", PluginName)
-		if err = PullAndWritePlugin(systemInfo.Key, PluginName, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull plugin. %s", err.Error()))
-		}
-	}
-
-	if AllAdaptors || AllAssets {
-		didSomething = true
-		fmt.Printf("Pulling all adapters:")
-		if err := backupAndCleanDirectory(adaptorsDir); err != nil {
-			return err
-		}
-		if err := PullAdaptors(systemInfo, client); err != nil {
-			if restoreErr := restoreBackupDirectory(adaptorsDir); restoreErr != nil {
-				fmt.Printf("Failed to restore backup directory; %s\n", restoreErr.Error())
-			}
-			logError(fmt.Sprintf("Failed to pull all adapters. %s", err.Error()))
-			return err
-		}
-		if err := removeBackupDirectory(adaptorsDir); err != nil {
-			fmt.Printf("Warning: Failed to remove backup directory for '%s'", adaptorsDir)
-		}
-		fmt.Printf("\n")
-	}
-
-	if AdaptorName != "" {
-		didSomething = true
-		fmt.Printf("Pulling adapter %+s\n", AdaptorName)
-		if err = PullAndWriteAdaptor(systemInfo.Key, AdaptorName, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull adapter. %s", err.Error()))
-		}
-	}
-
-	if AllDeployments || AllAssets {
-		didSomething = true
-		fmt.Printf("Pulling all deployments:")
-		if _, err = pullDeployments(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all deployments. %s", err.Error()))
-		}
-	}
-
-	if DeploymentName != "" {
-		didSomething = true
-		fmt.Printf("Pulling deployment %+s\n", DeploymentName)
-		if _, err = pullAndWriteDeployment(systemInfo, client, DeploymentName); err != nil {
-			logError(fmt.Sprintf("Failed to pull deployment. %s", err.Error()))
-		}
-	}
+	assetsToPull := createAffectedAssets()
+	assetsToPull.ExportItemId = true
+	assetsToPull.ExportRows = true
+	didSomething, err := pullAssets(systemInfo, client, createAffectedAssets())
 
 	if !didSomething {
 		fmt.Printf("Nothing to pull -- you must specify something to pull (ie, -service=<svc_name>)\n")
@@ -406,6 +132,7 @@ func PullAndWriteRoles(systemKey string, cli *cb.DevClient, writeThem bool) ([]m
 	rval := make([]map[string]interface{}, 0)
 	for _, rIF := range r {
 		thisRole := rIF.(map[string]interface{})
+		fmt.Printf(" %s", thisRole["Name"].(string))
 		rval = append(rval, thisRole)
 		if writeThem {
 			if err := writeRole(thisRole["Name"].(string), thisRole); err != nil {
@@ -436,39 +163,43 @@ func PullAndWriteLibrary(systemKey string, libraryName string, client *cb.DevCli
 	}
 }
 
-func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient) error {
+func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient, saveThem bool) ([]map[string]interface{}, error) {
 	if users, err := client.GetAllUsers(systemKey); err != nil {
-		return err
+		return nil, err
 	} else {
 		ok := false
 		for _, user := range users {
 			if user["email"] == userName || userName == PULL_ALL_USERS {
+				fmt.Printf(" %s", user["email"].(string))
 				ok = true
 				userId := user["user_id"].(string)
 				if roles, err := client.GetUserRoles(systemKey, userId); err != nil {
-					return fmt.Errorf("Could not get roles for %s: %s", userId, err.Error())
+					return nil, fmt.Errorf("Could not get roles for %s: %s", userId, err.Error())
 				} else {
 					user["roles"] = roles
 				}
-				err = writeUser(user["email"].(string), user)
-				if err != nil {
-					return err
+				if saveThem {
+					err = writeUser(user["email"].(string), user)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
 		if !ok {
 			if userName == PULL_ALL_USERS {
-				return fmt.Errorf("No users found")
+				return nil, fmt.Errorf("No users found")
 			} else {
-				return fmt.Errorf("User %+s not found\n", userName)
+				return nil, fmt.Errorf("User %+s not found\n", userName)
 			}
 
 		}
+
 	}
-	return nil
+	return nil, nil
 }
 
-func PullAndWriteCollection(systemInfo *System_meta, collectionName string, client *cb.DevClient) error {
+func PullAndWriteCollection(systemInfo *System_meta, collectionName string, client *cb.DevClient, shouldExportRows, shouldExportItemId bool) error {
 	if allColls, err := client.GetAllCollections(systemInfo.Key); err != nil {
 		return err
 	} else {
@@ -486,38 +217,13 @@ func PullAndWriteCollection(systemInfo *System_meta, collectionName string, clie
 		if coll, err := client.GetCollectionInfo(collID); err != nil {
 			return err
 		} else {
-			if data, err := PullCollection(systemInfo, coll, client); err != nil {
+			if data, err := PullCollection(systemInfo, client, coll, shouldExportRows, shouldExportItemId); err != nil {
 				return err
 			} else {
 				d := makeCollectionJsonConsistent(data)
 				err = writeCollection(d["name"].(string), d)
 				if err != nil {
 					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func PullAndWriteCollections(sysMeta *System_meta, client *cb.DevClient) error {
-	if allColls, err := client.GetAllCollections(sysMeta.Key); err != nil {
-		return err
-	} else {
-		// iterate over allColls and find one with matching name
-		for _, c := range allColls {
-			coll := c.(map[string]interface{})
-			if coll, err := client.GetCollectionInfo(coll["collectionID"].(string)); err != nil {
-				return err
-			} else {
-				if data, err := PullCollection(sysMeta, coll, client); err != nil {
-					return err
-				} else {
-					d := makeCollectionJsonConsistent(data)
-					err = writeCollection(d["name"].(string), d)
-					if err != nil {
-						return err
-					}
 				}
 			}
 		}
@@ -556,6 +262,7 @@ func PullAndWriteTriggers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string
 	triggers := []map[string]interface{}{}
 	for _, trig := range trigs {
 		thisTrig := trig.(map[string]interface{})
+		fmt.Printf(" %s", thisTrig["name"].(string))
 		delete(thisTrig, "system_key")
 		delete(thisTrig, "system_secret")
 		triggers = append(triggers, thisTrig)
@@ -587,6 +294,7 @@ func PullAndWriteTimers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]i
 	timers := []map[string]interface{}{}
 	for _, timer := range theTimers {
 		thisTimer := timer.(map[string]interface{})
+		fmt.Printf(" %s", thisTimer["name"].(string))
 		timers = append(timers, thisTimer)
 		err = writeTimer(thisTimer["name"].(string), thisTimer)
 		if err != nil {

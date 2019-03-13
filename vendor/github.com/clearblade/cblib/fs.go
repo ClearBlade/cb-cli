@@ -35,12 +35,12 @@ var (
 	pluginsDir     string
 	adaptorsDir    string
 	deploymentsDir string
+	cliHiddenDir   string
 	mapNameToIdDir string
-	arrDir         [14]string //this is used to set up the directory structure for a system
+	arrDir         [15]string //this is used to set up the directory structure for a system
 )
 
 func SetRootDir(theRootDir string) {
-
 	RootDirIsSet = true
 
 	rootDir = theRootDir
@@ -57,7 +57,8 @@ func SetRootDir(theRootDir string) {
 	pluginsDir = rootDir + "/plugins"
 	adaptorsDir = rootDir + "/adapters"
 	deploymentsDir = rootDir + "/deployments"
-	mapNameToIdDir = rootDir + "/map-name-to-id"
+	cliHiddenDir = rootDir + "/.cb-cli"
+	mapNameToIdDir = cliHiddenDir + "/map-name-to-id"
 	arrDir[0] = svcDir
 	arrDir[1] = libDir
 	arrDir[2] = dataDir
@@ -71,7 +72,8 @@ func SetRootDir(theRootDir string) {
 	arrDir[10] = pluginsDir
 	arrDir[11] = adaptorsDir
 	arrDir[12] = deploymentsDir
-	arrDir[13] = mapNameToIdDir
+	arrDir[13] = cliHiddenDir
+	arrDir[14] = mapNameToIdDir
 }
 
 func setupDirectoryStructure(sys *System_meta) error {
@@ -102,15 +104,19 @@ func cleanUpDirectories(sys *System_meta) error {
 }
 
 func storeCBMeta(info map[string]interface{}) error {
-	filename := ".cbmeta"
+	filename := "cbmeta"
 	marshalled, err := json.MarshalIndent(info, "", "    ")
 	if err != nil {
-		return fmt.Errorf("Could not marshal .cbmeta info: %s", err.Error())
+		return fmt.Errorf("Could not marshal cbmeta info: %s", err.Error())
 	}
-	if err = ioutil.WriteFile(rootDir+"/"+filename, marshalled, 0666); err != nil {
-		return fmt.Errorf("Could not write to .cbmeta: %s", err.Error())
+	if err = ioutil.WriteFile(cliHiddenDir+"/"+filename, marshalled, 0666); err != nil {
+		return fmt.Errorf("Could not write to cbmeta: %s", err.Error())
 	}
 	return nil
+}
+
+func getCbMeta() (map[string]interface{}, error) {
+	return getDict(cliHiddenDir + "/" + "cbmeta")
 }
 
 func whitelistSystemDotJSON(jason map[string]interface{}) map[string]interface{} {

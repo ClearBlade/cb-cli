@@ -88,6 +88,82 @@ var (
 	DefaultCollectionColumns = []string{"item_id"}
 )
 
+type AffectedAssets struct {
+	AllAssets        bool
+	AllServices      bool
+	AllLibraries     bool
+	AllEdges         bool
+	AllDevices       bool
+	AllPortals       bool
+	AllPlugins       bool
+	AllAdaptors      bool
+	AllDeployments   bool
+	AllCollections   bool
+	AllRoles         bool
+	AllUsers         bool
+	AllTriggers      bool
+	AllTimers        bool
+	DeviceSchema     bool
+	UserSchema       bool
+	EdgeSchema       bool
+	CollectionSchema string
+	ServiceName      string
+	LibraryName      string
+	CollectionName   string
+	User             string
+	RoleName         string
+	TriggerName      string
+	TimerName        string
+	EdgeName         string
+	DeviceName       string
+	PortalName       string
+	PluginName       string
+	AdaptorName      string
+	DeploymentName   string
+	ExportUsers      bool
+	ExportRows       bool
+	ExportItemId     bool
+}
+
+func createAffectedAssets() AffectedAssets {
+	return AffectedAssets{
+		AllAssets:        AllAssets,
+		AllServices:      AllServices,
+		AllLibraries:     AllLibraries,
+		AllEdges:         AllEdges,
+		AllDevices:       AllDevices,
+		AllPortals:       AllPortals,
+		AllPlugins:       AllPlugins,
+		AllAdaptors:      AllAdaptors,
+		AllDeployments:   AllDeployments,
+		AllCollections:   AllCollections,
+		AllRoles:         AllRoles,
+		AllUsers:         AllUsers,
+		UserSchema:       UserSchema,
+		DeviceSchema:     DeviceSchema,
+		EdgeSchema:       EdgeSchema,
+		AllTriggers:      AllTriggers,
+		AllTimers:        AllTimers,
+		CollectionSchema: CollectionSchema,
+		ServiceName:      ServiceName,
+		LibraryName:      LibraryName,
+		CollectionName:   CollectionName,
+		User:             User,
+		RoleName:         RoleName,
+		TriggerName:      TriggerName,
+		TimerName:        TimerName,
+		EdgeName:         EdgeName,
+		DeviceName:       DeviceName,
+		PortalName:       PortalName,
+		PluginName:       PluginName,
+		AdaptorName:      AdaptorName,
+		DeploymentName:   DeploymentName,
+		ExportUsers:      ExportUsers,
+		ExportRows:       ExportRows,
+		ExportItemId:     ExportItemId,
+	}
+}
+
 type Role_meta struct {
 	Name        string
 	Description string

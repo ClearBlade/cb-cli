@@ -87,11 +87,10 @@ func reallyTarget(cli *cb.DevClient, sysKey string, oldSysMeta *System_meta) err
 	}
 
 	metaStuff := map[string]interface{}{
-		"platform_url":        URL,
-		"messaging_url":       MsgURL,
-		"developer_email":     Email,
-		"asset_refresh_dates": []interface{}{},
-		"token":               cli.DevToken,
+		"platform_url":    URL,
+		"messaging_url":   MsgURL,
+		"developer_email": Email,
+		"token":           cli.DevToken,
 	}
 	if err = storeCBMeta(metaStuff); err != nil {
 		return err

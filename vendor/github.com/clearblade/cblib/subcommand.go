@@ -3,8 +3,9 @@ package cblib
 import (
 	"flag"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
 	"strings"
+
+	cb "github.com/clearblade/Go-SDK"
 )
 
 type SubCommand struct {
@@ -15,7 +16,7 @@ type SubCommand struct {
 	mustNotBeInRepo bool
 	flags           flag.FlagSet
 	run             func(cmd *SubCommand, client *cb.DevClient, args ...string) error
-	example			string
+	example         string
 }
 
 var (
@@ -41,8 +42,9 @@ func (c *SubCommand) Execute( /*client *cb.DevClient,*/ args []string) error {
 		return fmt.Errorf("You cannot run the '%s' command in an existing ClearBlade repository", c.name)
 	}
 
+	SetRootDir(".")
 	// This is the most important part of initialization
-	MetaInfo, _ = getDict(".cbmeta")
+	MetaInfo, _ = getCbMeta()
 
 	if MetaInfo != nil {
 		client = makeClientFromMetaInfo()
@@ -80,7 +82,7 @@ func AddCommand(commandName string, stuff *SubCommand) {
 	subCommands[commandName] = stuff
 }
 
-func PrintRootHelp(){
+func PrintRootHelp() {
 	var usage = `
 The cb-cli (ClearBlade CLI) provides methods for interacting with ClearBlade platform
 
@@ -90,9 +92,9 @@ Commands:
 
 `
 	for cmd, _ := range subCommands {
-		usage += fmt.Sprintf("\t%v\n",cmd)
-	 }
-	 usage += `
+		usage += fmt.Sprintf("\t%v\n", cmd)
+	}
+	usage += `
 
 Examples:
 
@@ -101,5 +103,5 @@ Examples:
 	cb-cli push -service=Service1			# pushs an individual service up to Platform
 	cb-cli pull -collection=Collection2	# pulls an individual collection to filesystem
 	 `
-	 fmt.Println(usage)
+	fmt.Println(usage)
 }

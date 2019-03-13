@@ -693,8 +693,10 @@ func importIt(cli *cb.DevClient) error {
 	}
 	//fmt.Printf("Done.\nImporting system...")
 	fmt.Printf("Importing system...")
-	if _, err := createSystem(systemInfo, cli); err != nil {
+	if data, err := createSystem(systemInfo, cli); err != nil {
 		return fmt.Errorf("Could not create system %s: %s", systemInfo["name"], err.Error())
+	} else {
+		logInfo(fmt.Sprintf("Successfully created new system. System key is - %s", data["systemKey"].(string)))
 	}
 
 	return importAllAssets(systemInfo, users, cli)

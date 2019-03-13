@@ -150,11 +150,6 @@ func doDiff(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if CollectionName != "" {
-		if err := diffCollection(systemInfo, client, CollectionName); err != nil {
-			return err
-		}
-	}
 	if User != "" {
 		if err := diffUser(systemInfo, client, User); err != nil {
 			return err
@@ -316,34 +311,8 @@ func diffLibrary(sys *System_meta, client *cb.DevClient, libraryName string) err
 	return diffCodeAndMeta(sys, client, "library", libraryName, getLibrary, pullLibrary)
 }
 
-func diffCollection(sys *System_meta, client *cb.DevClient, collectionName string) error {
-	localCollection, err := getCollection(collectionName)
-	if err != nil {
-		return err
-	}
-
-	colId, ok := localCollection["collectionID"].(string)
-	if !ok {
-		colId = localCollection["collection_id"].(string)
-	}
-	ExportRows = false
-	remoteCollection, err := pullCollectionAndInfo(sys, colId, client)
-	if err != nil {
-		return err
-	}
-	delete(localCollection, "items")
-	delete(remoteCollection, "items")
-	names.push("collection")
-	defer names.pop()
-	printedDiffCount = 0
-	diffMap(localCollection, remoteCollection)
-	printSummary("collection", collectionName)
-	return nil
-}
-
 func diffUser(sys *System_meta, client *cb.DevClient, userName string) error {
-	ExportUsers = true
-	allUsers, err := pullUsers(sys, client, false)
+	allUsers, err := PullAndWriteUsers(sys.Key, PULL_ALL_USERS, client, false)
 	if err != nil {
 		return err
 	}
