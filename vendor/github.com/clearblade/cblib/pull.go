@@ -404,7 +404,7 @@ func updateMapNameToIDFiles(systemInfo *System_meta, client *cb.DevClient) {
 		}
 	}
 	logInfo("\nUpdating collections...")
-	if data, err := pullCollections(systemInfo, client, false, false, false); err != nil {
+	if data, err := PullAndWriteCollections(systemInfo, client, false, false, false); err != nil {
 		logError(fmt.Sprintf("Failed to update %s. %s", getCollectionNameToIdFullFilePath(), err.Error()))
 	} else {
 		for i := 0; i < len(data); i++ {

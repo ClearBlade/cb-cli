@@ -57,7 +57,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 	if assets.AllCollections || assets.AllAssets {
 		didSomething = true
 		fmt.Println("Pulling all collections:")
-		if _, err := pullCollections(systemInfo, client, true, assets.ExportRows, assets.ExportItemId); err != nil {
+		if _, err := PullAndWriteCollections(systemInfo, client, true, assets.ExportRows, assets.ExportItemId); err != nil {
 			logError(fmt.Sprintf("Failed to pull all collections. %s", err.Error()))
 		}
 		fmt.Printf("\n")

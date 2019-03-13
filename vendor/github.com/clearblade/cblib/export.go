@@ -68,7 +68,7 @@ func makeRoleNameToIdMap(roles []map[string]interface{}) map[string]interface{} 
 	return rtn
 }
 
-func pullCollections(sysMeta *System_meta, cli *cb.DevClient, saveThem, shouldExportRows, shouldExportItemID bool) ([]map[string]interface{}, error) {
+func PullAndWriteCollections(sysMeta *System_meta, cli *cb.DevClient, saveThem, shouldExportRows, shouldExportItemID bool) ([]map[string]interface{}, error) {
 	colls, err := cli.GetAllCollections(sysMeta.Key)
 	if err != nil {
 		return nil, err
