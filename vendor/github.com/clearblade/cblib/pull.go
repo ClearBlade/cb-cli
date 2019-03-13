@@ -88,7 +88,8 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 	assetsToPull := createAffectedAssets()
 	assetsToPull.ExportItemId = true
 	assetsToPull.ExportRows = true
-	didSomething, err := pullAssets(systemInfo, client, createAffectedAssets())
+	assetsToPull.ExportUsers = true
+	didSomething, err := pullAssets(systemInfo, client, assetsToPull)
 
 	if !didSomething {
 		fmt.Printf("Nothing to pull -- you must specify something to pull (ie, -service=<svc_name>)\n")
