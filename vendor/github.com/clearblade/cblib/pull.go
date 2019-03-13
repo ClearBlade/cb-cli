@@ -393,7 +393,7 @@ func updateMapNameToIDFiles(systemInfo *System_meta, client *cb.DevClient) {
 		logError(fmt.Sprintf("Failed to update %s. %s", getRoleNameToIdFullFilePath(), err.Error()))
 	}
 	logInfo("\nUpdating collections...")
-	if _, err := pullCollections(systemInfo, client, false, false); err != nil {
+	if _, err := pullCollections(systemInfo, client, true, true); err != nil {
 		logError(fmt.Sprintf("Failed to update %s. %s", getCollectionNameToIdFullFilePath(), err.Error()))
 	}
 	logInfo("Updating users...")
