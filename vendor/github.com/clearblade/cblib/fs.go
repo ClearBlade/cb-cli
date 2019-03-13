@@ -89,6 +89,18 @@ func setupDirectoryStructure(sys *System_meta) error {
 	return nil
 }
 
+func getRoleNameToIdFullFilePath() string {
+	return getNameToIdFullFilePath(roleNameToIdFileName)
+}
+
+func getCollectionNameToIdFullFilePath() string {
+	return getNameToIdFullFilePath(collectionNameToIdFileName)
+}
+
+func getUserEmailToIdFullFilePath() string {
+	return getNameToIdFullFilePath(userEmailToIdFileName)
+}
+
 func getNameToIdFullFilePath(fileName string) string {
 	return mapNameToIdDir + "/" + fileName
 }
@@ -322,7 +334,7 @@ func whitelistCollection(data map[string]interface{}, items []interface{}) map[s
 }
 
 func writeCollectionNameToId(data map[string]interface{}) error {
-	return writeIdMap(data, getNameToIdFullFilePath(collectionNameToIdFileName))
+	return writeIdMap(data, getCollectionNameToIdFullFilePath())
 }
 
 func writeIdMap(data map[string]interface{}, fileName string) error {
@@ -337,7 +349,7 @@ func writeIdMap(data map[string]interface{}, fileName string) error {
 }
 
 func writeRoleNameToId(data map[string]interface{}) error {
-	return writeIdMap(data, getNameToIdFullFilePath(roleNameToIdFileName))
+	return writeIdMap(data, getRoleNameToIdFullFilePath())
 }
 
 func updateRoleNameToId(info RoleInfo) error {
@@ -350,7 +362,7 @@ func updateRoleNameToId(info RoleInfo) error {
 }
 
 func getRoleNameToId() (map[string]interface{}, error) {
-	return getDict(getNameToIdFullFilePath(roleNameToIdFileName))
+	return getDict(getRoleNameToIdFullFilePath())
 }
 
 func getRoleIdByName(name string) (string, error) {
@@ -375,7 +387,7 @@ func updateCollectionNameToId(info CollectionInfo) error {
 }
 
 func getCollectionNameToId() (map[string]interface{}, error) {
-	return getDict(getNameToIdFullFilePath(collectionNameToIdFileName))
+	return getDict(getCollectionNameToIdFullFilePath())
 }
 
 func getCollectionNameToIdAsSlice() ([]CollectionInfo, error) {
@@ -400,7 +412,7 @@ type UserInfo struct {
 }
 
 func getUserEmailToId() (map[string]interface{}, error) {
-	return getDict(getNameToIdFullFilePath(userEmailToIdFileName))
+	return getDict(getUserEmailToIdFullFilePath())
 }
 
 func updateUserEmailToId(info UserInfo) error {
@@ -413,7 +425,7 @@ func updateUserEmailToId(info UserInfo) error {
 }
 
 func writeUserEmailToId(data map[string]interface{}) error {
-	return writeIdMap(data, getNameToIdFullFilePath(userEmailToIdFileName))
+	return writeIdMap(data, getUserEmailToIdFullFilePath())
 }
 
 func getUserIdByEmail(email string) (string, error) {
@@ -460,10 +472,10 @@ func writeCollection(collectionName string, data map[string]interface{}) error {
 		return fmt.Errorf("Unable to process collection item array")
 	}
 	if SortCollections {
-		fmt.Println("Note: Sorting collections by item_id. This may take time depending on collection size.")
+		fmt.Println(" Note: Sorting collections by item_id. This may take time depending on collection size.")
 		sortByFunction(&itemArray, compareCollectionItems)
 	} else {
-		fmt.Println("Note: Not sorting collections by item_id. Add sort-collection=true flag if desired.")
+		fmt.Println(" Note: Not sorting collections by item_id. Add sort-collection=true flag if desired.")
 	}
 	err := updateCollectionNameToId(CollectionInfo{
 		ID:   data["collection_id"].(string),

@@ -96,6 +96,9 @@ func reallyTarget(cli *cb.DevClient, sysKey string, oldSysMeta *System_meta) err
 		return err
 	}
 
+	logInfo("Updating map name to ID files...")
+	updateMapNameToIDFiles(sysMeta, cli)
+
 	fmt.Printf("System '%s' has been initialized.\n", sysMeta.Name)
 	return nil
 }

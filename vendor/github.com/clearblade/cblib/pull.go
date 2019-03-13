@@ -385,3 +385,18 @@ func pullAdaptor(systemKey, adaptorName string, client *cb.DevClient) (*models.A
 
 	return currentAdaptor, nil
 }
+
+func updateMapNameToIDFiles(systemInfo *System_meta, client *cb.DevClient) {
+	logInfo("Updating roles...")
+	if _, err := PullAndWriteRoles(systemInfo.Key, client, false); err != nil {
+		logError(fmt.Sprintf("Failed to update %s. %s", getRoleNameToIdFullFilePath(), err.Error()))
+	}
+	logInfo("\nUpdating collections...")
+	if _, err := pullCollections(systemInfo, client, false, false); err != nil {
+		logError(fmt.Sprintf("Failed to update %s. %s", getCollectionNameToIdFullFilePath(), err.Error()))
+	}
+	logInfo("Updating users...")
+	if _, err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client, true); err != nil {
+		logError(fmt.Sprintf("Failed to update %s. %s", getUserEmailToIdFullFilePath(), err.Error()))
+	}
+}
