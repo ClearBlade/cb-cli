@@ -169,6 +169,7 @@ func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient, 
 		return nil, err
 	} else {
 		ok := false
+		rtn := make([]map[string]interface{}, 0)
 		for _, user := range users {
 			if user["email"] == userName || userName == PULL_ALL_USERS {
 				fmt.Printf(" %s", user["email"].(string))
@@ -179,6 +180,7 @@ func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient, 
 				} else {
 					user["roles"] = roles
 				}
+				rtn = append(rtn, user)
 				if saveThem {
 					err = writeUser(user["email"].(string), user)
 					if err != nil {
@@ -194,6 +196,8 @@ func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient, 
 				return nil, fmt.Errorf("User %+s not found\n", userName)
 			}
 
+		} else {
+			return rtn, nil
 		}
 
 	}
@@ -389,15 +393,36 @@ func pullAdaptor(systemKey, adaptorName string, client *cb.DevClient) (*models.A
 
 func updateMapNameToIDFiles(systemInfo *System_meta, client *cb.DevClient) {
 	logInfo("Updating roles...")
-	if _, err := PullAndWriteRoles(systemInfo.Key, client, false); err != nil {
+	if data, err := PullAndWriteRoles(systemInfo.Key, client, false); err != nil {
 		logError(fmt.Sprintf("Failed to update %s. %s", getRoleNameToIdFullFilePath(), err.Error()))
+	} else {
+		for i := 0; i < len(data); i++ {
+			updateRoleNameToId(RoleInfo{
+				ID:   data[i]["ID"].(string),
+				Name: data[i]["Name"].(string),
+			})
+		}
 	}
 	logInfo("\nUpdating collections...")
-	if _, err := pullCollections(systemInfo, client, true, true); err != nil {
+	if data, err := pullCollections(systemInfo, client, false, false, false); err != nil {
 		logError(fmt.Sprintf("Failed to update %s. %s", getCollectionNameToIdFullFilePath(), err.Error()))
+	} else {
+		for i := 0; i < len(data); i++ {
+			updateCollectionNameToId(CollectionInfo{
+				ID:   data[i]["collection_id"].(string),
+				Name: data[i]["name"].(string),
+			})
+		}
 	}
 	logInfo("Updating users...")
-	if _, err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client, true); err != nil {
+	if data, err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client, false); err != nil {
 		logError(fmt.Sprintf("Failed to update %s. %s", getUserEmailToIdFullFilePath(), err.Error()))
+	} else {
+		for i := 0; i < len(data); i++ {
+			updateUserEmailToId(UserInfo{
+				Email:  data[i]["email"].(string),
+				UserID: data[i]["user_id"].(string),
+			})
+		}
 	}
 }

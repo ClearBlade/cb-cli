@@ -68,7 +68,7 @@ func makeRoleNameToIdMap(roles []map[string]interface{}) map[string]interface{} 
 	return rtn
 }
 
-func pullCollections(sysMeta *System_meta, cli *cb.DevClient, shouldExportRows, shouldExportItemId bool) ([]map[string]interface{}, error) {
+func pullCollections(sysMeta *System_meta, cli *cb.DevClient, saveThem, shouldExportRows, shouldExportItemID bool) ([]map[string]interface{}, error) {
 	colls, err := cli.GetAllCollections(sysMeta.Key)
 	if err != nil {
 		return nil, err
@@ -81,12 +81,14 @@ func pullCollections(sysMeta *System_meta, cli *cb.DevClient, shouldExportRows, 
 		if ok {
 			continue
 		}
-		if r, err := PullCollection(sysMeta, cli, col.(map[string]interface{}), shouldExportRows, shouldExportItemId); err != nil {
+		if r, err := PullCollection(sysMeta, cli, col.(map[string]interface{}), shouldExportRows, shouldExportItemID); err != nil {
 			return nil, err
 		} else {
 			data := makeCollectionJsonConsistent(r)
-			writeCollection(r["name"].(string), data)
 			rval = append(rval, data)
+			if saveThem {
+				writeCollection(r["name"].(string), data)
+			}
 		}
 	}
 
