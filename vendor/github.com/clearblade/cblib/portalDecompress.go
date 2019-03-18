@@ -151,8 +151,9 @@ func getOrGenerateWidgetName(widgetData map[string]interface{}) string {
 }
 
 func writeParserBasedOnDataType(dataType string, setting map[string]interface{}, filePath string) error {
-
+	found := false
 	if ip, ok := setting["incoming_parser"].(map[string]interface{}); ok {
+		found = true
 		if dataType != dynamicDataType {
 			ip = setting
 		}
@@ -162,11 +163,20 @@ func writeParserBasedOnDataType(dataType string, setting map[string]interface{},
 	}
 
 	if op, ok := setting["outgoing_parser"].(map[string]interface{}); ok {
+		found = true
 		if dataType != dynamicDataType {
 			op = setting
 		}
 		if err := writeParserFiles(filePath+"/outgoing_parser", op); err != nil {
 			return err
+		}
+	}
+
+	if !found {
+		if _, okMap := setting["value"]; okMap {
+			if err := writeParserFiles(filePath+"/incoming_parser", setting); err != nil {
+				return err
+			}
 		}
 	}
 	return nil
