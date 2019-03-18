@@ -761,10 +761,14 @@ func whitelistPortal(data map[string]interface{}) map[string]interface{} {
 }
 
 func writePortal(name string, data map[string]interface{}) error {
-	if err := os.MkdirAll(portalsDir, 0777); err != nil {
+	myPortalDir := portalsDir + "/" + name
+	if err := os.MkdirAll(myPortalDir, 0777); err != nil {
 		return err
 	}
-	return writeEntity(portalsDir, name, whitelistPortal(data))
+	if err := writeEntity(myPortalDir, name, whitelistPortal(data)); err != nil {
+		return err
+	}
+	return cleanUpAndDecompress(name)
 }
 
 func writePlugin(name string, data map[string]interface{}) error {
@@ -967,7 +971,39 @@ func getDevices() ([]map[string]interface{}, error) {
 }
 
 func getPortals() ([]map[string]interface{}, error) {
-	return getObjectList(portalsDir, []string{})
+	dirName := portalsDir
+	dirList, err := getFileList(dirName, []string{".DS_Store", ".git", ".gitignore"}) // For starters
+	if err != nil {
+		fmt.Printf("getFileListFailed: %s, %s\n", dirName, err)
+		return nil, err
+	}
+	rval := []map[string]interface{}{}
+	for _, realDirName := range dirList {
+		p, err := getPortal(realDirName)
+		if err != nil {
+			fmt.Printf("getObject failed: %s\n", err)
+			return nil, err
+		}
+		rval = append(rval, p)
+	}
+	return rval, nil
+}
+
+func getCompressedPortals() ([]map[string]interface{}, error) {
+	portals, err := getPortals()
+	if err != nil {
+		return nil, err
+	}
+	rtn := make([]map[string]interface{}, 0)
+	for _, p := range portals {
+		name := p["name"].(string)
+		compressedPortal, err := compressPortal(name)
+		if err != nil {
+			return nil, fmt.Errorf("Error compressing portal '%s': %s\n", name, err.Error())
+		}
+		rtn = append(rtn, compressedPortal)
+	}
+	return rtn, nil
 }
 
 func getPlugins() ([]map[string]interface{}, error) {
@@ -1028,7 +1064,7 @@ func getEdge(name string) (map[string]interface{}, error) {
 }
 
 func getPortal(name string) (map[string]interface{}, error) {
-	return getObject(portalsDir, name+".json")
+	return getObject(portalsDir+"/"+name, name+".json")
 }
 
 func getPlugin(name string) (map[string]interface{}, error) {

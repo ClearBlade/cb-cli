@@ -413,7 +413,7 @@ func createDevices(systemInfo map[string]interface{}, client *cb.DevClient) ([]m
 
 func createPortals(systemInfo map[string]interface{}, client *cb.DevClient) ([]map[string]interface{}, error) {
 	sysKey := systemInfo["systemKey"].(string)
-	portals, err := getPortals()
+	portals, err := getCompressedPortals()
 	if err != nil {
 		return nil, err
 	}
