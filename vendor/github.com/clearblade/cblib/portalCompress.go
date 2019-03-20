@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/totherme/unstructured"
 )
@@ -35,15 +34,19 @@ func compressDatasources(portal *unstructured.Data, decompressedPortalDir string
 	}
 
 	datasourcesDir := filepath.Join(decompressedPortalDir, "datasources")
-	filepath.Walk(datasourcesDir, func(path string, info os.FileInfo, err error) error {
+	if ok, err := dirExists(datasourcesDir); !ok || err != nil {
+		// portal doesn't have any datasources, just return
+		return nil
+	}
+	return filepath.Walk(datasourcesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		if info.IsDir() {
+		if !isInsideDirectory(datasourceDirectory, path) {
 			return nil
 		}
 
-		currDS, err := readFileAsString(path)
+		currDS, err := readFileAsString(path + "/" + portalDatasourceMetaFile)
 		if err != nil {
 			return err
 		}
@@ -51,6 +54,23 @@ func compressDatasources(portal *unstructured.Data, decompressedPortalDir string
 		if err != nil {
 			return err
 		}
+		dsSettings, err := currDSObj.GetByPointer("/settings")
+		if err != nil {
+			return err
+		}
+
+		dsSettingsMap, err := dsSettings.ObValue()
+		if err != nil {
+			return err
+		}
+		if hasDatasourceParser(dsSettingsMap) {
+			parserFile, err := readFileAsString(path + "/" + datasourceParserFileName)
+			if err != nil {
+				return err
+			}
+			dsSettings.SetField(datasourceParserKey, parserFile)
+		}
+
 		dsID, err := currDSObj.GetByPointer("/id")
 		if err != nil {
 			return err
@@ -243,6 +263,10 @@ func compressWidgets(portal *unstructured.Data, decompressedPortalDir string) er
 	}
 
 	widgetsDir := filepath.Join(decompressedPortalDir, "widgets")
+	if ok, err := dirExists(widgetsDir); !ok || err != nil {
+		// portal doesn't have any widgets, just return
+		return nil
+	}
 	return filepath.Walk(widgetsDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -250,8 +274,7 @@ func compressWidgets(portal *unstructured.Data, decompressedPortalDir string) er
 		if !info.IsDir() {
 			return nil
 		}
-		split := strings.Split(path, "/")
-		if split[len(split)-2] != widgetsDirectory {
+		if !isInsideDirectory(widgetsDirectory, path) {
 			return nil
 		}
 
@@ -275,6 +298,10 @@ func compressInternalResources(portal *unstructured.Data, decompressedPortalDir 
 	}
 
 	internalResourcesDir := filepath.Join(decompressedPortalDir, "internalResources")
+	if ok, err := dirExists(internalResourcesDir); !ok || err != nil {
+		// portal doesn't have any internal resources, just return
+		return nil
+	}
 	return filepath.Walk(internalResourcesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -282,8 +309,7 @@ func compressInternalResources(portal *unstructured.Data, decompressedPortalDir 
 		if !info.IsDir() {
 			return nil
 		}
-		split := strings.Split(path, "/")
-		if split[len(split)-2] != internalResourcesDirectory {
+		if !isInsideDirectory(internalResourcesDirectory, path) {
 			return nil
 		}
 
