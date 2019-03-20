@@ -765,10 +765,11 @@ func writePortal(name string, data map[string]interface{}) error {
 	if err := os.MkdirAll(myPortalDir, 0777); err != nil {
 		return err
 	}
-	if err := writeEntity(myPortalDir, name, whitelistPortal(data)); err != nil {
+	p, err := cleanUpAndDecompress(name, data)
+	if err != nil {
 		return err
 	}
-	return cleanUpAndDecompress(name)
+	return writeEntity(myPortalDir, name, whitelistPortal(p))
 }
 
 func writePlugin(name string, data map[string]interface{}) error {
@@ -1065,6 +1066,18 @@ func getEdge(name string) (map[string]interface{}, error) {
 
 func getPortal(name string) (map[string]interface{}, error) {
 	return getObject(portalsDir+"/"+name, name+".json")
+}
+
+func getRawPortal(name string) (string, error) {
+	return readFileAsString(portalsDir + "/" + name + "/" + name + ".json")
+}
+
+func readFileAsString(absFilePath string) (string, error) {
+	byts, err := ioutil.ReadFile(absFilePath)
+	if err != nil {
+		return "", err
+	}
+	return string(byts), nil
 }
 
 func getPlugin(name string) (map[string]interface{}, error) {

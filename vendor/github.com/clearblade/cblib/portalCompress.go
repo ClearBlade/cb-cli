@@ -2,51 +2,13 @@ package cblib
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
+	"strings"
 
-	cb "github.com/clearblade/Go-SDK"
 	"github.com/totherme/unstructured"
 )
-
-const outgoingParserKey = "outgoing_parser"
-const incomingParserKey = "incoming_parser"
-const valueKey = "value"
-
-func init() {
-
-	usage :=
-		`
-	Compresses or decompresses Portal code
-	`
-
-	example :=
-		`
-	cb-cli compress -portalName=portal1		#
-	`
-
-	compressCommand := &SubCommand{
-		name:         "compress",
-		usage:        usage,
-		needsAuth:    false,
-		mustBeInRepo: true,
-		run:          docompress,
-		example:      example,
-	}
-	compressCommand.flags.StringVar(&PortalName, "portal", "", "Name of Portal to compress after editing")
-	AddCommand("compress", compressCommand)
-}
-
-func readFileAsString(absFilePath string) (string, error) {
-	byts, err := ioutil.ReadFile(absFilePath)
-	if err != nil {
-		return "", err
-	}
-	return string(byts), nil
-}
 
 func processDataSourceDir(path string, info os.FileInfo, err error) error {
 	if err != nil {
@@ -58,14 +20,20 @@ func processDataSourceDir(path string, info os.FileInfo, err error) error {
 	return nil
 }
 
-func compressDatasources(portalDotJSONAbsPath, decompressedPortalDir string) error {
-	portalJSONString, _ := readFileAsString(portalDotJSONAbsPath)
-	portalData, _ := unstructured.ParseJSON(portalJSONString)
-	myPayloadData, err := portalData.GetByPointer("/config/datasources")
+func compressDatasources(portal *unstructured.Data, decompressedPortalDir string) error {
+	portalConfig, err := portal.GetByPointer(portalConfigPath)
+	if err != nil {
+		return err
+	}
+	if err := portalConfig.SetField("datasources", map[string]interface{}{}); err != nil {
+		return err
+	}
+	myPayloadData, err := portal.GetByPointer(portalDatasourcesPath)
 
 	if err != nil {
-		return fmt.Errorf("Couldn't address into my own json")
+		return fmt.Errorf("Couldn't address datasources into my own json")
 	}
+
 	datasourcesDir := filepath.Join(decompressedPortalDir, "datasources")
 	filepath.Walk(datasourcesDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -103,21 +71,7 @@ func compressDatasources(portalDotJSONAbsPath, decompressedPortalDir string) err
 		return nil
 	})
 
-	updatedPortalObject, _ := portalData.ObValue()
-	err = writeFile(portalDotJSONAbsPath, updatedPortalObject)
-	if err != nil {
-		return err
-	}
 	return nil
-}
-
-func extractUUiD(dirName string) string {
-	re := regexp.MustCompile("[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[8|9|aA|bB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}$")
-	uuidFromDir := re.Find([]byte(dirName))
-	if uuidFromDir == nil {
-		return ""
-	}
-	return string(uuidFromDir)
 }
 
 func recursivelyFindKeyPath(queryKey string, data map[string]interface{}, keysToIgnoreInData map[string]interface{}, keyPath string) string {
@@ -184,18 +138,66 @@ func processParser(currWidgetDir string, parserObj *unstructured.Data, parserTyp
 
 }
 
-func processCurrWidgetDir(path string, data *unstructured.Data) error {
+func mergeMaps(a map[string]interface{}, b map[string]interface{}) {
+	for k, v := range b {
+		a[k] = v
+	}
+}
 
-	widgetSettings, err := data.ObValue()
+func processCurrInternalResourceDir(path string, allInternalResources *unstructured.Data) error {
+	meta, err := getPortalInternalResourceMetaFile(path)
 	if err != nil {
 		return err
 	}
 
-	return actOnParserSettings(widgetSettings, func(settingName, dataType string, parserSetting map[string]interface{}) error {
-		settingDir := path + "/" + settingName
+	resourceID := meta["id"].(string)
+	if err := allInternalResources.SetField(resourceID, meta); err != nil {
+		return err
+	}
 
-		if setting, err := data.GetByPointer("/props/" + settingName); err == nil {
+	myResource, err := allInternalResources.GetByPointer("/" + resourceID)
+	if err != nil {
+		return err
+	}
+
+	resourceName := meta["name"].(string)
+	file, err := getPortalInternalResourceCode(path, resourceName)
+	if err != nil {
+		return err
+	}
+
+	return myResource.SetField("file", file)
+}
+
+func processCurrWidgetDir(path string, allWidgets *unstructured.Data) error {
+
+	widgetMeta, err := getPortalWidgetMetaFile(path)
+	if err != nil {
+		return err
+	}
+
+	widgetSettings, err := getPortalWidgetSettingsFile(path)
+	if err != nil {
+		return err
+	}
+
+	mergeMaps(widgetMeta, map[string]interface{}{"props": widgetSettings})
+	widgetID := widgetMeta["id"].(string)
+	if err := allWidgets.SetField(widgetID, widgetMeta); err != nil {
+		return err
+	}
+
+	myWidget, err := allWidgets.GetByPointer("/" + widgetID)
+	if err != nil {
+		return err
+	}
+	return actOnParserSettings(widgetSettings, func(settingName, dataType string) error {
+		settingDir := path + "/" + parsersDirectory + "/" + settingName
+
+		if setting, err := myWidget.GetByPointer("/props/" + settingName); err == nil {
+			found := false
 			if incoming, err := setting.GetByPointer("/" + incomingParserKey); err == nil {
+				found = true
 				if dataType != dynamicDataType {
 					incoming = setting
 				}
@@ -205,11 +207,20 @@ func processCurrWidgetDir(path string, data *unstructured.Data) error {
 			}
 
 			if outgoing, err := setting.GetByPointer("/" + outgoingParserKey); err == nil {
+				found = true
 				if dataType != dynamicDataType {
 					outgoing = setting
 				}
 				if err := processParser(settingDir, &outgoing, outgoingParserKey); err != nil {
 					return err
+				}
+			}
+
+			if !found {
+				if setting.HasKey("value") {
+					if err := processParser(settingDir, &setting, incomingParserKey); err != nil {
+						return err
+					}
 				}
 			}
 		} else {
@@ -220,97 +231,88 @@ func processCurrWidgetDir(path string, data *unstructured.Data) error {
 	})
 }
 
-func processOtherValues(currWidgetDir string, widgetsDataObj *unstructured.Data, keysToIgnoreInData map[string]interface{}) error {
-	valueParent := recursivelyFindKeyPath("value", widgetsDataObj.RawValue().(map[string]interface{}), keysToIgnoreInData, "/")
-	if valueParent == "" {
-		return nil
-	}
-	valuePath := filepath.Join("/", valueParent, valueKey)
-	valueParent = filepath.Join("/", valueParent)
-	valueParentData, err := widgetsDataObj.GetByPointer(valueParent)
+func compressWidgets(portal *unstructured.Data, decompressedPortalDir string) error {
+	portalConfig, err := portal.GetByPointer(portalConfigPath)
 	if err != nil {
-		log.Println("Got Err:", err)
 		return err
 	}
-	valueData, err := widgetsDataObj.GetByPointer(valuePath)
+	portalConfig.SetField("widgets", map[string]interface{}{})
+	widgets, err := portal.GetByPointer(portalWidgetsPath)
 	if err != nil {
-		log.Println("Got Err:", err)
-		return err
-	}
-	switch valueData.RawValue().(type) {
-	case map[string]interface{}:
-		updateObjUsingWebFiles(&valueData, currWidgetDir)
-	case string:
-		currFile := filepath.Join(currWidgetDir, outFile)
-		updateObjFromFile(&valueParentData, currFile, valueKey)
-	default:
-
-	}
-	return nil
-}
-
-func compressWidgets(portalDotJSONAbsPath, decompressedPortalDir string) error {
-	portalJSONString, _ := readFileAsString(portalDotJSONAbsPath)
-	portalData, _ := unstructured.ParseJSON(portalJSONString)
-	widgetsDataObj, err := portalData.GetByPointer("/config/widgets")
-	if err != nil {
-		return fmt.Errorf("Couldn't address into my own json")
+		return fmt.Errorf("Couldn't address widgets into my own json")
 	}
 
 	widgetsDir := filepath.Join(decompressedPortalDir, "widgets")
-	filepath.Walk(widgetsDir, func(path string, info os.FileInfo, err error) error {
+	return filepath.Walk(widgetsDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() {
 			return nil
 		}
-
-		currUUID := extractUUiD(path)
-		if currUUID == "" {
+		split := strings.Split(path, "/")
+		if split[len(split)-2] != widgetsDirectory {
 			return nil
 		}
-		currWidgetData, err := widgetsDataObj.GetByPointer("/" + currUUID)
-		if err != nil {
-			return err
-		}
 
-		return processCurrWidgetDir(path, &currWidgetData)
+		return processCurrWidgetDir(path, &widgets)
 	})
-
-	updatedPortalObject, _ := portalData.ObValue()
-	err = writeFile(portalDotJSONAbsPath, updatedPortalObject)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func getDecompressedPortalDir(portalName string) string {
 	return filepath.Join(portalsDir, portalName, portalConfigDirectory)
 }
-func docompress(cmd *SubCommand, client *cb.DevClient, args ...string) error {
-	if err := checkPortalCodeManagerArgsAndFlags(args); err != nil {
+
+func compressInternalResources(portal *unstructured.Data, decompressedPortalDir string) error {
+	portalConfig, err := portal.GetByPointer(portalConfigPath)
+	if err != nil {
 		return err
 	}
-	SetRootDir(".")
+	portalConfig.SetField("internalResources", map[string]interface{}{})
+	resources, err := portal.GetByPointer(portalInternalResourcesPath)
+	if err != nil {
+		return fmt.Errorf("Couldn't address internal resources into my own json")
+	}
 
-	_, err := compressPortal(PortalName)
-	return err
+	internalResourcesDir := filepath.Join(decompressedPortalDir, "internalResources")
+	return filepath.Walk(internalResourcesDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			return nil
+		}
+		split := strings.Split(path, "/")
+		if split[len(split)-2] != internalResourcesDirectory {
+			return nil
+		}
+
+		return processCurrInternalResourceDir(path, &resources)
+	})
 }
 
 func compressPortal(name string) (map[string]interface{}, error) {
-	portalDotJSONAbsPath := filepath.Join(portalsDir, name, name+".json")
 
 	decompressedPortalDir := getDecompressedPortalDir(name)
 
-	if err := compressDatasources(portalDotJSONAbsPath, decompressedPortalDir); err != nil {
+	p, err := getPortal(name)
+	if err != nil {
 		return nil, err
 	}
-	if err := compressWidgets(portalDotJSONAbsPath, decompressedPortalDir); err != nil {
+	portalConfig, err := convertPortalMapToUnstructured(p)
+	if err != nil {
 		return nil, err
 	}
 
-	return getPortal(name)
+	if err := compressDatasources(portalConfig, decompressedPortalDir); err != nil {
+		return nil, err
+	}
+	if err := compressWidgets(portalConfig, decompressedPortalDir); err != nil {
+		return nil, err
+	}
+	if err := compressInternalResources(portalConfig, decompressedPortalDir); err != nil {
+		return nil, err
+	}
+
+	return portalConfig.ObValue()
 }
