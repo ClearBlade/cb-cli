@@ -191,7 +191,7 @@ func writeParserBasedOnDataType(dataType string, setting *unstructured.Data, cur
 		raw, _ := setting.GetByPointer("/" + incomingParserKey)
 		ip := &raw
 		found = true
-		if dataType != dynamicDataType {
+		if dataType != dynamicDataType && setting.HasKey("value") {
 			ip = setting
 		}
 		if err := writeParserFiles(ip, currentWidgetRelativePath, filepath.Join(parserSettingRelativePath, incomingParserKey)); err != nil {
@@ -203,7 +203,7 @@ func writeParserBasedOnDataType(dataType string, setting *unstructured.Data, cur
 		found = true
 		raw, _ := setting.GetByPointer("/" + outgoingParserKey)
 		op := &raw
-		if dataType != dynamicDataType {
+		if dataType != dynamicDataType && setting.HasKey("value") {
 			op = setting
 		}
 		if err := writeParserFiles(op, currentWidgetRelativePath, filepath.Join(parserSettingRelativePath, outgoingParserKey)); err != nil {
@@ -319,26 +319,30 @@ func writeParserFiles(parserData *unstructured.Data, currWidgetDir, parserDir st
 	keysToIgnoreInData := map[string]interface{}{}
 	path := filepath.Join(currWidgetDir, parserDir, outFile)
 
-	value := parserData.UnsafeGetField("value")
-	switch value.RawValue().(type) {
-	case string:
-		str, _ := value.StringValue()
-		if err := writeFile(path+jsFileSuffix, str); err != nil {
-			return err
+	if parserData.HasKey("value") {
+		value := parserData.UnsafeGetField("value")
+		switch value.RawValue().(type) {
+		case string:
+			str, _ := value.StringValue()
+			if err := writeFile(path+jsFileSuffix, str); err != nil {
+				return err
+			}
+			if err := parserData.SetField("value", "./"+filepath.Join(parserDir, outFile)+jsFileSuffix); err != nil {
+				return err
+			}
+		case map[string]interface{}:
+			mapp, _ := value.ObValue()
+			if err := writeHTMLFiles(path, mapp, keysToIgnoreInData); err != nil {
+				return err
+			}
+			if err := parserData.SetField("value", map[string]interface{}{"CSS": "./" + filepath.Join(parserDir, outFile) + ".css", "HTML": "./" + filepath.Join(parserDir, outFile) + ".html", "JavaScript": "./" + filepath.Join(parserDir, outFile) + ".js"}); err != nil {
+				return err
+			}
+		default:
+			return nil
 		}
-		if err := parserData.SetField("value", "./"+filepath.Join(parserDir, outFile)+jsFileSuffix); err != nil {
-			return err
-		}
-	case map[string]interface{}:
-		mapp, _ := value.ObValue()
-		if err := writeHTMLFiles(path, mapp, keysToIgnoreInData); err != nil {
-			return err
-		}
-		if err := parserData.SetField("value", map[string]interface{}{"CSS": "./" + filepath.Join(parserDir, outFile) + ".css", "HTML": "./" + filepath.Join(parserDir, outFile) + ".html", "JavaScript": "./" + filepath.Join(parserDir, outFile) + ".js"}); err != nil {
-			return err
-		}
-	default:
-		return nil
+	} else {
+		logWarning(fmt.Sprintf("WE FOUND A PARSER THAT DIDN'T HAVE A VALUE!! %+v    current widget dir - '%s'; parser dir - '%s'  \n\n", parserData.RawValue(), currWidgetDir, parserDir))
 	}
 
 	return nil

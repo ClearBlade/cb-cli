@@ -405,10 +405,19 @@ func convertInterfaceSliceToStringSlice(ifaces []interface{}) []string {
 	return rtn
 }
 
+func myLogger(str string) {
+	fmt.Printf("\n\n%s\n\n", str)
+}
+
 func logError(err string) {
-	fmt.Printf("\n\n[ERROR] %s\n\n", err)
+	myLogger(fmt.Sprintf("[ERROR] %s", err))
+
 }
 
 func logInfo(info string) {
-	fmt.Printf("\n\n[INFO] %s\n\n", info)
+	myLogger(fmt.Sprintf("[INFO] %s", info))
+}
+
+func logWarning(info string) {
+	myLogger(fmt.Sprintf("[WARNING] %s", info))
 }
