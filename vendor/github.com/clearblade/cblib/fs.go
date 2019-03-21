@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 
 	cb "github.com/clearblade/Go-SDK"
 	"github.com/clearblade/cblib/models"
@@ -17,6 +19,7 @@ const SORT_KEY_COLLECTION = "Name"
 const collectionNameToIdFileName = "collections.json"
 const roleNameToIdFileName = "roles.json"
 const userEmailToIdFileName = "users.json"
+const portalsDirSuffix = "portals"
 
 var (
 	RootDirIsSet bool
@@ -53,7 +56,7 @@ func SetRootDir(theRootDir string) {
 	rolesDir = rootDir + "/roles"
 	edgesDir = rootDir + "/edges"
 	devicesDir = rootDir + "/devices"
-	portalsDir = rootDir + "/portals"
+	portalsDir = rootDir + "/" + portalsDirSuffix
 	pluginsDir = rootDir + "/plugins"
 	adaptorsDir = rootDir + "/adapters"
 	deploymentsDir = rootDir + "/deployments"
@@ -988,6 +991,43 @@ func getPortals() ([]map[string]interface{}, error) {
 		rval = append(rval, p)
 	}
 	return rval, nil
+}
+
+func getLegacyPortals() ([]map[string]interface{}, error) {
+	return getObjectList(portalsDir, []string{})
+}
+
+func hasLegacyPortalDirectory() bool {
+	isLegacy := false
+	filepath.Walk(portalsDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		// this check will filter out any files in the new portal directory layout
+		if !isInsideDirectory(portalsDirSuffix, path) {
+			return nil
+		}
+
+		// we found a file inside the portals directory. if it's a .json file that contains a 'config' key, it must be a legacy directory
+		if strings.Contains(path, ".json") {
+			p, err := getDict(path)
+			if err != nil {
+				return nil
+			}
+			if _, ok := p["config"].(map[string]interface{}); ok {
+				isLegacy = true
+				return nil
+			}
+		}
+
+		return nil
+	})
+	return isLegacy
 }
 
 func getCompressedPortals() ([]map[string]interface{}, error) {

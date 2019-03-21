@@ -413,9 +413,18 @@ func createDevices(systemInfo map[string]interface{}, client *cb.DevClient) ([]m
 
 func createPortals(systemInfo map[string]interface{}, client *cb.DevClient) ([]map[string]interface{}, error) {
 	sysKey := systemInfo["systemKey"].(string)
-	portals, err := getCompressedPortals()
-	if err != nil {
-		return nil, err
+	var portals []map[string]interface{}
+	var err error
+	if hasLegacyPortalDirectory() {
+		portals, err = getLegacyPortals()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		portals, err = getCompressedPortals()
+		if err != nil {
+			return nil, err
+		}
 	}
 	portalsRval := make([]map[string]interface{}, len(portals))
 	for idx, dash := range portals {
