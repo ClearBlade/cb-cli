@@ -218,7 +218,7 @@ func processCurrWidgetDir(path string, allWidgets *unstructured.Data) error {
 			found := false
 			if incoming, err := setting.GetByPointer("/" + incomingParserKey); err == nil {
 				found = true
-				if dataType != dynamicDataType {
+				if dataType != dynamicDataType && setting.HasKey("value") {
 					incoming = setting
 				}
 				if err := processParser(settingDir, &incoming, incomingParserKey); err != nil {
@@ -228,7 +228,7 @@ func processCurrWidgetDir(path string, allWidgets *unstructured.Data) error {
 
 			if outgoing, err := setting.GetByPointer("/" + outgoingParserKey); err == nil {
 				found = true
-				if dataType != dynamicDataType {
+				if dataType != dynamicDataType && setting.HasKey("value") {
 					outgoing = setting
 				}
 				if err := processParser(settingDir, &outgoing, outgoingParserKey); err != nil {
