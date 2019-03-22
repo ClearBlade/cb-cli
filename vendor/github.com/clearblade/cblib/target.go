@@ -77,7 +77,7 @@ func reallyTarget(cli *cb.DevClient, sysKey string, oldSysMeta *System_meta) err
 		os.Rename(fixo, fixn)
 	}
 	SetRootDir(fixn)
-	if err := setupDirectoryStructure(sysMeta); err != nil {
+	if err := setupDirectoryStructure(); err != nil {
 		return err
 	}
 	storeMeta(sysMeta)

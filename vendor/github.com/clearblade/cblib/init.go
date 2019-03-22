@@ -61,7 +61,7 @@ func reallyInit(cli *cb.DevClient, sysKey string) error {
 		SetRootDir(".")
 	} else {
 		SetRootDir(strings.Replace(sysMeta.Name, " ", "_", -1))
-		if err := setupDirectoryStructure(sysMeta); err != nil {
+		if err := setupDirectoryStructure(); err != nil {
 			return err
 		}
 	}

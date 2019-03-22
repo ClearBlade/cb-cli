@@ -73,8 +73,11 @@ func init() {
 func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 	SetRootDir(".")
 	systemInfo, err := getSysMeta()
-	setupDirectoryStructure(systemInfo)
 	if err != nil {
+		return err
+	}
+
+	if err := setupDirectoryStructure(); err != nil {
 		return err
 	}
 

@@ -685,6 +685,9 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 func importIt(cli *cb.DevClient) error {
 	//fmt.Printf("Reading system configuration files...")
 	SetRootDir(".")
+	if err := setupDirectoryStructure(); err != nil {
+		return err
+	}
 	users, err := getUsers()
 	if err != nil {
 		return err

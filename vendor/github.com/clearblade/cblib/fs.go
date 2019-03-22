@@ -79,7 +79,7 @@ func SetRootDir(theRootDir string) {
 	arrDir[14] = mapNameToIdDir
 }
 
-func setupDirectoryStructure(sys *System_meta) error {
+func setupDirectoryStructure() error {
 	if err := os.MkdirAll(rootDir, 0777); err != nil {
 		return fmt.Errorf("Could not make directory '%s': %s", rootDir, err.Error())
 	}

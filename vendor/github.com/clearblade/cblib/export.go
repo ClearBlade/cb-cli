@@ -567,7 +567,7 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 		cleanUpDirectories(sysMeta)
 	}
 
-	if err := setupDirectoryStructure(sysMeta); err != nil {
+	if err := setupDirectoryStructure(); err != nil {
 		return err
 	}
 	storeMeta(sysMeta)
