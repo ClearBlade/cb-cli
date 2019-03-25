@@ -2,6 +2,7 @@ package cblib
 
 import (
 	//"fmt"
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -420,4 +421,22 @@ func logInfo(info string) {
 
 func logWarning(info string) {
 	myLogger(fmt.Sprintf("[WARNING] %s", info))
+}
+
+func confirmPrompt(question string) (bool, error) {
+	if AutoApprove {
+		fmt.Println("-auto-approve is true. Creating entity...")
+		return true, nil
+	}
+	fmt.Printf("%s (Y/n)", question)
+	reader := bufio.NewReader(os.Stdin)
+	if text, err := reader.ReadString('\n'); err != nil {
+		return false, err
+	} else {
+		if strings.Contains(strings.ToUpper(text), "Y") {
+			return true, nil
+		} else {
+			return false, nil
+		}
+	}
 }

@@ -112,6 +112,18 @@ func (u *UserClient) GetDataTotal(collection_id string, query *Query) (map[strin
 	return getdatatotal(u, collection_id, query)
 }
 
+func (d *DevClient) GetDataTotalByName(system_key, collection_name string, query *Query) (map[string]interface{}, error) {
+	return getdatatotalbyname(d, system_key, collection_name, query)
+}
+
+func (d *DeviceClient) GetDataTotalByName(system_key, collection_name string, query *Query) (map[string]interface{}, error) {
+	return getdatatotalbyname(d, system_key, collection_name, query)
+}
+
+func (u *UserClient) GetDataTotalByName(system_key, collection_name string, query *Query) (map[string]interface{}, error) {
+	return getdatatotalbyname(u, system_key, collection_name, query)
+}
+
 func (u *UserClient) GetItemCount(collection_id string) (int, error) {
 	return getItemCount(u, collection_id)
 }
@@ -218,6 +230,35 @@ func getdatatotal(c cbClient, collection_id string, query *Query) (map[string]in
 		qry = nil
 	}
 	resp, err := get(c, _DATA_PREAMBLE+collection_id+"/count", qry, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting data: %v", resp.Body)
+	}
+	return resp.Body.(map[string]interface{}), nil
+}
+
+func getdatatotalbyname(c cbClient, system_key, collection_name string, query *Query) (map[string]interface{}, error) {
+
+	creds, err := c.credentials()
+	if err != nil {
+		return nil, err
+	}
+	var qry map[string]string
+	if query != nil {
+		query_map := query.serialize()
+		query_bytes, err := json.Marshal(query_map)
+		if err != nil {
+			return nil, err
+		}
+		qry = map[string]string{
+			"query": url.QueryEscape(string(query_bytes)),
+		}
+	} else {
+		qry = nil
+	}
+	resp, err := get(c, _DATA_V2_PREAMBLE+"/collection/"+system_key+"/"+collection_name+"/count", qry, creds, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error getting data: %v", err)
 	}

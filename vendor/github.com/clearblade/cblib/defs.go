@@ -71,6 +71,7 @@ var (
 	AllAssets                  bool
 	AllTriggers                bool
 	AllTimers                  bool
+	AutoApprove                bool
 	TempDir                    string
 )
 
