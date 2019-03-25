@@ -8,11 +8,6 @@ import (
 )
 
 func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAssets) (bool, error) {
-	fmt.Println("Pulling all roles:")
-	if _, err := PullAndWriteRoles(systemInfo.Key, client, false); err != nil {
-		return false, err
-	}
-	fmt.Printf("\n")
 
 	didSomething := false
 
