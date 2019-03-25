@@ -48,6 +48,10 @@ func (c *SubCommand) Execute( /*client *cb.DevClient,*/ args []string) error {
 
 	if MetaInfo != nil {
 		client = makeClientFromMetaInfo()
+		err := client.CheckAuth()
+		if err != nil {
+			return fmt.Errorf("Check authentication step failed. Please make sure that your token is valid. Hint: if you're inside an existing system you might want to run the 'target' command to re-authenticate. Error - %s", err.Error())
+		}
 	} else if c.needsAuth {
 		client, err = Authorize(nil)
 		if err != nil {
