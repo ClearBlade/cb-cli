@@ -21,6 +21,9 @@ func init() {
 
 	example :=
 		`
+	cb-cli push -all							# Push all assets up to Platform
+	cb-cli push -all -auto-approve				# Push all assets up to Platform and automatically confirm any prompts for creating new assets
+	cb-cli push -all-services -all-portals		# Push all services and all portals up to Platform
 	cb-cli push -service=Service1				# Push a code service up to Platform
 	cb-cli push -collection=Collection1			# Push a code service up to Platform
 	`
@@ -94,7 +97,7 @@ func pushOneService(systemInfo *System_meta, client *cb.DevClient, name string) 
 	if err != nil {
 		return err
 	}
-	return updateService(systemInfo.Key, service, client)
+	return updateService(systemInfo.Key, name, service, client)
 }
 
 func pushUserSchema(systemInfo *System_meta, client *cb.DevClient) error {
@@ -534,8 +537,9 @@ func pushAllServices(systemInfo *System_meta, client *cb.DevClient) error {
 		return err
 	}
 	for _, service := range services {
-		fmt.Printf("Pushing service %+s\n", service["name"].(string))
-		if err := updateService(systemInfo.Key, service, client); err != nil {
+		name := service["name"].(string)
+		fmt.Printf("Pushing service %+s\n", name)
+		if err := updateService(systemInfo.Key, name, service, client); err != nil {
 			return fmt.Errorf("Error updating service '%s': %s\n", service["name"].(string), err.Error())
 		}
 	}
@@ -883,29 +887,28 @@ func updateDeployment(systemInfo *System_meta, cli *cb.DevClient, name string, d
 	// fetch deployment
 	backendDep, err := cli.GetDeploymentByName(systemInfo.Key, name)
 	if err != nil {
-		fmt.Printf("Could not update deployment '%s'. Failed to get deployment by name. Error is - %s\n", name, err.Error())
+		fmt.Printf("Could not find deployment '%s'. Error is - %s\n", name, err.Error())
 		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new deployment named %s?", name))
 		if err != nil {
 			return err
 		} else {
 			if c {
-				var createErr error
-				if backendDep, createErr = createDeployment(systemInfo.Key, dep, cli); createErr != nil {
+				if _, err := createDeployment(systemInfo.Key, dep, cli); err != nil {
 					return fmt.Errorf("Could not create deployment %s: %s", name, err.Error())
 				} else {
 					fmt.Printf("Successfully created new deployment %s\n", name)
 				}
 			} else {
 				fmt.Printf("Deployment will not be created.\n")
-				return nil
 			}
 		}
-	}
+	} else {
 
-	// diff backend deployment and local deployment
-	theDiff := diffDeployments(dep, backendDep)
-	if _, err := cli.UpdateDeploymentByName(systemInfo.Key, name, theDiff); err != nil {
-		return err
+		// diff backend deployment and local deployment
+		theDiff := diffDeployments(dep, backendDep)
+		if _, err := cli.UpdateDeploymentByName(systemInfo.Key, name, theDiff); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -1187,6 +1190,7 @@ func updateUser(meta *System_meta, user map[string]interface{}, client *cb.DevCl
 						if err != nil {
 							return fmt.Errorf("Could not create user %s: %s", email, err.Error())
 						} else {
+							// tack the new user id onto the user object so it can be used in subsequent requests
 							user["user_id"] = id
 							fmt.Printf("Successfully created new user %s\n", email)
 						}
@@ -1267,14 +1271,15 @@ func createTrigger(sysKey string, trigger map[string]interface{}, client *cb.Dev
 
 func updateTrigger(systemKey string, trigger map[string]interface{}, client *cb.DevClient) error {
 	triggerName := trigger["name"].(string)
+
 	triggerDef := trigger["event_definition"].(map[string]interface{})
 	trigger["def_module"] = triggerDef["def_module"]
 	trigger["def_name"] = triggerDef["def_name"]
 	trigger["system_key"] = systemKey
-	delete(trigger, "name")
 	delete(trigger, "event_definition")
-	if _, err := client.UpdateEventHandler(systemKey, triggerName, trigger); err != nil {
-		fmt.Printf("Could not update trigger '%s'. Error is - %s\n", triggerName, err.Error())
+
+	if _, err := pullTrigger(systemKey, triggerName, client); err != nil {
+		fmt.Printf("Could not find trigger '%s'. Error is - %s\n", triggerName, err.Error())
 		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new trigger named %s?", triggerName))
 		if err != nil {
 			return err
@@ -1288,6 +1293,13 @@ func updateTrigger(systemKey string, trigger map[string]interface{}, client *cb.
 			} else {
 				fmt.Printf("Trigger will not be created.\n")
 			}
+		}
+	} else {
+
+		delete(trigger, "name")
+
+		if _, err := client.UpdateEventHandler(systemKey, triggerName, trigger); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -1313,8 +1325,9 @@ func updateTimer(systemKey string, timer map[string]interface{}, client *cb.DevC
 	if startTime == "Now" {
 		timer["start_time"] = time.Now().Format(time.RFC3339)
 	}
-	if _, err := client.UpdateTimer(systemKey, timerName, timer); err != nil {
-		fmt.Printf("Could not update timer '%s'. Error is - %s\n", timerName, err.Error())
+
+	if _, err := pullTimer(systemKey, timerName, client); err != nil {
+		fmt.Printf("Could not find timer '%s'. Error is - %s\n", timerName, err.Error())
 		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new timer named %s?", timerName))
 		if err != nil {
 			return err
@@ -1328,6 +1341,10 @@ func updateTimer(systemKey string, timer map[string]interface{}, client *cb.DevC
 			} else {
 				fmt.Printf("Timer will not be created.\n")
 			}
+		}
+	} else {
+		if _, err := client.UpdateTimer(systemKey, timerName, timer); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -1363,14 +1380,14 @@ func updateDevice(systemKey string, device map[string]interface{}, client *cb.De
 		}
 	}
 
-	if _, err := client.UpdateDevice(systemKey, deviceName, device); err != nil {
-		fmt.Printf("Could not update device '%s'. Error is - %s\n", deviceName, err.Error())
+	if _, err := pullDevice(systemKey, deviceName, client); err != nil {
+		fmt.Printf("Could not find device '%s'. Error is - %s\n", deviceName, err.Error())
 		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new device named %s?", deviceName))
 		if err != nil {
 			return err
 		} else {
 			if c {
-				device["name"] = deviceName
+				originalColumns["name"] = deviceName
 				if _, err := client.CreateDevice(systemKey, deviceName, originalColumns); err != nil {
 					return fmt.Errorf("Could not create device %s: %s", deviceName, err.Error())
 				} else {
@@ -1383,6 +1400,10 @@ func updateDevice(systemKey string, device map[string]interface{}, client *cb.De
 			} else {
 				fmt.Printf("Device will not be created.\n")
 			}
+		}
+	} else {
+		if _, err := client.UpdateDevice(systemKey, deviceName, device); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -1566,31 +1587,34 @@ func findService(systemKey, serviceName string) (map[string]interface{}, error) 
 	return nil, fmt.Errorf(NotExistErrorString)
 }
 
-func updateService(systemKey string, service map[string]interface{}, client *cb.DevClient) error {
-	svcName := service["name"].(string)
-	if ServiceName != "" {
-		svcName = ServiceName
-	}
-	svcCode := service["code"].(string)
+func updateService(systemKey, name string, service map[string]interface{}, client *cb.DevClient) error {
 
-	extra := getServiceBody(service)
-	_, err := client.UpdateServiceWithBody(systemKey, svcName, svcCode, extra)
-	if err != nil {
-		fmt.Printf("Could not update service '%s'. Error is - %s\n", svcName, err.Error())
-		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new service named %s?", svcName))
+	if _, err := pullService(systemKey, name, client); err != nil {
+		fmt.Printf("Could not find service '%s'. Error is - %s\n", name, err.Error())
+		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new service named %s?", name))
 		if err != nil {
 			return err
 		} else {
 			if c {
 				if err := createService(systemKey, service, client); err != nil {
-					return fmt.Errorf("Could not create service %s: %s", svcName, err.Error())
+					return fmt.Errorf("Could not create service %s: %s", name, err.Error())
 				} else {
-					fmt.Printf("Successfully created new service %s\n", svcName)
+					fmt.Printf("Successfully created new service %s\n", name)
 				}
 			} else {
 				fmt.Printf("Service will not be created.\n")
 			}
 		}
+	} else {
+
+		svcCode := service["code"].(string)
+
+		extra := getServiceBody(service)
+		_, err := client.UpdateServiceWithBody(systemKey, name, svcCode, extra)
+		if err != nil {
+			return err
+		}
+
 	}
 	return nil
 }
@@ -1649,14 +1673,9 @@ func createService(systemKey string, service map[string]interface{}, client *cb.
 
 func updateLibrary(systemKey string, library map[string]interface{}, client *cb.DevClient) error {
 	libName := library["name"].(string)
-	if LibraryName != "" {
-		libName = LibraryName
-	}
-	delete(library, "name")
-	delete(library, "version")
-	_, err := client.UpdateLibrary(systemKey, libName, library)
-	if err != nil {
-		fmt.Printf("Could not update library '%s'. Error is - %s\n", libName, err.Error())
+
+	if _, err := pullLibrary(systemKey, libName, client); err != nil {
+		fmt.Printf("Could not find library '%s'. Error is - %s\n", libName, err.Error())
 		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new library named %s?", libName))
 		if err != nil {
 			return err
@@ -1671,6 +1690,13 @@ func updateLibrary(systemKey string, library map[string]interface{}, client *cb.
 			} else {
 				fmt.Printf("Library will not be created.\n")
 			}
+		}
+	} else {
+
+		delete(library, "name")
+		delete(library, "version")
+		if _, err := client.UpdateLibrary(systemKey, libName, library); err != nil {
+			return err
 		}
 	}
 	return nil
@@ -1697,7 +1723,7 @@ func updateCollection(meta *System_meta, collection map[string]interface{}, clie
 
 	_, err := client.GetDataTotalByName(meta.Key, collection_name, cb.NewQuery())
 	if err != nil {
-		fmt.Printf("Could not update collection '%s'. Collection does not exist on backend. Error is - %s\n", collection_name, err.Error())
+		fmt.Printf("Could not find collection '%s'. Error is - %s\n", collection_name, err.Error())
 		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new collection named %s?", collection_name))
 		if err != nil {
 			return err
@@ -1938,16 +1964,9 @@ func createAdaptor(adap *models.Adaptor) error {
 
 func updateRole(systemKey string, role map[string]interface{}, collectionsInfo []CollectionInfo, client *cb.DevClient) error {
 	roleName := role["Name"].(string)
-	roleID, err := getRoleIdByName(roleName)
-	if err != nil {
-		return fmt.Errorf("Error updating role: %s", err.Error())
-	}
-	updateRoleBody, err := packageRoleForUpdate(roleID, role, collectionsInfo)
-	if err != nil {
-		return err
-	}
-	if err := client.UpdateRole(systemKey, roleName, updateRoleBody); err != nil {
-		fmt.Printf("Could not update role '%s'. Error is - %s\n", roleName, err.Error())
+
+	if _, err := pullRole(systemKey, roleName, client); err != nil {
+		fmt.Printf("Could not find role '%s'. Error is - %s\n", roleName, err.Error())
 		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new role named %s?", roleName))
 		if err != nil {
 			return err
@@ -1961,6 +1980,19 @@ func updateRole(systemKey string, role map[string]interface{}, collectionsInfo [
 			} else {
 				fmt.Printf("Role will not be created.\n")
 			}
+		}
+	} else {
+		roleID, err := getRoleIdByName(roleName)
+		if err != nil {
+			return fmt.Errorf("Error updating role: %s", err.Error())
+		}
+		updateRoleBody, err := packageRoleForUpdate(roleID, role, collectionsInfo)
+		if err != nil {
+			return err
+		}
+		if err := client.UpdateRole(systemKey, roleName, updateRoleBody); err != nil {
+			fmt.Printf("Failed to update role '%s'. Request body is - %+v\n", roleName, updateRoleBody)
+			return err
 		}
 	}
 	return nil

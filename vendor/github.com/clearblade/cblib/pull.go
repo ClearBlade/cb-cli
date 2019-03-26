@@ -21,6 +21,8 @@ func init() {
 
 	example :=
 		`
+	cb-cli pull -all												# Pull all assets from Platform to local filesystem
+	cb-cli pull -all-services -all-portals							# Pull all services and all portals from Platform to local filesystem
 	cb-cli pull -service=Service1 									# Pulls Service1 from Platform to local filesystem
 	cb-cli pull -collection=Collection1								# Pulls Collection1 from Platform to local filesystem, with all rows, unsorted
 	cb-cli pull -collection=Collection1 -sort-collections=true		# Pulls Collection1 from Platform to local filesystem, with all rows, sorted
