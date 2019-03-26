@@ -29,7 +29,6 @@ var (
 	CleanUp                    bool
 	EdgeSchema                 bool
 	DeviceSchema               bool
-	DeviceSchemaPresent        bool
 	UserSchema                 bool
 	DataPageSize               int
 	Email                      string

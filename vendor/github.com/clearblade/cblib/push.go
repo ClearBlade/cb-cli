@@ -179,12 +179,8 @@ func pushDevicesSchema(systemInfo *System_meta, client *cb.DevClient) error {
 	fmt.Println("Pushing device schema")
 	deviceSchema, err := getDevicesSchema()
 	if err != nil {
-		if strings.Contains(err.Error(), "no such file or directory") {
-			DeviceSchemaPresent = false
-		}
 		return err
 	}
-	DeviceSchemaPresent = true
 	allDeviceColumns, err := client.GetDeviceColumns(systemInfo.Key)
 	if err != nil {
 		return err
@@ -364,33 +360,6 @@ func pushOneDevice(systemInfo *System_meta, client *cb.DevClient, name string) e
 	if err != nil {
 		return err
 	}
-	var randomActiveKey string
-	activeKey, ok := device["active_key"].(string)
-	if !ok {
-		// Active key not present in json file. Creating a random one
-		fmt.Printf(" Active key not present. Creating a random one for device creation. Please update the active key from the ClearBlade Console after export\n")
-		randomActiveKey = randSeq(8)
-		device["active_key"] = randomActiveKey
-	} else {
-		if activeKey == "" || len(activeKey) < 6 {
-			fmt.Printf("Active is either an empty string or less than 6 characters. Creating a random one for device creation. Please update the active key from the ClearBlade Console after export\n")
-			randomActiveKey = randSeq(8)
-			device["active_key"] = randomActiveKey
-		}
-	}
-	if !DeviceSchemaPresent {
-		for columnName, _ := range device {
-			switch strings.ToLower(columnName) {
-			case "device_key", "name", "system_key", "type", "state", "description", "enabled", "allow_key_auth", "active_key", "keys", "allow_certificate_auth", "certificate", "created_date", "last_active_date":
-				continue
-			default:
-				err := client.CreateDeviceColumn(systemInfo.Key, columnName, "string")
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
 	return updateDevice(systemInfo.Key, device, client)
 }
 
@@ -399,35 +368,8 @@ func pushAllDevices(systemInfo *System_meta, client *cb.DevClient) error {
 	if err != nil {
 		return err
 	}
-	for idx, device := range devices {
+	for _, device := range devices {
 		fmt.Printf("Pushing device %+s\n", device["name"].(string))
-		var randomActiveKey string
-		activeKey, ok := device["active_key"].(string)
-		if !ok {
-			// Active key not present in json file. Creating a random one
-			fmt.Printf(" Active key not present. Creating a random one for device creation. Please update the active key from the ClearBlade Console after export\n")
-			randomActiveKey = randSeq(8)
-			device["active_key"] = randomActiveKey
-		} else {
-			if activeKey == "" || len(activeKey) < 6 {
-				fmt.Printf("Active is either an empty string or less than 6 characters. Creating a random one for device creation. Please update the active key from the ClearBlade Console after export\n")
-				randomActiveKey = randSeq(8)
-				device["active_key"] = randomActiveKey
-			}
-		}
-		if !DeviceSchemaPresent && idx == 0 {
-			for columnName, _ := range device {
-				switch strings.ToLower(columnName) {
-				case "device_key", "name", "system_key", "type", "state", "description", "enabled", "allow_key_auth", "active_key", "keys", "allow_certificate_auth", "certificate", "created_date", "last_active_date":
-					continue
-				default:
-					err := client.CreateDeviceColumn(systemInfo.Key, columnName, "string")
-					if err != nil {
-						return err
-					}
-				}
-			}
-		}
 		if err := updateDevice(systemInfo.Key, device, client); err != nil {
 			return fmt.Errorf("Error updating device '%s': %s\n", device["name"].(string), err.Error())
 		}
@@ -720,8 +662,6 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		if err := pushDevicesSchema(systemInfo, client); err != nil {
 			return err
 		}
-	} else {
-		DeviceSchemaPresent = false
 	}
 
 	if AllDevices || AllAssets {
@@ -1025,13 +965,14 @@ func convertPermissionsStructure(in map[string]interface{}, collectionsInfo []Co
 				}
 				cols := make([]map[string]interface{}, 0)
 				for _, mapVal := range collections {
-					id, err := getCollectionIdByName(mapVal["Name"].(string), collectionsInfo)
+					collName := mapVal["Name"].(string)
+					id, err := getCollectionIdByName(collName, collectionsInfo)
 					if err != nil {
-						fmt.Printf("Skipping permissions for collection '%s'; Error is - %s", mapVal["Name"].(string), err.Error())
+						fmt.Printf("Skipping permissions for collection '%s'; Error is - %s", collName, err.Error())
 						continue
 					}
 					cols = append(cols, map[string]interface{}{
-						"itemInfo":    map[string]interface{}{"id": id},
+						"itemInfo":    map[string]interface{}{"id": id, "name": collName},
 						"permissions": mapVal["Level"],
 					})
 				}
@@ -1361,24 +1302,10 @@ func createDeployment(systemKey string, deployment map[string]interface{}, clien
 
 func updateDevice(systemKey string, device map[string]interface{}, client *cb.DevClient) error {
 	deviceName := device["name"].(string)
-	delete(device, "name")
 	delete(device, "last_active_date")
 	delete(device, "created_date")
 	delete(device, "device_key")
 	delete(device, "system_key")
-
-	originalColumns := make(map[string]interface{})
-	customColumns := make(map[string]interface{})
-	for columnName, value := range device {
-		switch strings.ToLower(columnName) {
-		case "name", "type", "state", "description", "enabled", "allow_key_auth", "keys", "active_key", "allow_certificate_auth", "certificate":
-			originalColumns[columnName] = value
-			break
-		default:
-			customColumns[columnName] = value
-			break
-		}
-	}
 
 	if _, err := pullDevice(systemKey, deviceName, client); err != nil {
 		fmt.Printf("Could not find device '%s'. Error is - %s\n", deviceName, err.Error())
@@ -1387,14 +1314,7 @@ func updateDevice(systemKey string, device map[string]interface{}, client *cb.De
 			return err
 		} else {
 			if c {
-				originalColumns["name"] = deviceName
-				if _, err := client.CreateDevice(systemKey, deviceName, originalColumns); err != nil {
-					return fmt.Errorf("Could not create device %s: %s", deviceName, err.Error())
-				} else {
-					fmt.Printf("Successfully created new device %s\n", deviceName)
-				}
-				_, err = client.UpdateDevice(systemKey, deviceName, customColumns)
-				if err != nil {
+				if _, err := createDevice(systemKey, device, client); err != nil {
 					return err
 				}
 			} else {
@@ -1402,6 +1322,7 @@ func updateDevice(systemKey string, device map[string]interface{}, client *cb.De
 			}
 		}
 	} else {
+		delete(device, "name")
 		if _, err := client.UpdateDevice(systemKey, deviceName, device); err != nil {
 			return err
 		}
@@ -1887,12 +1808,12 @@ func createDevice(systemKey string, device map[string]interface{}, client *cb.De
 	activeKey, ok := device["active_key"].(string)
 	if !ok {
 		// Active key not present in json file. Creating a random one
-		fmt.Printf(" Active key not present. Creating a random one for device creation. Please update the active key from the ClearBlade Console after export\n")
+		fmt.Printf(" Active key not present. Creating a random one for device creation. Please update the active key from the ClearBlade Console after creation\n")
 		randomActiveKey = randSeq(8)
 		device["active_key"] = randomActiveKey
 	} else {
 		if activeKey == "" || len(activeKey) < 6 {
-			fmt.Printf("Active is either an empty string or less than 6 characters. Creating a random one for device creation. Please update the active key from the ClearBlade Console after export\n")
+			fmt.Printf("Active is either an empty string or less than 6 characters. Creating a random one for device creation. Please update the active key from the ClearBlade Console after creation\n")
 			randomActiveKey = randSeq(8)
 			device["active_key"] = randomActiveKey
 		}
@@ -1991,7 +1912,9 @@ func updateRole(systemKey string, role map[string]interface{}, collectionsInfo [
 			return err
 		}
 		if err := client.UpdateRole(systemKey, roleName, updateRoleBody); err != nil {
-			fmt.Printf("Failed to update role '%s'. Request body is - %+v\n", roleName, updateRoleBody)
+			if byts, err := json.Marshal(updateRoleBody); err == nil {
+				fmt.Printf("Failed to update role '%s'. Request body is - \n%s\n", roleName, string(byts))
+			}
 			return err
 		}
 	}
