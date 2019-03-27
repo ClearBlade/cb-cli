@@ -14,6 +14,7 @@ import (
 )
 
 const SORT_KEY_CODE_SERVICE = "Name"
+const SORT_KEY_PORTAL = "Name"
 const SORT_KEY_COLLECTION_ITEM = "item_id"
 const SORT_KEY_COLLECTION = "Name"
 const collectionNameToIdFileName = "collections.json"
@@ -647,6 +648,7 @@ func writeRole(name string, data map[string]interface{}) error {
 	}
 	portals, castSuccess := permissions["Portals"].([]interface{})
 	if castSuccess {
+		sortByMapKey(&portals, SORT_KEY_PORTAL)
 		fmtPortals := whitelistPortalsPermissions(portals)
 		permissions["Portals"] = fmtPortals
 	}
