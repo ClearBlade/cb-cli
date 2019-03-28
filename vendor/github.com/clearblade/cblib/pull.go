@@ -169,13 +169,18 @@ func PullAndWriteLibrary(systemKey string, libraryName string, client *cb.DevCli
 	}
 }
 
+func pullAllUsers(systemKey string, client *cb.DevClient) ([]interface{}, error) {
+	return paginateRequests(systemKey, DataPageSize, client.GetUserCountWithQuery, client.GetUsersWithQuery)
+}
+
 func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient, saveThem bool) ([]map[string]interface{}, error) {
-	if users, err := client.GetAllUsers(systemKey); err != nil {
+	if users, err := pullAllUsers(systemKey, client); err != nil {
 		return nil, err
 	} else {
 		ok := false
 		rtn := make([]map[string]interface{}, 0)
-		for _, user := range users {
+		for _, u := range users {
+			user := u.(map[string]interface{})
 			if user["email"] == userName || userName == PULL_ALL_USERS {
 				email := user["email"].(string)
 				fmt.Printf(" %s", email)

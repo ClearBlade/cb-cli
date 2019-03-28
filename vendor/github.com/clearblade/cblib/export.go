@@ -339,9 +339,13 @@ func storeMeta(meta *System_meta) {
 	systemDotJSON["auth"] = true
 }
 
+func pullAllEdges(systemKey string, cli *cb.DevClient) ([]interface{}, error) {
+	return paginateRequests(systemKey, DataPageSize, cli.GetEdgesCountWithQuery, cli.GetEdgesWithQuery)
+}
+
 func PullEdges(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
 	sysKey := sysMeta.Key
-	allEdges, err := cli.GetEdges(sysKey)
+	allEdges, err := pullAllEdges(sysKey, cli)
 	if err != nil {
 		return nil, err
 	}
@@ -413,9 +417,13 @@ func pullDevicesSchema(systemKey string, cli *cb.DevClient, writeThem bool) (map
 	return schema, nil
 }
 
+func pullAllDevices(systemKey string, cli *cb.DevClient) ([]interface{}, error) {
+	return paginateRequests(systemKey, DataPageSize, cli.GetDevicesCount, cli.GetDevices)
+}
+
 func PullDevices(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
 	sysKey := sysMeta.Key
-	allDevices, err := cli.GetDevices(sysKey, nil)
+	allDevices, err := pullAllDevices(sysKey, cli)
 	if err != nil {
 		return nil, err
 	}

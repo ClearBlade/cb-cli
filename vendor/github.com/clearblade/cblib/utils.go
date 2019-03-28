@@ -413,3 +413,26 @@ func confirmPrompt(question string) (bool, error) {
 		}
 	}
 }
+
+type countRequestFunc = func(systemKey string, query *cb.Query) (cb.CountResp, error)
+type dataRequestFunc = func(systemKey string, query *cb.Query) ([]interface{}, error)
+
+func paginateRequests(systemKey string, pageSize int, cf countRequestFunc, df dataRequestFunc) ([]interface{}, error) {
+	u, err := cf(systemKey, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	rtn := make([]interface{}, 0)
+	for i := 0; i*pageSize < int(u.Count); i++ {
+		pageQuery := cb.NewQuery()
+		pageQuery.PageNumber = i + 1
+		pageQuery.PageSize = pageSize
+		data, err := df(systemKey, pageQuery)
+		if err != nil {
+			return nil, err
+		}
+		rtn = append(rtn, data...)
+	}
+	return rtn, nil
+}
