@@ -177,17 +177,21 @@ func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient, 
 		rtn := make([]map[string]interface{}, 0)
 		for _, user := range users {
 			if user["email"] == userName || userName == PULL_ALL_USERS {
-				fmt.Printf(" %s", user["email"].(string))
+				email := user["email"].(string)
+				fmt.Printf(" %s", email)
 				ok = true
 				userId := user["user_id"].(string)
-				if roles, err := client.GetUserRoles(systemKey, userId); err != nil {
+				roles, err := client.GetUserRoles(systemKey, userId)
+				if err != nil {
 					return nil, fmt.Errorf("Could not get roles for %s: %s", userId, err.Error())
-				} else {
-					user["roles"] = roles
 				}
 				rtn = append(rtn, user)
 				if saveThem {
-					err = writeUser(user["email"].(string), user)
+					err := writeUser(email, user)
+					if err != nil {
+						return nil, err
+					}
+					err = writeUserRoles(email, roles)
 					if err != nil {
 						return nil, err
 					}

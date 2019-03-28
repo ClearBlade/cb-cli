@@ -388,9 +388,19 @@ func createDevices(systemInfo map[string]interface{}, client *cb.DevClient) ([]m
 				}
 			}
 		}
-		fmt.Printf(" %s", device["name"].(string))
+		deviceName := device["name"].(string)
+		fmt.Printf(" %s", deviceName)
 		deviceInfo, err := createDevice(sysKey, device, client)
 		if err != nil {
+			return nil, err
+		}
+		deviceRoles, err := getDeviceRoles(deviceName)
+		if err != nil {
+			return nil, err
+		}
+		defaultRoles := convertStringSliceToInterfaceSlice([]string{"Authenticated"})
+		roleDiff := diffRoles(deviceRoles, defaultRoles)
+		if err := client.UpdateDeviceRoles(sysKey, deviceName, convertInterfaceSliceToStringSlice(roleDiff.add), convertInterfaceSliceToStringSlice(roleDiff.remove)); err != nil {
 			return nil, err
 		}
 		devicesRval[idx] = deviceInfo

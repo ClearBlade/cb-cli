@@ -205,7 +205,16 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 			if _, err := pullDevicesSchema(systemInfo.Key, client, true); err != nil {
 				logError(fmt.Sprintf("Failed to pull device schema. %s", err.Error()))
 			}
-			writeDevice(DeviceName, device)
+			if err := writeDevice(DeviceName, device); err != nil {
+				logError(fmt.Sprintf("Failed to write device. %s", err.Error()))
+			}
+			roles, err := pullDeviceRoles(systemInfo.Key, DeviceName, client)
+			if err != nil {
+				logError(fmt.Sprintf("Failed to pull device roles. %s", err.Error()))
+			}
+			if err := writeDeviceRoles(DeviceName, roles); err != nil {
+				logError(fmt.Sprintf("Failed to write device roles. %s", err.Error()))
+			}
 		}
 		fmt.Printf("\n")
 	}

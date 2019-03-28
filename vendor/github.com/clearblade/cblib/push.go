@@ -1143,12 +1143,16 @@ func updateUser(meta *System_meta, user map[string]interface{}, client *cb.DevCl
 			}
 		}
 
-		localRoles := user["roles"]
+		userRoles, err := getUserRoles(user["email"].(string))
+		if err != nil {
+			return err
+		}
+
 		backendUserRoles, err := client.GetUserRoles(meta.Key, id)
 		if err != nil {
 			return err
 		}
-		roleDiff := diffRoles(localRoles.([]interface{}), convertStringSliceToInterfaceSlice(backendUserRoles))
+		roleDiff := diffRoles(userRoles, convertStringSliceToInterfaceSlice(backendUserRoles))
 		user["roles"] = map[string]interface{}{
 			"add":    convertInterfaceSliceToStringSlice(roleDiff.add),
 			"delete": convertInterfaceSliceToStringSlice(roleDiff.remove),
@@ -1175,8 +1179,12 @@ func createUser(systemKey string, systemSecret string, user map[string]interface
 		fmt.Printf("Error - Failed to update user email to ID map; subsequent operations may fail. %+v\n", err.Error())
 	}
 
+	userRoles, err := getUserRoles(email)
+	if err != nil {
+		return userId, err
+	}
 	defaultRoles := convertStringSliceToInterfaceSlice([]string{"Authenticated"})
-	roleDiff := diffRoles(user["roles"].([]interface{}), defaultRoles)
+	roleDiff := diffRoles(userRoles, defaultRoles)
 	if len(roleDiff.add) > 0 || len(roleDiff.remove) > 0 {
 		add := convertInterfaceSliceToStringSlice(roleDiff.add)
 		remove := convertInterfaceSliceToStringSlice(roleDiff.remove)
@@ -1319,6 +1327,7 @@ func updateDevice(systemKey string, device map[string]interface{}, client *cb.De
 				}
 			} else {
 				fmt.Printf("Device will not be created.\n")
+				return nil
 			}
 		}
 	} else {
@@ -1327,7 +1336,16 @@ func updateDevice(systemKey string, device map[string]interface{}, client *cb.De
 			return err
 		}
 	}
-	return nil
+	deviceRoles, err := getDeviceRoles(deviceName)
+	if err != nil {
+		return err
+	}
+	backendDeviceRoles, err := pullDeviceRoles(systemKey, deviceName, client)
+	if err != nil {
+		return err
+	}
+	roleDiff := diffRoles(deviceRoles, convertStringSliceToInterfaceSlice(backendDeviceRoles))
+	return client.UpdateDeviceRoles(systemKey, deviceName, convertInterfaceSliceToStringSlice(roleDiff.add), convertInterfaceSliceToStringSlice(roleDiff.remove))
 }
 
 func updateEdge(systemKey string, edge map[string]interface{}, client *cb.DevClient) error {

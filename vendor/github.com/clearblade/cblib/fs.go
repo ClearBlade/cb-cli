@@ -25,23 +25,25 @@ const portalsDirSuffix = "portals"
 var (
 	RootDirIsSet bool
 
-	rootDir        string
-	dataDir        string
-	svcDir         string
-	libDir         string
-	usersDir       string
-	timersDir      string
-	triggersDir    string
-	rolesDir       string
-	edgesDir       string
-	devicesDir     string
-	portalsDir     string
-	pluginsDir     string
-	adaptorsDir    string
-	deploymentsDir string
-	cliHiddenDir   string
-	mapNameToIdDir string
-	arrDir         [15]string //this is used to set up the directory structure for a system
+	rootDir         string
+	dataDir         string
+	svcDir          string
+	libDir          string
+	usersDir        string
+	usersRolesDir   string
+	timersDir       string
+	triggersDir     string
+	rolesDir        string
+	edgesDir        string
+	devicesDir      string
+	devicesRolesDir string
+	portalsDir      string
+	pluginsDir      string
+	adaptorsDir     string
+	deploymentsDir  string
+	cliHiddenDir    string
+	mapNameToIdDir  string
+	arrDir          [17]string //this is used to set up the directory structure for a system
 )
 
 func SetRootDir(theRootDir string) {
@@ -52,11 +54,13 @@ func SetRootDir(theRootDir string) {
 	libDir = rootDir + "/code/libraries"
 	dataDir = rootDir + "/data"
 	usersDir = rootDir + "/users"
+	usersRolesDir = usersDir + "/roles"
 	timersDir = rootDir + "/timers"
 	triggersDir = rootDir + "/triggers"
 	rolesDir = rootDir + "/roles"
 	edgesDir = rootDir + "/edges"
 	devicesDir = rootDir + "/devices"
+	devicesRolesDir = devicesDir + "/roles"
 	portalsDir = rootDir + "/" + portalsDirSuffix
 	pluginsDir = rootDir + "/plugins"
 	adaptorsDir = rootDir + "/adapters"
@@ -67,17 +71,19 @@ func SetRootDir(theRootDir string) {
 	arrDir[1] = libDir
 	arrDir[2] = dataDir
 	arrDir[3] = usersDir
-	arrDir[4] = timersDir
-	arrDir[5] = triggersDir
-	arrDir[6] = rolesDir
-	arrDir[7] = edgesDir
-	arrDir[8] = devicesDir
-	arrDir[9] = portalsDir
-	arrDir[10] = pluginsDir
-	arrDir[11] = adaptorsDir
-	arrDir[12] = deploymentsDir
-	arrDir[13] = cliHiddenDir
-	arrDir[14] = mapNameToIdDir
+	arrDir[4] = usersRolesDir
+	arrDir[5] = timersDir
+	arrDir[6] = triggersDir
+	arrDir[7] = rolesDir
+	arrDir[8] = edgesDir
+	arrDir[9] = devicesDir
+	arrDir[10] = devicesRolesDir
+	arrDir[11] = portalsDir
+	arrDir[12] = pluginsDir
+	arrDir[13] = adaptorsDir
+	arrDir[14] = deploymentsDir
+	arrDir[15] = cliHiddenDir
+	arrDir[16] = mapNameToIdDir
 }
 
 func setupDirectoryStructure() error {
@@ -508,6 +514,13 @@ func writeUser(email string, data map[string]interface{}) error {
 	return writeEntity(usersDir, email, data)
 }
 
+func writeUserRoles(email string, roles []string) error {
+	if err := os.MkdirAll(usersRolesDir, 0777); err != nil {
+		return err
+	}
+	return writeEntity(usersRolesDir, email, roles)
+}
+
 func writeUserSchema(data map[string]interface{}) error {
 	return writeEntity(usersDir, "schema", data)
 }
@@ -756,6 +769,13 @@ func writeDevice(name string, data map[string]interface{}) error {
 	return writeEntity(devicesDir, name, data)
 }
 
+func writeDeviceRoles(name string, roles []string) error {
+	if err := os.MkdirAll(devicesRolesDir, 0777); err != nil {
+		return err
+	}
+	return writeEntity(devicesRolesDir, name, roles)
+}
+
 func whitelistPortal(data map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
 		"config":      data["config"],
@@ -937,7 +957,7 @@ func getRoles() ([]map[string]interface{}, error) {
 }
 
 func getUsers() ([]map[string]interface{}, error) {
-	return getObjectList(usersDir, []string{"schema.json"})
+	return getObjectList(usersDir, []string{"schema.json", "roles"})
 }
 
 func getCollections() ([]map[string]interface{}, error) {
@@ -973,7 +993,7 @@ func getDevicesSchema() (map[string]interface{}, error) {
 }
 
 func getDevices() ([]map[string]interface{}, error) {
-	return getObjectList(devicesDir, []string{"schema.json"})
+	return getObjectList(devicesDir, []string{"schema.json", "roles"})
 }
 
 func getPortals() ([]map[string]interface{}, error) {
@@ -1086,6 +1106,10 @@ func getFullUserObject(email string) (map[string]interface{}, error) {
 	return u, nil
 }
 
+func getUserRoles(email string) ([]interface{}, error) {
+	return getArray(usersRolesDir + "/" + email + ".json")
+}
+
 func getUser(email string) (map[string]interface{}, error) {
 	return getObject(usersDir, email+".json")
 }
@@ -1100,6 +1124,10 @@ func getTimer(name string) (map[string]interface{}, error) {
 
 func getDevice(name string) (map[string]interface{}, error) {
 	return getObject(devicesDir, name+".json")
+}
+
+func getDeviceRoles(name string) ([]interface{}, error) {
+	return getArray(devicesRolesDir + "/" + name + ".json")
 }
 
 func getEdge(name string) (map[string]interface{}, error) {

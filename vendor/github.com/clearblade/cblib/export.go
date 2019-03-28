@@ -422,14 +422,25 @@ func PullDevices(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interfac
 	list := make([]map[string]interface{}, len(allDevices))
 	for i := 0; i < len(allDevices); i++ {
 		currentDevice := allDevices[i].(map[string]interface{})
-		fmt.Printf(" %s", currentDevice["name"].(string))
-		err = writeDevice(currentDevice["name"].(string), currentDevice)
+		name := currentDevice["name"].(string)
+		fmt.Printf(" %s", name)
+		roles, err := pullDeviceRoles(sysKey, name, cli)
 		if err != nil {
+			return nil, err
+		}
+		if err = writeDevice(name, currentDevice); err != nil {
+			return nil, err
+		}
+		if err := writeDeviceRoles(name, roles); err != nil {
 			return nil, err
 		}
 		list = append(list, currentDevice)
 	}
 	return list, nil
+}
+
+func pullDeviceRoles(sysKey, name string, cli *cb.DevClient) ([]string, error) {
+	return cli.GetDeviceRoles(sysKey, name)
 }
 
 func pullEdgeDeployInfo(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
