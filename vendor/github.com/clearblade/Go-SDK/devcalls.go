@@ -260,36 +260,36 @@ func (d *DevClient) GetRolesWithQuery(SystemKey string, query *Query) ([]interfa
 	return rval, nil
 }
 
-type RolesCountResp struct {
+type CountResp struct {
 	Count float64 `json:"count"`
 }
 
 //GetRolesCount returns the number of roles that match a given query
-func (d *DevClient) GetRolesCount(SystemKey string, query *Query) (RolesCountResp, error) {
+func (d *DevClient) GetRolesCount(SystemKey string, query *Query) (CountResp, error) {
 	creds, err := d.credentials()
 	if err != nil {
-		return RolesCountResp{Count: 0}, err
+		return CountResp{Count: 0}, err
 	}
 	var qry map[string]string
 	query_map := query.serialize()
 	query_bytes, err := json.Marshal(query_map)
 	if err != nil {
-		return RolesCountResp{Count: 0}, err
+		return CountResp{Count: 0}, err
 	}
 	qry = map[string]string{
 		"query": url.QueryEscape(string(query_bytes)),
 	}
 	resp, err := get(d, d.preamble()+"/user/"+SystemKey+"/roles/count", qry, creds, nil)
 	if err != nil {
-		return RolesCountResp{Count: 0}, fmt.Errorf("Couldn't get all roles: '%s'\n", err.Error())
+		return CountResp{Count: 0}, fmt.Errorf("Couldn't get all roles: '%s'\n", err.Error())
 	}
 
 	rval, ok := resp.Body.(map[string]interface{})
 	if !ok {
-		return RolesCountResp{Count: 0}, fmt.Errorf("Bad type returned by GetRolesCount: %T, %s", resp.Body, resp.Body.(string))
+		return CountResp{Count: 0}, fmt.Errorf("Bad type returned by GetRolesCount: %T, %s", resp.Body, resp.Body.(string))
 	}
 
-	return RolesCountResp{
+	return CountResp{
 		Count: rval["count"].(float64),
 	}, nil
 }

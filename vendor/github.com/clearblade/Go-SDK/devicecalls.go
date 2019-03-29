@@ -8,10 +8,11 @@ import (
 )
 
 const (
-	_DEVICE_HEADER_KEY     = "ClearBlade-DeviceToken"
-	_DEVICES_DEV_PREAMBLE  = "/admin/devices/"
-	_DEVICES_USER_PREAMBLE = "/api/v/2/devices/"
-	_DEVICE_SESSION        = "/admin/v/4/session"
+	_DEVICE_HEADER_KEY       = "ClearBlade-DeviceToken"
+	_DEVICES_DEV_PREAMBLE    = "/admin/devices/"
+	_DEVICES_USER_PREAMBLE   = "/api/v/2/devices/"
+	_DEVICE_SESSION          = "/admin/v/4/session"
+	_DEVICE_V3_USER_PREAMBLE = "/api/v/3/devices/"
 )
 
 func (d *DevClient) GetDevices(systemKey string, query *Query) ([]interface{}, error) {
@@ -24,6 +25,18 @@ func (u *UserClient) GetDevices(systemKey string, query *Query) ([]interface{}, 
 
 func (u *DeviceClient) GetDevices(systemKey string, query *Query) ([]interface{}, error) {
 	return getDevices(u, systemKey, _DEVICES_USER_PREAMBLE, query)
+}
+
+func (d *DevClient) GetDevicesCount(systemKey string, query *Query) (CountResp, error) {
+	return getDevicesCount(d, systemKey, _DEVICE_V3_USER_PREAMBLE, query)
+}
+
+func (u *UserClient) GetDevicesCount(systemKey string, query *Query) (CountResp, error) {
+	return getDevicesCount(u, systemKey, _DEVICE_V3_USER_PREAMBLE, query)
+}
+
+func (u *DeviceClient) GetDevicesCount(systemKey string, query *Query) (CountResp, error) {
+	return getDevicesCount(u, systemKey, _DEVICE_V3_USER_PREAMBLE, query)
 }
 
 func getDevices(client cbClient, systemKey string, preamble string, query *Query) ([]interface{}, error) {
@@ -43,6 +56,32 @@ func getDevices(client cbClient, systemKey string, preamble string, query *Query
 		return nil, err
 	}
 	return resp.Body.([]interface{}), nil
+}
+
+func getDevicesCount(client cbClient, systemKey string, preamble string, query *Query) (CountResp, error) {
+	creds, err := client.credentials()
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+
+	qry, err := createQueryMap(query)
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+
+	resp, err := get(client, preamble+systemKey+"/count", qry, creds, nil)
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+	rval, ok := resp.Body.(map[string]interface{})
+	if !ok {
+		return CountResp{Count: 0}, fmt.Errorf("Bad type returned by getDevicesCount: %T, %s", resp.Body, resp.Body.(string))
+	}
+
+	return CountResp{
+		Count: rval["count"].(float64),
+	}, nil
 }
 
 func (d *DevClient) UpdateDevices(systemKey string, query *Query, changes map[string]interface{}) ([]interface{}, error) {

@@ -353,3 +353,33 @@ func (d *DevClient) GetEdgeColumns(systemKey string) ([]interface{}, error) {
 	}
 	return resp.Body.([]interface{}), nil
 }
+
+func (d *DevClient) GetEdgesCountWithQuery(systemKey string, query *Query) (CountResp, error) {
+	return getEdgesCount(d, systemKey, _EDGES_USER_V3, query)
+}
+
+func getEdgesCount(client cbClient, systemKey string, preamble string, query *Query) (CountResp, error) {
+	creds, err := client.credentials()
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+
+	qry, err := createQueryMap(query)
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+
+	resp, err := get(client, preamble+systemKey+"/count", qry, creds, nil)
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+	rval, ok := resp.Body.(map[string]interface{})
+	if !ok {
+		return CountResp{Count: 0}, fmt.Errorf("Bad type returned by getEdgesCount: %T, %s", resp.Body, resp.Body.(string))
+	}
+
+	return CountResp{
+		Count: rval["count"].(float64),
+	}, nil
+}
