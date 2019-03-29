@@ -170,7 +170,7 @@ func Authorize(defaults *DefaultInfo) (*cb.DevClient, error) {
 }
 
 func checkIfTokenHasExpired(client *cb.DevClient, systemKey string) (*cb.DevClient, error) {
-	_, err := client.GetAllRoles(systemKey)
+	err := client.CheckAuth()
 	if err != nil {
 		fmt.Printf("Token has probably expired. Please enter details for authentication again...\n")
 		MetaInfo = nil
