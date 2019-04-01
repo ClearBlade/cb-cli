@@ -87,7 +87,7 @@ func doPushService(systemKey string, client *cb.DevClient) error {
 		}
 		return err
 	}
-	return updateService(systemKey, ServiceName, svcMap, client)
+	return updateServiceWithRunAs(systemKey, ServiceName, svcMap, client)
 }
 
 func doCallService(systemKey string, client *cb.DevClient) (map[string]interface{}, error) {

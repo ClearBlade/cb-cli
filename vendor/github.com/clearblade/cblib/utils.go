@@ -436,3 +436,28 @@ func paginateRequests(systemKey string, pageSize int, cf countRequestFunc, df da
 	}
 	return rtn, nil
 }
+
+func getRunUserEmail(service map[string]interface{}) string {
+	if runUserID, ok := service[runUserKey].(string); ok {
+		if email, err := getUserEmailByID(runUserID); err != nil {
+			return runUserID
+		} else {
+			return email
+		}
+	}
+	return ""
+}
+
+func getUserEmailByID(id string) (string, error) {
+	u, err := getUserEmailToId()
+	if err != nil {
+		return id, err
+	}
+	for email, userID := range u {
+		if userID == id {
+			return email, nil
+		}
+	}
+	// couldn't find a match, just return the id
+	return id, nil
+}

@@ -97,7 +97,7 @@ func pushOneService(systemInfo *System_meta, client *cb.DevClient, name string) 
 	if err != nil {
 		return err
 	}
-	return updateService(systemInfo.Key, name, service, client)
+	return updateServiceWithRunAs(systemInfo.Key, name, service, client)
 }
 
 func pushUserSchema(systemInfo *System_meta, client *cb.DevClient) error {
@@ -481,7 +481,7 @@ func pushAllServices(systemInfo *System_meta, client *cb.DevClient) error {
 	for _, service := range services {
 		name := service["name"].(string)
 		fmt.Printf("Pushing service %+s\n", name)
-		if err := updateService(systemInfo.Key, name, service, client); err != nil {
+		if err := updateServiceWithRunAs(systemInfo.Key, name, service, client); err != nil {
 			return fmt.Errorf("Error updating service '%s': %s\n", service["name"].(string), err.Error())
 		}
 	}
@@ -1526,8 +1526,20 @@ func findService(systemKey, serviceName string) (map[string]interface{}, error) 
 	return nil, fmt.Errorf(NotExistErrorString)
 }
 
-func updateService(systemKey, name string, service map[string]interface{}, client *cb.DevClient) error {
+func updateServiceWithRunAs(systemKey, name string, service map[string]interface{}, client *cb.DevClient) error {
+	if savedRunAs, ok := service[runUserKey].(string); ok {
+		if id, err := getUserIdByEmail(savedRunAs); err == nil {
+			service[runUserKey] = id
+		} else if savedRunAs != "" {
+			service[runUserKey] = ""
+			logWarning(fmt.Sprintf("Failed to retrieve run_user ID for email '%s'. Please check to make sure that the user exists and that there is a matching entry in .cb-cli/map-name-to-id/users.json. Empty value will be used for run_user", savedRunAs))
+		}
+	}
 
+	return updateService(systemKey, name, service, client)
+}
+
+func updateService(systemKey, name string, service map[string]interface{}, client *cb.DevClient) error {
 	if _, err := pullService(systemKey, name, client); err != nil {
 		fmt.Printf("Could not find service '%s'. Error is - %s\n", name, err.Error())
 		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new service named %s?", name))
@@ -1567,6 +1579,7 @@ func getServiceBody(service map[string]interface{}) map[string]interface{} {
 		"auto_restart":      false,
 		"concurrency":       0,
 		"dependencies":      "",
+		runUserKey:          "",
 	}
 	if loggingEnabled, ok := service["logging_enabled"]; ok {
 		ret["logging_enabled"] = loggingEnabled
@@ -1588,6 +1601,9 @@ func getServiceBody(service map[string]interface{}) map[string]interface{} {
 	}
 	if concurrency, ok := service["concurrency"].(float64); ok {
 		ret["concurrency"] = concurrency
+	}
+	if runUser, ok := service[runUserKey].(string); ok {
+		ret[runUserKey] = runUser
 	}
 	return ret
 }

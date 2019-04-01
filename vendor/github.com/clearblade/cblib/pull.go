@@ -153,7 +153,7 @@ func PullAndWriteService(systemKey string, serviceName string, client *cb.DevCli
 	if svc, err := pullService(systemKey, serviceName, client); err != nil {
 		return err
 	} else {
-		return writeService(serviceName, svc)
+		return writeService(serviceName, getRunUserEmail(svc), svc)
 	}
 }
 

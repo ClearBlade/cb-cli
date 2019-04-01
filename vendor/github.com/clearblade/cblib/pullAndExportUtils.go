@@ -11,6 +11,41 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	didSomething := false
 
+	if assets.UserSchema || assets.AllAssets {
+		didSomething = true
+		fmt.Println("Pulling user schema")
+		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
+			logError(fmt.Sprintf("Failed to pull user schema - %s\n", err.Error()))
+		}
+		fmt.Printf("\n")
+	}
+
+	if (assets.AllUsers || assets.AllAssets) && assets.ExportUsers {
+		didSomething = true
+		fmt.Println("Pulling all users:")
+		if _, err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client, true); err != nil {
+			logError(fmt.Sprintf("Failed to pull all users - %s\n", err.Error()))
+		}
+		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
+			logError(fmt.Sprintf("Failed to pull user schema - %s\n", err.Error()))
+		}
+		fmt.Printf("\n")
+	}
+
+	if assets.User != "" {
+		didSomething = true
+		fmt.Printf("Pulling user %+s\n", User)
+		_, err := PullAndWriteUsers(systemInfo.Key, User, client, true)
+		if err != nil {
+			logError(fmt.Sprintf("Failed to pull users. %s", err.Error()))
+		}
+		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
+			logError(fmt.Sprintf("Failed to pull user schema. %s", err.Error()))
+			return false, err
+		}
+		fmt.Printf("\n")
+	}
+
 	if assets.AllServices || assets.AllAssets {
 		didSomething = true
 		fmt.Println("Pulling all services:")
@@ -73,41 +108,6 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 		err := PullAndWriteCollection(systemInfo, CollectionName, client, assets.ExportRows, assets.ExportItemId)
 		if err != nil {
 			logError(fmt.Sprintf("Failed to pull collection. %s", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if assets.UserSchema || assets.AllAssets {
-		didSomething = true
-		fmt.Println("Pulling user schema")
-		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull user schema - %s\n", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if (assets.AllUsers || assets.AllAssets) && assets.ExportUsers {
-		didSomething = true
-		fmt.Println("Pulling all users:")
-		if _, err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull all users - %s\n", err.Error()))
-		}
-		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull user schema - %s\n", err.Error()))
-		}
-		fmt.Printf("\n")
-	}
-
-	if assets.User != "" {
-		didSomething = true
-		fmt.Printf("Pulling user %+s\n", User)
-		_, err := PullAndWriteUsers(systemInfo.Key, User, client, true)
-		if err != nil {
-			logError(fmt.Sprintf("Failed to pull users. %s", err.Error()))
-		}
-		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
-			logError(fmt.Sprintf("Failed to pull user schema. %s", err.Error()))
-			return false, err
 		}
 		fmt.Printf("\n")
 	}
