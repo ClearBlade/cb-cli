@@ -929,6 +929,23 @@ func getCollectionIdByName(theNameWeWant string, collectionsInfo []CollectionInf
 	return "", fmt.Errorf("Couldn't find ID for collection name '%s'\n", theNameWeWant)
 }
 
+// it's possible that there are duplicate permissions
+// we need to remove any duplicates so that a role create/update succeeds
+func removeDuplicatePermissions(perms []map[string]interface{}, idKey string) []map[string]interface{} {
+	rtn := make([]map[string]interface{}, 0)
+	foundIds := make(map[string]bool)
+
+	for i := 0; i < len(perms); i++ {
+		id := perms[i]["itemInfo"].(map[string]interface{})[idKey].(string)
+		if _, found := foundIds[id]; !found {
+			foundIds[id] = true
+			rtn = append(rtn, perms[i])
+		}
+	}
+
+	return rtn
+}
+
 //
 //  The roles structure we get back when we retrieve roles is different from
 //  the format accepted for updating a role. Thus, we have this beauty of a
@@ -954,7 +971,7 @@ func convertPermissionsStructure(in map[string]interface{}, collectionsInfo []Co
 						"permissions": mapVal["Level"],
 					}
 				}
-				out["services"] = svcs
+				out["services"] = removeDuplicatePermissions(svcs, "name")
 			}
 		case "Collections":
 			if valIF != nil {
@@ -976,7 +993,7 @@ func convertPermissionsStructure(in map[string]interface{}, collectionsInfo []Co
 						"permissions": mapVal["Level"],
 					})
 				}
-				out["collections"] = cols
+				out["collections"] = removeDuplicatePermissions(cols, "id")
 			}
 		case "DevicesList":
 			if valIF != nil {
@@ -1007,7 +1024,7 @@ func convertPermissionsStructure(in map[string]interface{}, collectionsInfo []Co
 						"permissions": mapVal["Level"],
 					}
 				}
-				out["portals"] = ptls
+				out["portals"] = removeDuplicatePermissions(ptls, "name")
 			}
 		case "Push":
 			if valIF != nil {
