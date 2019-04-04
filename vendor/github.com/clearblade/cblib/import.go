@@ -396,7 +396,9 @@ func createDevices(systemInfo map[string]interface{}, client *cb.DevClient) ([]m
 		}
 		deviceRoles, err := getDeviceRoles(deviceName)
 		if err != nil {
-			return nil, err
+			// system is probably in the legacy format, let's just set the roles to the default
+			deviceRoles = convertStringSliceToInterfaceSlice([]string{"Authenticated"})
+			logWarning(fmt.Sprintf("Could not find roles for device with name '%s'. This device will be created with only the default 'Authenticated' role.", deviceName))
 		}
 		defaultRoles := convertStringSliceToInterfaceSlice([]string{"Authenticated"})
 		roleDiff := diffRoles(deviceRoles, defaultRoles)
