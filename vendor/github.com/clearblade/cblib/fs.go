@@ -1103,7 +1103,7 @@ func getFullUserObject(email string) (map[string]interface{}, error) {
 	}
 	id, err := getUserIdByEmail(email)
 	if err != nil {
-		return nil, nil
+		return u, nil
 	}
 	u["user_id"] = id
 	return u, nil
