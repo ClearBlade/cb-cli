@@ -1173,10 +1173,15 @@ func createUser(systemKey string, systemSecret string, user map[string]interface
 	}); err != nil {
 		fmt.Printf("Error - Failed to update user email to ID map; subsequent operations may fail. %+v\n", err.Error())
 	}
-
 	userRoles, err := getUserRoles(email)
 	if err != nil {
-		return userId, err
+		// couldn't get user roles, let's see if they're on the user map (legacy format)
+		if r, ok := user["roles"].([]interface{}); ok {
+			userRoles = r
+		} else {
+			logWarning(fmt.Sprintf("Could not find roles for user with email '%s'. This user will be created with only the default 'Authenticated' role.", email))
+			userRoles = convertStringSliceToInterfaceSlice([]string{"Authenticated"})
+		}
 	}
 	defaultRoles := convertStringSliceToInterfaceSlice([]string{"Authenticated"})
 	roleDiff := diffRoles(userRoles, defaultRoles)
