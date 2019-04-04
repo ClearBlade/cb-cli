@@ -396,6 +396,10 @@ func logWarning(info string) {
 	myLogger(fmt.Sprintf("[WARNING] %s", info))
 }
 
+func logErrorForUpdatingMapFile(fileName string, err error) {
+	logError(fmt.Sprintf("Failed to update %s - subsequent operations may fail. Error is - %s", fileName, err.Error()))
+}
+
 func confirmPrompt(question string) (bool, error) {
 	if AutoApprove {
 		fmt.Println("-auto-approve is true. Creating entity...")

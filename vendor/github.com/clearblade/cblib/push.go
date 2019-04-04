@@ -906,7 +906,7 @@ func createRole(systemKey string, role map[string]interface{}, collectionsInfo [
 		return err
 	}
 	if err := updateRoleNameToId(RoleInfo{ID: roleID, Name: roleName}); err != nil {
-		fmt.Printf("Error - Failed to update %s - subsequent operations may fail", getRoleNameToIdFullFilePath())
+		logErrorForUpdatingMapFile(getRoleNameToIdFullFilePath(), err)
 	}
 	return nil
 }
@@ -1171,7 +1171,7 @@ func createUser(systemKey string, systemSecret string, user map[string]interface
 		UserID: userId,
 		Email:  email,
 	}); err != nil {
-		fmt.Printf("Error - Failed to update user email to ID map; subsequent operations may fail. %+v\n", err.Error())
+		logErrorForUpdatingMapFile(getUserEmailToIdFullFilePath(), err)
 	}
 	userRoles, err := getUserRoles(email)
 	if err != nil {
@@ -1759,7 +1759,7 @@ func CreateCollection(systemKey string, collection map[string]interface{}, clien
 	}
 
 	if err := updateCollectionNameToId(myInfo); err != nil {
-		fmt.Printf("Error - Failed to update %s - subsequent operations may fail", getCollectionNameToIdFullFilePath())
+		logErrorForUpdatingMapFile(getCollectionNameToIdFullFilePath(), err)
 	}
 
 	columns := collection["schema"].([]interface{})

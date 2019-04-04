@@ -128,7 +128,7 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 			UserID: userId,
 			Email:  user["email"].(string),
 		}); err != nil {
-			fmt.Printf("Error - Failed to update user email to ID map; subsequent operations may fail. %+v\n", err.Error())
+			logErrorForUpdatingMapFile(getUserEmailToIdFullFilePath(), err)
 		}
 
 		if len(userCols) == 0 {
