@@ -1111,54 +1111,49 @@ func getMap(val interface{}) map[string]interface{} {
 }
 
 func updateUser(meta *System_meta, user map[string]interface{}, client *cb.DevClient) error {
-	var id string
-	var ok bool
-	if id, ok = user["user_id"].(string); !ok {
-		return fmt.Errorf("Missing user id %+v", user)
+
+	if email, ok := user["email"].(string); !ok {
+		return fmt.Errorf("Missing user email %+v", user)
 	} else {
-		if email, ok := user["email"].(string); !ok {
-			return fmt.Errorf("Missing user email %+v", user)
-		} else {
-			_, err := client.GetUserInfo(meta.Key, email)
+		_, err := client.GetUserInfo(meta.Key, email)
+		if err != nil {
+			fmt.Printf("Could not update user '%s'. Error is - %s\n", email, err.Error())
+			c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new user with email %s?", email))
 			if err != nil {
-				fmt.Printf("Could not update user '%s'. Error is - %s\n", email, err.Error())
-				c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new user with email %s?", email))
-				if err != nil {
-					return err
-				} else {
-					if c {
-						id, err = createUser(meta.Key, meta.Secret, user, client)
-						if err != nil {
-							return fmt.Errorf("Could not create user %s: %s", email, err.Error())
-						} else {
-							// tack the new user id onto the user object so it can be used in subsequent requests
-							user["user_id"] = id
-							fmt.Printf("Successfully created new user %s\n", email)
-						}
+				return err
+			} else {
+				if c {
+					id, err := createUser(meta.Key, meta.Secret, user, client)
+					if err != nil {
+						return fmt.Errorf("Could not create user %s: %s", email, err.Error())
 					} else {
-						fmt.Printf("User will not be created.\n")
-						return nil
+						// tack the new user id onto the user object so it can be used in subsequent requests
+						user["user_id"] = id
+						fmt.Printf("Successfully created new user %s\n", email)
 					}
+				} else {
+					fmt.Printf("User will not be created.\n")
+					return nil
 				}
 			}
 		}
-
-		userRoles, err := getUserRoles(user["email"].(string))
-		if err != nil {
-			return err
-		}
-
-		backendUserRoles, err := client.GetUserRoles(meta.Key, id)
-		if err != nil {
-			return err
-		}
-		roleDiff := diffRoles(userRoles, convertStringSliceToInterfaceSlice(backendUserRoles))
-		user["roles"] = map[string]interface{}{
-			"add":    convertInterfaceSliceToStringSlice(roleDiff.add),
-			"delete": convertInterfaceSliceToStringSlice(roleDiff.remove),
-		}
-		return client.UpdateUser(meta.Key, id, user)
 	}
+
+	userRoles, err := getUserRoles(user["email"].(string))
+	if err != nil {
+		return err
+	}
+
+	backendUserRoles, err := client.GetUserRoles(meta.Key, user["user_id"].(string))
+	if err != nil {
+		return err
+	}
+	roleDiff := diffRoles(userRoles, convertStringSliceToInterfaceSlice(backendUserRoles))
+	user["roles"] = map[string]interface{}{
+		"add":    convertInterfaceSliceToStringSlice(roleDiff.add),
+		"delete": convertInterfaceSliceToStringSlice(roleDiff.remove),
+	}
+	return client.UpdateUser(meta.Key, user["user_id"].(string), user)
 }
 
 func createUser(systemKey string, systemSecret string, user map[string]interface{}, client *cb.DevClient) (string, error) {
