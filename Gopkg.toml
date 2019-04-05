@@ -1,9 +1,7 @@
 [[constraint]]
 
   name = "github.com/clearblade/cblib"
-  branch = "extension-prep"
-  source = "github.com/clearblade/cblib"
-  # version = "4.1.7"
+  version = "4.2.0"
 
 [prune]
   go-tests = true

@@ -31,9 +31,7 @@
 
 [[constraint]]
   name = "github.com/clearblade/Go-SDK"
-  branch = "extension-prep"
-  source = "github.com/clearblade/Go-SDK"
-  # version = "2.5.5"
+  version = "3.0.0"
 
 [[constraint]]
   name = "github.com/clearblade/cbjson"
