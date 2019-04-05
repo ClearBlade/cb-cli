@@ -2,9 +2,9 @@ package cblib
 
 import (
 	"fmt"
+
 	cb "github.com/clearblade/Go-SDK"
 	"github.com/clearblade/cblib/models"
-	"strings"
 )
 
 var (
@@ -12,15 +12,17 @@ var (
 )
 
 func init() {
-	usage := 
-	`
+	usage :=
+		`
 	Pull a ClearBlade asset from the Platform to your local filesystem. Use -sort-collections for easier version controlling of datasets.
 
 	Note: Collection rows are pulled by default.
 	`
 
-	example := 
-	`
+	example :=
+		`
+	cb-cli pull -all												# Pull all assets from Platform to local filesystem
+	cb-cli pull -all-services -all-portals							# Pull all services and all portals from Platform to local filesystem
 	cb-cli pull -service=Service1 									# Pulls Service1 from Platform to local filesystem
 	cb-cli pull -collection=Collection1								# Pulls Collection1 from Platform to local filesystem, with all rows, unsorted
 	cb-cli pull -collection=Collection1 -sort-collections=true		# Pulls Collection1 from Platform to local filesystem, with all rows, sorted
@@ -31,7 +33,7 @@ func init() {
 		needsAuth:    true,
 		mustBeInRepo: true,
 		run:          doPull,
-		example:	  example,
+		example:      example,
 	}
 
 	pullCommand.flags.BoolVar(&AllServices, "all-services", false, "pull all services from system")
@@ -41,8 +43,16 @@ func init() {
 	pullCommand.flags.BoolVar(&AllPortals, "all-portals", false, "pull all portals from system")
 	pullCommand.flags.BoolVar(&AllPlugins, "all-plugins", false, "pull all plugins from system")
 	pullCommand.flags.BoolVar(&AllAdaptors, "all-adapters", false, "pull all adapters from system")
+	pullCommand.flags.BoolVar(&AllDeployments, "all-deployments", false, "pull all deployments from system")
+	pullCommand.flags.BoolVar(&AllCollections, "all-collections", false, "pull all collections from system")
+	pullCommand.flags.BoolVar(&AllRoles, "all-roles", false, "pull all roles from system")
+	pullCommand.flags.BoolVar(&AllUsers, "all-users", false, "pull all users from system")
 	pullCommand.flags.BoolVar(&UserSchema, "userschema", false, "pull user table schema")
+	pullCommand.flags.BoolVar(&AllAssets, "all", false, "pull all assets from system")
+	pullCommand.flags.BoolVar(&AllTriggers, "all-triggers", false, "pull all triggers from system")
+	pullCommand.flags.BoolVar(&AllTimers, "all-timers", false, "pull all timers from system")
 
+	pullCommand.flags.StringVar(&CollectionSchema, "collectionschema", "", "Name of collection schema to pull")
 	pullCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to pull")
 	pullCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to pull")
 	pullCommand.flags.StringVar(&CollectionName, "collection", "", "Name of collection to pull")
@@ -57,6 +67,7 @@ func init() {
 	pullCommand.flags.StringVar(&PortalName, "portal", "", "Name of portal to pull")
 	pullCommand.flags.StringVar(&PluginName, "plugin", "", "Name of plugin to pull")
 	pullCommand.flags.StringVar(&AdaptorName, "adapter", "", "Name of adapter to pull")
+	pullCommand.flags.StringVar(&DeploymentName, "deployment", "", "Name of deployment to pull")
 
 	AddCommand("pull", pullCommand)
 }
@@ -64,8 +75,11 @@ func init() {
 func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 	SetRootDir(".")
 	systemInfo, err := getSysMeta()
-	setupDirectoryStructure(systemInfo)
 	if err != nil {
+		return err
+	}
+
+	if err := setupDirectoryStructure(); err != nil {
 		return err
 	}
 
@@ -73,221 +87,14 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 	// since we dont have an endpoint to determine this
 	client, err = checkIfTokenHasExpired(client, systemInfo.Key)
 	if err != nil {
-		return fmt.Errorf("Re-auth failed: %s", err)
+		return fmt.Errorf("Re-auth failed: %s\n", err)
 	}
 
-	// ??? we already have them locally
-	if r, err := pullRoles(systemInfo.Key, client, false); err != nil {
-		return err
-	} else {
-		rolesInfo = r
-	}
-
-	didSomething := false
-
-	if AllServices {
-		didSomething = true
-		fmt.Printf("Pulling all services:")
-		if _, err := PullServices(systemInfo.Key, client); err != nil {
-			return err
-		}
-		fmt.Printf("\n")
-	}
-
-	if ServiceName != "" {
-		didSomething = true
-		fmt.Printf("Pulling service %+s\n", ServiceName)
-		if err := PullAndWriteService(systemInfo.Key, ServiceName, client); err != nil {
-			return err
-		}
-	}
-
-	if AllLibraries {
-		didSomething = true
-		fmt.Printf("Pulling all libraries:")
-		if _, err := PullLibraries(systemInfo, client); err != nil {
-			return err
-		}
-		fmt.Printf("\n")
-	}
-
-	if LibraryName != "" {
-		didSomething = true
-		fmt.Printf("Pulling library %s\n", LibraryName)
-		if lib, err := pullLibrary(systemInfo.Key, LibraryName, client); err != nil {
-			return err
-		} else {
-			writeLibrary(lib["name"].(string), lib)
-		}
-	}
-
-	if CollectionName != "" {
-		didSomething = true
-		ExportRows = true
-		fmt.Printf("Pulling collection %+s\n", CollectionName)
-		err := PullAndWriteCollection(systemInfo, CollectionName, client)
-		if err != nil {
-			return err
-		}
-	}
-
-	if User != "" {
-		didSomething = true
-		fmt.Printf("Pulling user %+s\n", User)
-		err := PullAndWriteUsers(systemInfo.Key, User, client)
-		if err != nil {
-			return err
-		}
-		if col, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
-			return err
-		} else {
-			writeUserSchema(col)
-		}
-	}
-
-	if RoleName != "" {
-		didSomething = true
-		roles := make([]map[string]interface{}, 0)
-		splitRoles := strings.Split(RoleName, ",")
-		for _, role := range splitRoles {
-			fmt.Printf("Pulling role %+s\n", role)
-			if r, err := pullRole(systemInfo.Key, role, client); err != nil {
-				return err
-			} else {
-				roles = append(roles, r)
-				writeRole(role, r)
-			}
-		}
-		storeRoles(roles)
-	}
-
-	if TriggerName != "" {
-		didSomething = true
-		fmt.Printf("Pulling trigger %+s\n", TriggerName)
-		err := PullAndWriteTrigger(systemInfo.Key, TriggerName, client)
-		if err != nil {
-			return err
-		}
-	}
-
-	if TimerName != "" {
-		didSomething = true
-		fmt.Printf("Pulling timer %+s\n", TimerName)
-		err := PullAndWriteTimer(systemInfo.Key, TimerName, client)
-		if err != nil {
-			return err
-		}
-	}
-
-	if AllDevices {
-		didSomething = true
-		fmt.Printf("Pulling all devices:")
-		if _, err := PullDevices(systemInfo, client); err != nil {
-			return err
-		}
-		if _, err := pullDevicesSchema(systemInfo.Key, client, true); err != nil {
-			return err
-		}
-		fmt.Printf("\n")
-	}
-
-	if DeviceName != "" {
-		didSomething = true
-		fmt.Printf("Pulling device %+s\n", DeviceName)
-		if device, err := pullDevice(systemInfo.Key, DeviceName, client); err != nil {
-			return err
-		} else {
-			if _, err := pullDevicesSchema(systemInfo.Key, client, true); err != nil {
-				return err
-			}
-			writeDevice(DeviceName, device)
-		}
-	}
-
-	if AllEdges {
-		didSomething = true
-		fmt.Printf("Pulling all edges:")
-		if _, err := PullEdges(systemInfo, client); err != nil {
-			return err
-		}
-		if _, err := pullEdgesSchema(systemInfo.Key, client, true); err != nil {
-			return err
-		}
-		fmt.Printf("\n")
-	}
-
-	if EdgeName != "" {
-		didSomething = true
-		fmt.Printf("Pulling edge %+s\n", EdgeName)
-		if edge, err := pullEdge(systemInfo.Key, EdgeName, client); err != nil {
-			return err
-		} else {
-			writeEdge(EdgeName, edge)
-		}
-		if _, err := pullEdgesSchema(systemInfo.Key, client, true); err != nil {
-			fmt.Printf("\nNo custom columns to pull and create schema.json from... Continuing...\n")
-		}
-	}
-
-	if AllPortals {
-		didSomething = true
-		fmt.Printf("Pulling all portals:")
-		if _, err := PullPortals(systemInfo, client); err != nil {
-			return err
-		}
-		fmt.Printf("\n")
-	}
-
-	if PortalName != "" {
-		didSomething = true
-		fmt.Printf("Pulling portal %+s\n", PortalName)
-		if err := PullAndWritePortal(systemInfo.Key, PortalName, client); err != nil {
-			return err
-		}
-	}
-
-	if AllPlugins {
-		didSomething = true
-		fmt.Printf("Pulling all plugins:")
-		if _, err := PullPlugins(systemInfo, client); err != nil {
-			return err
-		}
-		fmt.Printf("\n")
-	}
-
-	if PluginName != "" {
-		didSomething = true
-		fmt.Printf("Pulling plugin %+s\n", PluginName)
-		if err = PullAndWritePlugin(systemInfo.Key, PluginName, client); err != nil {
-			return err
-		}
-	}
-
-	if AllAdaptors {
-		didSomething = true
-		fmt.Printf("Pulling all adaptors:")
-		if err := backupAndCleanDirectory(adaptorsDir); err != nil {
-			return err
-		}
-		if err := PullAdaptors(systemInfo, client); err != nil {
-			if restoreErr := restoreBackupDirectory(adaptorsDir); restoreErr != nil {
-				fmt.Printf("Failed to restore backup directory; %s", restoreErr.Error())
-			}
-			return err
-		}
-		if err := removeBackupDirectory(adaptorsDir); err != nil {
-			fmt.Printf("Warning: Failed to remove backup directory for '%s'", adaptorsDir)
-		}
-		fmt.Printf("\n")
-	}
-
-	if AdaptorName != "" {
-		didSomething = true
-		fmt.Printf("Pulling adaptor %+s\n", AdaptorName)
-		if err = PullAndWriteAdaptor(systemInfo.Key, AdaptorName, client); err != nil {
-			return err
-		}
-	}
+	assetsToPull := createAffectedAssets()
+	assetsToPull.ExportItemId = true
+	assetsToPull.ExportRows = true
+	assetsToPull.ExportUsers = true
+	didSomething, err := pullAssets(systemInfo, client, assetsToPull)
 
 	if !didSomething {
 		fmt.Printf("Nothing to pull -- you must specify something to pull (ie, -service=<svc_name>)\n")
@@ -295,57 +102,63 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 	return nil
 }
 
-func pullRole(systemKey string, roleName string, client *cb.DevClient) (map[string]interface{}, error) {
-	r, err := client.GetAllRoles(systemKey)
+func pullUserSchemaInfo(systemKey string, cli *cb.DevClient, writeThem bool) (map[string]interface{}, error) {
+	resp, err := cli.GetUserColumns(systemKey)
 	if err != nil {
 		return nil, err
 	}
-	ok := false
-	var rval map[string]interface{}
-	for _, rIF := range r {
-		r := rIF.(map[string]interface{})
-		if r["Name"].(string) == roleName {
-			ok = true
-			rval = r
+	columns := []map[string]interface{}{}
+	for _, colIF := range resp {
+		col := colIF.(map[string]interface{})
+		if col["ColumnName"] == "email" || col["ColumnName"] == "creation_date" {
+			continue
+		}
+		columns = append(columns, col)
+	}
+	schema := map[string]interface{}{
+		"columns": columns,
+	}
+	if writeThem {
+		if err := writeUserSchema(schema); err != nil {
+			return nil, err
 		}
 	}
-	if !ok {
-		return nil, fmt.Errorf("Role %s not found\n", roleName)
-	}
-	return rval, nil
+	return schema, nil
 }
 
-func PullAndWriteRoles(systemKey string, client *cb.DevClient) error {
-	r, err := client.GetAllRoles(systemKey)
+func pullRole(systemKey string, roleName string, client *cb.DevClient) (map[string]interface{}, error) {
+	return client.GetRole(systemKey, roleName)
+}
+
+func PullAndWriteRoles(systemKey string, cli *cb.DevClient, writeThem bool) ([]map[string]interface{}, error) {
+	r, err := cli.GetAllRoles(systemKey)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	var roleMap map[string]interface{}
-	for i := 0; i < len(r); i++ {
-		roleMap = r[i].(map[string]interface{})
-		err = writeRole(roleMap["Name"].(string), roleMap)
-		if err != nil {
-			return err
+	rval := make([]map[string]interface{}, 0)
+	for _, rIF := range r {
+		thisRole := rIF.(map[string]interface{})
+		fmt.Printf(" %s", thisRole["Name"].(string))
+		rval = append(rval, thisRole)
+		if writeThem {
+			if err := writeRole(thisRole["Name"].(string), thisRole); err != nil {
+				return nil, err
+			}
 		}
 	}
-	return nil
+	return rval, nil
 }
 
 func PullAndWriteService(systemKey string, serviceName string, client *cb.DevClient) error {
 	if svc, err := pullService(systemKey, serviceName, client); err != nil {
 		return err
 	} else {
-		return writeService(serviceName, svc)
+		return writeService(serviceName, getRunUserEmail(svc), svc)
 	}
 }
 
 func pullService(systemKey string, serviceName string, client *cb.DevClient) (map[string]interface{}, error) {
-	if service, err := client.GetServiceRaw(systemKey, serviceName); err != nil {
-		return nil, err
-	} else {
-		service["code"] = strings.Replace(service["code"].(string), "\\n", "\n", -1)
-		return service, nil
-	}
+	return client.GetServiceRaw(systemKey, serviceName)
 }
 
 func PullAndWriteLibrary(systemKey string, libraryName string, client *cb.DevClient) error {
@@ -356,39 +169,56 @@ func PullAndWriteLibrary(systemKey string, libraryName string, client *cb.DevCli
 	}
 }
 
-func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient) error {
-	if users, err := client.GetAllUsers(systemKey); err != nil {
-		return err
+func pullAllUsers(systemKey string, client *cb.DevClient) ([]interface{}, error) {
+	return paginateRequests(systemKey, DataPageSize, client.GetUserCountWithQuery, client.GetUsersWithQuery)
+}
+
+func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient, saveThem bool) ([]map[string]interface{}, error) {
+	if users, err := pullAllUsers(systemKey, client); err != nil {
+		return nil, err
 	} else {
 		ok := false
-		for _, user := range users {
+		rtn := make([]map[string]interface{}, 0)
+		for _, u := range users {
+			user := u.(map[string]interface{})
 			if user["email"] == userName || userName == PULL_ALL_USERS {
+				email := user["email"].(string)
+				fmt.Printf(" %s", email)
 				ok = true
 				userId := user["user_id"].(string)
-				if roles, err := client.GetUserRoles(systemKey, userId); err != nil {
-					return fmt.Errorf("Could not get roles for %s: %s", userId, err.Error())
-				} else {
-					user["roles"] = roles
-				}
-				err = writeUser(user["email"].(string), user)
+				roles, err := client.GetUserRoles(systemKey, userId)
 				if err != nil {
-					return err
+					return nil, fmt.Errorf("Could not get roles for %s: %s", userId, err.Error())
+				}
+				rtn = append(rtn, user)
+				if saveThem {
+					err := writeUser(email, user)
+					if err != nil {
+						return nil, err
+					}
+					err = writeUserRoles(email, roles)
+					if err != nil {
+						return nil, err
+					}
 				}
 			}
 		}
 		if !ok {
 			if userName == PULL_ALL_USERS {
-				return fmt.Errorf("No users found")
+				return nil, fmt.Errorf("No users found")
 			} else {
-				return fmt.Errorf("User %+s not found\n", userName)
+				return nil, fmt.Errorf("User %+s not found\n", userName)
 			}
 
+		} else {
+			return rtn, nil
 		}
+
 	}
-	return nil
+	return nil, nil
 }
 
-func PullAndWriteCollection(systemInfo *System_meta, collectionName string, client *cb.DevClient) error {
+func PullAndWriteCollection(systemInfo *System_meta, collectionName string, client *cb.DevClient, shouldExportRows, shouldExportItemId bool) error {
 	if allColls, err := client.GetAllCollections(systemInfo.Key); err != nil {
 		return err
 	} else {
@@ -406,38 +236,13 @@ func PullAndWriteCollection(systemInfo *System_meta, collectionName string, clie
 		if coll, err := client.GetCollectionInfo(collID); err != nil {
 			return err
 		} else {
-			if data, err := PullCollection(systemInfo, coll, client); err != nil {
+			if data, err := PullCollection(systemInfo, client, coll, shouldExportRows, shouldExportItemId); err != nil {
 				return err
 			} else {
 				d := makeCollectionJsonConsistent(data)
 				err = writeCollection(d["name"].(string), d)
 				if err != nil {
 					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func PullAndWriteCollections(sysMeta *System_meta, client *cb.DevClient) error {
-	if allColls, err := client.GetAllCollections(sysMeta.Key); err != nil {
-		return err
-	} else {
-		// iterate over allColls and find one with matching name
-		for _, c := range allColls {
-			coll := c.(map[string]interface{})
-			if coll, err := client.GetCollectionInfo(coll["collectionID"].(string)); err != nil {
-				return err
-			} else {
-				if data, err := PullCollection(sysMeta, coll, client); err != nil {
-					return err
-				} else {
-					d := makeCollectionJsonConsistent(data)
-					err = writeCollection(d["name"].(string), d)
-					if err != nil {
-						return err
-					}
 				}
 			}
 		}
@@ -468,19 +273,24 @@ func PullAndWriteTrigger(systemKey, trigName string, client *cb.DevClient) error
 	return nil
 }
 
-func PullAndWriteTriggers(sysMeta *System_meta, client *cb.DevClient) error {
-	if trigs, err := pullTriggers(sysMeta, client); err != nil {
-		return err
-	} else {
-		for i := 0; i < len(trigs); i++ {
-			stripTriggerFields(trigs[i])
-			err = writeTrigger(trigs[i]["name"].(string), trigs[i])
-			if err != nil {
-				return err
-			}
+func PullAndWriteTriggers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
+	trigs, err := cli.GetEventHandlers(sysMeta.Key)
+	if err != nil {
+		return nil, fmt.Errorf("Could not pull triggers out of system %s: %s", sysMeta.Key, err.Error())
+	}
+	triggers := []map[string]interface{}{}
+	for _, trig := range trigs {
+		thisTrig := trig.(map[string]interface{})
+		fmt.Printf(" %s", thisTrig["name"].(string))
+		delete(thisTrig, "system_key")
+		delete(thisTrig, "system_secret")
+		triggers = append(triggers, thisTrig)
+		err = writeTrigger(thisTrig["name"].(string), thisTrig)
+		if err != nil {
+			return nil, err
 		}
 	}
-	return nil
+	return triggers, nil
 }
 
 func PullAndWriteTimer(systemKey, timerName string, client *cb.DevClient) error {
@@ -495,12 +305,22 @@ func PullAndWriteTimer(systemKey, timerName string, client *cb.DevClient) error 
 	return nil
 }
 
-func PullAndWriteTimers(sysMeta *System_meta, client *cb.DevClient) error {
-	_, err := pullTimers(sysMeta, client)
+func PullAndWriteTimers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
+	theTimers, err := cli.GetTimers(sysMeta.Key)
 	if err != nil {
-		return err
+		return nil, fmt.Errorf("Could not pull timers out of system %s: %s", sysMeta.Key, err.Error())
 	}
-	return nil
+	timers := []map[string]interface{}{}
+	for _, timer := range theTimers {
+		thisTimer := timer.(map[string]interface{})
+		fmt.Printf(" %s", thisTimer["name"].(string))
+		timers = append(timers, thisTimer)
+		err = writeTimer(thisTimer["name"].(string), thisTimer)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return timers, nil
 }
 
 func PullAndWritePortal(systemKey, name string, client *cb.DevClient) error {
@@ -583,4 +403,40 @@ func pullAdaptor(systemKey, adaptorName string, client *cb.DevClient) (*models.A
 	}
 
 	return currentAdaptor, nil
+}
+
+func updateMapNameToIDFiles(systemInfo *System_meta, client *cb.DevClient) {
+	logInfo("Updating roles...")
+	if data, err := PullAndWriteRoles(systemInfo.Key, client, false); err != nil {
+		logError(fmt.Sprintf("Failed to update %s. %s", getRoleNameToIdFullFilePath(), err.Error()))
+	} else {
+		for i := 0; i < len(data); i++ {
+			updateRoleNameToId(RoleInfo{
+				ID:   data[i]["ID"].(string),
+				Name: data[i]["Name"].(string),
+			})
+		}
+	}
+	logInfo("\nUpdating collections...")
+	if data, err := PullAndWriteCollections(systemInfo, client, false, false, false); err != nil {
+		logError(fmt.Sprintf("Failed to update %s. %s", getCollectionNameToIdFullFilePath(), err.Error()))
+	} else {
+		for i := 0; i < len(data); i++ {
+			updateCollectionNameToId(CollectionInfo{
+				ID:   data[i]["collection_id"].(string),
+				Name: data[i]["name"].(string),
+			})
+		}
+	}
+	logInfo("Updating users...")
+	if data, err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client, false); err != nil {
+		logError(fmt.Sprintf("Failed to update %s. %s", getUserEmailToIdFullFilePath(), err.Error()))
+	} else {
+		for i := 0; i < len(data); i++ {
+			updateUserEmailToId(UserInfo{
+				Email:  data[i]["email"].(string),
+				UserID: data[i]["user_id"].(string),
+			})
+		}
+	}
 }

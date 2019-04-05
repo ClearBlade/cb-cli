@@ -2,8 +2,8 @@ package cblib
 
 import (
 	//"fmt"
+	"bufio"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
 	"io"
 	"io/ioutil"
 	"math/rand"
@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+
+	cb "github.com/clearblade/Go-SDK"
 )
 
 const BACKUP_DIRECTORY_SUFFIX = "_cb_bak"
@@ -34,33 +36,6 @@ func setupAddrs(paddr string, maddr string) {
 	} else {
 		cb.CB_MSG_ADDR = maddr + ":1883"
 	}
-}
-
-func convertPermissionsNames(perms map[string]interface{}) map[string]interface{} {
-	rval := map[string]interface{}{}
-	for key, val := range perms {
-		switch key {
-		case "CodeServices":
-			rval["services"] = val
-		case "Collections":
-			rval["collections"] = val
-		case "DevicesList":
-			rval["devices"] = val
-		case "MsgHistory":
-			rval["messagehistory"] = val
-		case "Portals":
-			rval["portals"] = val
-		case "Push":
-			rval["push"] = val
-		case "Topics":
-			rval["topics"] = val
-		case "UsersList":
-			rval["users"] = val
-		default:
-			rval[key] = "unknown"
-		}
-	}
-	return rval
 }
 
 // Bubble sort, compare by map key
@@ -322,15 +297,15 @@ func IsInRepo() bool {
 
 func FoundSystemDotJSON() bool {
 	if _, err := getDict("system.json"); err == nil {
-			return true
+		return true
 	}
 	return false
 
 }
 
 func FoundCBMeta() bool {
-	if _, err := getDict(".cbmeta"); err == nil {
-			return true
+	if _, err := getCbMeta(); err == nil {
+		return true
 	}
 	return false
 
@@ -339,9 +314,154 @@ func FoundCBMeta() bool {
 // These keys are generated upon GET, and not representative of the data model
 // If we store to filesystem with these keys, the corresponding PUT/POST for portal fails
 func removeBlacklistedPortalKeys(portal map[string]interface{}) map[string]interface{} {
-	var blacklist=[]string{"permissions","plugins"}
+	var blacklist = []string{"permissions", "plugins"}
 	for _, key := range blacklist {
-		delete(portal,key)
+		delete(portal, key)
 	}
 	return portal
+}
+
+type ListDiff struct {
+	add    []interface{}
+	remove []interface{}
+}
+
+func isDefaultColumn(defaultColumns []string, colName string) bool {
+	for i := 0; i < len(defaultColumns); i++ {
+		if defaultColumns[i] == colName {
+			return true
+		}
+	}
+	return false
+}
+
+func findDiff(listA []interface{}, listB []interface{}, isMatch func(interface{}, interface{}) bool, isDefaultColumnCb func(interface{}) bool) []interface{} {
+	rtn := make([]interface{}, 0)
+	for i := 0; i < len(listA); i++ {
+		found := false
+		if isDefaultColumnCb(listA[i]) {
+			found = true
+		}
+		for j := 0; j < len(listB); j++ {
+			if !isDefaultColumnCb(listB[j]) && isMatch(listA[i], listB[j]) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			rtn = append(rtn, listA[i])
+		}
+	}
+	return rtn
+}
+
+func compareLists(localList []interface{}, backendList []interface{}, isMatch func(interface{}, interface{}) bool, isDefaultColumnCb func(interface{}) bool) ListDiff {
+	diff := ListDiff{
+		add:    findDiff(localList, backendList, isMatch, isDefaultColumnCb),
+		remove: findDiff(backendList, localList, isMatch, isDefaultColumnCb),
+	}
+	return diff
+}
+
+func convertStringSliceToInterfaceSlice(strs []string) []interface{} {
+	rtn := make([]interface{}, len(strs))
+	for i, s := range strs {
+		rtn[i] = s
+	}
+	return rtn
+}
+
+func convertInterfaceSliceToStringSlice(ifaces []interface{}) []string {
+	rtn := make([]string, len(ifaces))
+	for i, s := range ifaces {
+		rtn[i] = s.(string)
+	}
+	return rtn
+}
+
+func myLogger(str string) {
+	fmt.Printf("\n\n%s\n\n", str)
+}
+
+func logError(err string) {
+	myLogger(fmt.Sprintf("[ERROR] %s", err))
+
+}
+
+func logInfo(info string) {
+	myLogger(fmt.Sprintf("[INFO] %s", info))
+}
+
+func logWarning(info string) {
+	myLogger(fmt.Sprintf("[WARNING] %s", info))
+}
+
+func logErrorForUpdatingMapFile(fileName string, err error) {
+	logError(fmt.Sprintf("Failed to update %s - subsequent operations may fail. Error is - %s", fileName, err.Error()))
+}
+
+func confirmPrompt(question string) (bool, error) {
+	if AutoApprove {
+		fmt.Println("-auto-approve is true. Creating entity...")
+		return true, nil
+	}
+	fmt.Printf("\n%s (Y/n)", question)
+	reader := bufio.NewReader(os.Stdin)
+	if text, err := reader.ReadString('\n'); err != nil {
+		return false, err
+	} else {
+		if strings.Contains(strings.ToUpper(text), "Y") {
+			return true, nil
+		} else {
+			return false, nil
+		}
+	}
+}
+
+type countRequestFunc = func(systemKey string, query *cb.Query) (cb.CountResp, error)
+type dataRequestFunc = func(systemKey string, query *cb.Query) ([]interface{}, error)
+
+func paginateRequests(systemKey string, pageSize int, cf countRequestFunc, df dataRequestFunc) ([]interface{}, error) {
+	u, err := cf(systemKey, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	rtn := make([]interface{}, 0)
+	for i := 0; i*pageSize < int(u.Count); i++ {
+		pageQuery := cb.NewQuery()
+		pageQuery.PageNumber = i + 1
+		pageQuery.PageSize = pageSize
+		data, err := df(systemKey, pageQuery)
+		if err != nil {
+			return nil, err
+		}
+		rtn = append(rtn, data...)
+	}
+	return rtn, nil
+}
+
+func getRunUserEmail(service map[string]interface{}) string {
+	if runUserID, ok := service[runUserKey].(string); ok {
+		if email, err := getUserEmailByID(runUserID); err != nil {
+			return runUserID
+		} else {
+			return email
+		}
+	}
+	return ""
+}
+
+func getUserEmailByID(id string) (string, error) {
+	u, err := getUserEmailToId()
+	if err != nil {
+		return id, err
+	}
+	for email, userID := range u {
+		if userID == id {
+			return email, nil
+		}
+	}
+	// couldn't find a match, just return the id
+	return id, nil
 }

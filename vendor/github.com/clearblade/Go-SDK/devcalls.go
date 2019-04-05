@@ -231,16 +231,23 @@ func (d *DevClient) AlterConnectionDetails(systemkey string, connectConfig conne
 	}
 }
 
-//GetAllRoles returns a slice of all roles, including their permissions
+//GetRolesWithQuery returns a slice of roles that match the given query, including their permissions
 //the return value is a slice of [{"ID":"roleid","Name":"rolename","Description":"role description", "Permissions":{"Collections":[{"ID":"collectionid","Columns":[{"Name":"columnname","Level":0}],"Items":[{"Name":"itemid","Level":2}],"Name":"collectionname"}], "Topics":[{"Name":"topic/path","Level":1}],"CodeServices":[{"Name":"service name","SystemKey":"syskey","Level":4}],"UsersList":{"Name":"users","Level":8},"Push":{"Name":"push","Level":0},"MsgHistory":{"Name":"messagehistory","Level":1}}},...]
-func (d *DevClient) GetAllRoles(SystemKey string) ([]interface{}, error) {
+func (d *DevClient) GetRolesWithQuery(SystemKey string, query *Query) ([]interface{}, error) {
 	creds, err := d.credentials()
 	if err != nil {
 		return nil, err
 	}
-	resp, err := get(d, d.preamble()+"/user/"+SystemKey+"/roles", map[string]string{
-		"appid": SystemKey,
-	}, creds, nil)
+	var qry map[string]string
+	query_map := query.serialize()
+	query_bytes, err := json.Marshal(query_map)
+	if err != nil {
+		return nil, err
+	}
+	qry = map[string]string{
+		"query": url.QueryEscape(string(query_bytes)),
+	}
+	resp, err := get(d, d.preamble()+"/user/"+SystemKey+"/roles", qry, creds, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Couldn't get all roles: '%s'\n", err.Error())
 	}
@@ -251,6 +258,105 @@ func (d *DevClient) GetAllRoles(SystemKey string) ([]interface{}, error) {
 	}
 
 	return rval, nil
+}
+
+type CountResp struct {
+	Count float64 `json:"count"`
+}
+
+//GetRolesCount returns the number of roles that match a given query
+func (d *DevClient) GetRolesCount(SystemKey string, query *Query) (CountResp, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+	var qry map[string]string
+	query_map := query.serialize()
+	query_bytes, err := json.Marshal(query_map)
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+	qry = map[string]string{
+		"query": url.QueryEscape(string(query_bytes)),
+	}
+	resp, err := get(d, d.preamble()+"/user/"+SystemKey+"/roles/count", qry, creds, nil)
+	if err != nil {
+		return CountResp{Count: 0}, fmt.Errorf("Couldn't get all roles: '%s'\n", err.Error())
+	}
+
+	rval, ok := resp.Body.(map[string]interface{})
+	if !ok {
+		return CountResp{Count: 0}, fmt.Errorf("Bad type returned by GetRolesCount: %T, %s", resp.Body, resp.Body.(string))
+	}
+
+	return CountResp{
+		Count: rval["count"].(float64),
+	}, nil
+}
+
+//GetAllRoles returns a slice of all roles, including their permissions
+//the return value is a slice of [{"ID":"roleid","Name":"rolename","Description":"role description", "Permissions":{"Collections":[{"ID":"collectionid","Columns":[{"Name":"columnname","Level":0}],"Items":[{"Name":"itemid","Level":2}],"Name":"collectionname"}], "Topics":[{"Name":"topic/path","Level":1}],"CodeServices":[{"Name":"service name","SystemKey":"syskey","Level":4}],"UsersList":{"Name":"users","Level":8},"Push":{"Name":"push","Level":0},"MsgHistory":{"Name":"messagehistory","Level":1}}},...]
+func (d *DevClient) GetAllRoles(SystemKey string) ([]interface{}, error) {
+	pageSize := 25
+	query := NewQuery()
+	r, err := d.GetRolesCount(SystemKey, query)
+	if err != nil {
+		return nil, fmt.Errorf("Error: Unable to fetch roles count - %s\n", err.Error())
+	}
+
+	rtn := make([]interface{}, 0)
+	for i := 0; i*pageSize < int(r.Count); i++ {
+		pageQuery := NewQuery()
+		pageQuery.PageNumber = i + 1
+		pageQuery.PageSize = pageSize
+		roles, err := d.GetRolesWithQuery(SystemKey, pageQuery)
+		if err != nil {
+			return nil, err
+		}
+		rtn = append(rtn, roles...)
+	}
+
+	return rtn, nil
+}
+
+//GetRole returns a slice of the desired role, including its permissions
+//the return value is a slice of [{"ID":"roleid","Name":"rolename","Description":"role description", "Permissions":{"Collections":[{"ID":"collectionid","Columns":[{"Name":"columnname","Level":0}],"Items":[{"Name":"itemid","Level":2}],"Name":"collectionname"}], "Topics":[{"Name":"topic/path","Level":1}],"CodeServices":[{"Name":"service name","SystemKey":"syskey","Level":4}],"UsersList":{"Name":"users","Level":8},"Push":{"Name":"push","Level":0},"MsgHistory":{"Name":"messagehistory","Level":1}}},...]
+func (d *DevClient) GetRole(SystemKey, roleName string) (map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	query := NewQuery()
+	query.EqualTo("name", roleName)
+	var qry map[string]string
+	query_map := query.serialize()
+	query_bytes, err := json.Marshal(query_map)
+	if err != nil {
+		return nil, err
+	}
+	qry = map[string]string{
+		"query": url.QueryEscape(string(query_bytes)),
+	}
+	resp, err := get(d, d.preamble()+"/user/"+SystemKey+"/roles", qry, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Couldn't get all roles: '%s'\n", err.Error())
+	}
+
+	rval, ok := resp.Body.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("Bad type returned by GetAllRoles: %T, %s", resp.Body, resp.Body.(string))
+	}
+
+	if len(rval) == 0 {
+		return map[string]interface{}{}, fmt.Errorf("No role found with name: '%s'", roleName)
+	}
+
+	var daRole map[string]interface{}
+	if daRole, ok = rval[0].(map[string]interface{}); !ok {
+		return nil, fmt.Errorf("Bad type for returned GetRole: %+v\n", ok)
+	}
+
+	return daRole, nil
 }
 
 //CreateRole creates a new role

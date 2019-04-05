@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/bgentry/speakeasy"
-	cb "github.com/clearblade/Go-SDK"
 	"os"
 	"strings"
+
+	"github.com/bgentry/speakeasy"
+	cb "github.com/clearblade/Go-SDK"
 )
 
 const (
@@ -100,7 +101,7 @@ func GoToRepoRootDir() error {
 			// Exit
 			return nil
 		} else if err = os.Chdir(".."); err != nil {
-				return fmt.Errorf("Error changing directory: %s", err.Error())
+			return fmt.Errorf("Error changing directory: %s", err.Error())
 		}
 	}
 }
@@ -169,17 +170,16 @@ func Authorize(defaults *DefaultInfo) (*cb.DevClient, error) {
 }
 
 func checkIfTokenHasExpired(client *cb.DevClient, systemKey string) (*cb.DevClient, error) {
-	_, err := client.GetAllRoles(systemKey)
+	err := client.CheckAuth()
 	if err != nil {
 		fmt.Printf("Token has probably expired. Please enter details for authentication again...\n")
 		MetaInfo = nil
 		client, _ = Authorize(nil)
 		metaStuff := map[string]interface{}{
-			"platform_url":        cb.CB_ADDR,
-			"messaging_url":       cb.CB_MSG_ADDR,
-			"developer_email":     Email,
-			"asset_refresh_dates": []interface{}{},
-			"token":               client.DevToken,
+			"platform_url":    cb.CB_ADDR,
+			"messaging_url":   cb.CB_MSG_ADDR,
+			"developer_email": Email,
+			"token":           client.DevToken,
 		}
 		if err = storeCBMeta(metaStuff); err != nil {
 			return nil, err

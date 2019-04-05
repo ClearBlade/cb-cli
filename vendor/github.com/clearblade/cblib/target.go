@@ -3,33 +3,33 @@ package cblib
 import (
 	//"flag"
 	"fmt"
-	cb "github.com/clearblade/Go-SDK"
 	"os"
 	"strings"
+
+	cb "github.com/clearblade/Go-SDK"
 )
 
 func init() {
 
-	usage := 
-	`
+	usage :=
+		`
 	Point your local system to a different remote system within a ClearBlade Platform
 	`
 
-	example := 
-	`
+	example :=
+		`
 	cb-cli target
 	cb-cli target -url=https://platform.clearblade.com -messaging-url=platform.clearblade.com -system-key=8abcd6aa0baadcd8bbe3fabca29301 -email=dev@dev.com -password=pw
 	`
 	systemDotJSON = map[string]interface{}{}
 	svcCode = map[string]interface{}{}
-	rolesInfo = []map[string]interface{}{}
 	myTargetCommand := &SubCommand{
 		name:         "target",
 		usage:        usage,
 		needsAuth:    false,
 		mustBeInRepo: true,
 		run:          doTarget,
-		example:	  example,
+		example:      example,
 	}
 	myTargetCommand.flags.StringVar(&URL, "url", "", "Clearblade platform url for target system")
 	myTargetCommand.flags.StringVar(&MsgURL, "messaging-url", "", "Clearblade messaging url for target system")
@@ -77,7 +77,7 @@ func reallyTarget(cli *cb.DevClient, sysKey string, oldSysMeta *System_meta) err
 		os.Rename(fixo, fixn)
 	}
 	SetRootDir(fixn)
-	if err := setupDirectoryStructure(sysMeta); err != nil {
+	if err := setupDirectoryStructure(); err != nil {
 		return err
 	}
 	storeMeta(sysMeta)
@@ -87,15 +87,17 @@ func reallyTarget(cli *cb.DevClient, sysKey string, oldSysMeta *System_meta) err
 	}
 
 	metaStuff := map[string]interface{}{
-		"platform_url":        URL,
-		"messaging_url":       MsgURL,
-		"developer_email":     Email,
-		"asset_refresh_dates": []interface{}{},
-		"token":               cli.DevToken,
+		"platform_url":    URL,
+		"messaging_url":   MsgURL,
+		"developer_email": Email,
+		"token":           cli.DevToken,
 	}
 	if err = storeCBMeta(metaStuff); err != nil {
 		return err
 	}
+
+	logInfo("Updating map name to ID files...")
+	updateMapNameToIDFiles(sysMeta, cli)
 
 	fmt.Printf("System '%s' has been initialized.\n", sysMeta.Name)
 	return nil

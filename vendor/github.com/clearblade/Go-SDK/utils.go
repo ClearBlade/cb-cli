@@ -47,8 +47,10 @@ type Client interface {
 
 	//data calls
 	CreateData(string, interface{}) ([]interface{}, error)
+	CreateDataByName(string, string, interface{}) ([]interface{}, error)
 	InsertData(string, interface{}) error
 	UpdateData(string, *Query, map[string]interface{}) error
+	UpdateDataByName(string, *Query, map[string]interface{}) error
 	GetData(string, *Query) (map[string]interface{}, error)
 	GetDataByName(string, *Query) (map[string]interface{}, error)
 	GetDataByKeyAndName(string, string, *Query) (map[string]interface{}, error)

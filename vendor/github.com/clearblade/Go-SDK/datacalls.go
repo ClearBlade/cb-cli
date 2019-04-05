@@ -9,6 +9,7 @@ import (
 const (
 	_DATA_PREAMBLE      = "/api/v/1/data/"
 	_DATA_NAME_PREAMBLE = "/api/v/1/collection/"
+	_DATA_V2_PREAMBLE   = "/api/v/2"
 	_DATA_V3_PREAMBLE   = "/api/v/3"
 )
 
@@ -32,29 +33,17 @@ func (d *DevClient) InsertData(collection_id string, data interface{}) error {
 
 //CreateData is an alias for InsertData, but returns a response value, it should be a slice of strings representing the item ids (if not using an external datastore)
 func (d *DevClient) CreateData(collection_id string, data interface{}) ([]interface{}, error) {
-	resp, err := insertdata(d, collection_id, data)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	return insertdata(d, collection_id, data)
 }
 
 //CreateData is an alias for InsertData, but returns a response value, it should be a slice of strings representing the item ids (if not using an external datastore)
 func (u *UserClient) CreateData(collection_id string, data interface{}) ([]interface{}, error) {
-	resp, err := insertdata(u, collection_id, data)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	return insertdata(u, collection_id, data)
 }
 
 //CreateData is an alias for InsertData, but returns a response value, it should be a slice of strings representing the item ids (if not using an external datastore)
 func (d *DeviceClient) CreateData(collection_id string, data interface{}) ([]interface{}, error) {
-	resp, err := insertdata(d, collection_id, data)
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	return insertdata(d, collection_id, data)
 }
 
 func insertdata(c cbClient, collection_id string, data interface{}) ([]interface{}, error) {
@@ -121,6 +110,18 @@ func (d *DeviceClient) GetDataTotal(collection_id string, query *Query) (map[str
 
 func (u *UserClient) GetDataTotal(collection_id string, query *Query) (map[string]interface{}, error) {
 	return getdatatotal(u, collection_id, query)
+}
+
+func (d *DevClient) GetDataTotalByName(system_key, collection_name string, query *Query) (map[string]interface{}, error) {
+	return getdatatotalbyname(d, system_key, collection_name, query)
+}
+
+func (d *DeviceClient) GetDataTotalByName(system_key, collection_name string, query *Query) (map[string]interface{}, error) {
+	return getdatatotalbyname(d, system_key, collection_name, query)
+}
+
+func (u *UserClient) GetDataTotalByName(system_key, collection_name string, query *Query) (map[string]interface{}, error) {
+	return getdatatotalbyname(u, system_key, collection_name, query)
 }
 
 func (u *UserClient) GetItemCount(collection_id string) (int, error) {
@@ -238,6 +239,35 @@ func getdatatotal(c cbClient, collection_id string, query *Query) (map[string]in
 	return resp.Body.(map[string]interface{}), nil
 }
 
+func getdatatotalbyname(c cbClient, system_key, collection_name string, query *Query) (map[string]interface{}, error) {
+
+	creds, err := c.credentials()
+	if err != nil {
+		return nil, err
+	}
+	var qry map[string]string
+	if query != nil {
+		query_map := query.serialize()
+		query_bytes, err := json.Marshal(query_map)
+		if err != nil {
+			return nil, err
+		}
+		qry = map[string]string{
+			"query": url.QueryEscape(string(query_bytes)),
+		}
+	} else {
+		qry = nil
+	}
+	resp, err := get(c, _DATA_V2_PREAMBLE+"/collection/"+system_key+"/"+collection_name+"/count", qry, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting data: %v", resp.Body)
+	}
+	return resp.Body.(map[string]interface{}), nil
+}
+
 //UpdateData mutates the values in extant rows, selecting them via a query. If the query is nil, it updates all rows
 //changes should be a map of the names of the columns, and the value you want them updated to
 
@@ -258,6 +288,35 @@ func (d *DevClient) UpdateData(collection_id string, query *Query, changes map[s
 	return err
 }
 
+//UpdateDataByName mutates the values in extant rows, selecting them via a query. If the query is nil, it updates all rows
+//changes should be a map of the names of the columns, and the value you want them updated to
+
+func (u *UserClient) UpdateDataByName(system_key, collection_name string, query *Query, changes map[string]interface{}) (UpdateResponse, error) {
+	return updatedataByName(u, system_key, collection_name, query, changes)
+}
+
+func (d *DeviceClient) UpdateDataByName(system_key, collection_name string, query *Query, changes map[string]interface{}) (UpdateResponse, error) {
+	return updatedataByName(d, system_key, collection_name, query, changes)
+}
+
+//UpdateDataByName mutates the values in extant rows, selecting them via a query. If the query is nil, it updates all rows
+//changes should be a map of the names of the columns, and the value you want them updated to
+func (d *DevClient) UpdateDataByName(system_key, collection_name string, query *Query, changes map[string]interface{}) (UpdateResponse, error) {
+	return updatedataByName(d, system_key, collection_name, query, changes)
+}
+
+func (u *UserClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+	return createDataByName(u, system_key, collection_name, item)
+}
+
+func (d *DeviceClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+	return createDataByName(d, system_key, collection_name, item)
+}
+
+func (d *DevClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+	return createDataByName(d, system_key, collection_name, item)
+}
+
 func updatedata(c cbClient, collection_id string, query *Query, changes map[string]interface{}) error {
 	qry := query.serialize()
 	body := map[string]interface{}{
@@ -269,6 +328,56 @@ func updatedata(c cbClient, collection_id string, query *Query, changes map[stri
 		return err
 	}
 	resp, err := put(c, _DATA_PREAMBLE+collection_id, body, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error updating data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating data: %v", resp.Body)
+	}
+	return nil
+}
+
+type UpdateResponse struct {
+	Count float64
+}
+
+func updatedataByName(c cbClient, system_key, collection_name string, query *Query, changes map[string]interface{}) (UpdateResponse, error) {
+	qry := query.serialize()
+	body := map[string]interface{}{
+		"query": qry,
+		"$set":  changes,
+	}
+	creds, err := c.credentials()
+	if err != nil {
+		return UpdateResponse{}, err
+	}
+	resp, err := put(c, _DATA_NAME_PREAMBLE+system_key+"/"+collection_name, body, creds, nil)
+	if err != nil {
+		return UpdateResponse{}, fmt.Errorf("Error updating data: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return UpdateResponse{}, fmt.Errorf("Error updating data: %v", resp.Body)
+	}
+	fmtBody := make(map[string]interface{})
+	ok := true
+	if fmtBody, ok = resp.Body.(map[string]interface{}); !ok {
+		return UpdateResponse{}, fmt.Errorf("Unexpected response type from update. Body is - %+v\n", resp.Body)
+	}
+	if count, ok := fmtBody["count"].(float64); !ok {
+		return UpdateResponse{}, fmt.Errorf("No count key in response type from update. Body is - %+v\n", fmtBody)
+	} else {
+		return UpdateResponse{
+			Count: count,
+		}, nil
+	}
+}
+
+func createDataByName(c cbClient, system_key, collection_name string, item interface{}) error {
+	creds, err := c.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := post(c, _DATA_NAME_PREAMBLE+system_key+"/"+collection_name, item, creds, nil)
 	if err != nil {
 		return fmt.Errorf("Error updating data: %v", err)
 	}
@@ -337,6 +446,28 @@ func (u *UserClient) GetColumns(collection_id, systemKey, systemSecret string) (
 //As map[string]interface{}{"ColumnName":"name","ColumnType":"typename in string", "PK":bool}
 func (d *DeviceClient) GetColumns(collection_id, systemKey, systemSecret string) ([]interface{}, error) {
 	return getColumns(d, collection_id, "", "")
+}
+
+//GetColumnsByCollectionName gets a slice of map[string]interface{} of the column names and values.
+//As map[string]interface{}{"ColumnName":"name","ColumnType":"typename in string", "PK":bool}
+func (d *DevClient) GetColumnsByCollectionName(systemKey, collectionName string) ([]interface{}, error) {
+	return getColumnsByCollectionName(d, systemKey, collectionName)
+}
+
+func getColumnsByCollectionName(c cbClient, systemKey, collectionName string) ([]interface{}, error) {
+	creds, err := c.credentials()
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := get(c, _DATA_V2_PREAMBLE+"/collection/"+systemKey+"/"+collectionName+"/columns", nil, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting collection columns: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting collection columns: %v", resp.Body)
+	}
+	return resp.Body.([]interface{}), nil
 }
 
 func getColumns(c cbClient, collection_id, systemKey, systemSecret string) ([]interface{}, error) {

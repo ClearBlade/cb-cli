@@ -65,7 +65,7 @@ func createSystem(system map[string]interface{}, client *cb.DevClient) (map[stri
 	return system, nil
 }
 
-func createRoles(systemInfo map[string]interface{}, client *cb.DevClient) error {
+func createRoles(systemInfo map[string]interface{}, collectionsInfo []CollectionInfo, client *cb.DevClient) error {
 	sysKey := systemInfo["systemKey"].(string)
 	roles, err := getRoles()
 	if err != nil {
@@ -75,13 +75,14 @@ func createRoles(systemInfo map[string]interface{}, client *cb.DevClient) error 
 		name := role["Name"].(string)
 		fmt.Printf(" %s", name)
 		//if name != "Authenticated" && name != "Administrator" && name != "Anonymous" {
-		if err := createRole(sysKey, role, false, client); err != nil {
+		if err := createRole(sysKey, role, collectionsInfo, client); err != nil {
 			return err
 		}
 		//}
 	}
+	fmt.Println("\nUpdating local roles with newly created role IDs... ")
 	// ids were created on import for the new roles, grab those
-	rolesInfo, err = pullRoles(sysKey, client, false) // global :(
+	_, err = PullAndWriteRoles(sysKey, client, true)
 	if err != nil {
 		return err
 	}
@@ -95,11 +96,9 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 	sysKey := systemInfo["systemKey"].(string)
 	sysSec := systemInfo["systemSecret"].(string)
 	userCols := []interface{}{}
-	userPerms := map[string]interface{}{}
 	userSchema, err := getUserSchema()
 	if err == nil {
 		userCols = userSchema["columns"].([]interface{})
-		userPerms = userSchema["permissions"].(map[string]interface{})
 	}
 	for _, columnIF := range userCols {
 		column := columnIF.(map[string]interface{})
@@ -112,22 +111,6 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 			return fmt.Errorf("Could not create user column %s: %s", columnName, err.Error())
 		}
 	}
-	// same thing as with code services, we need role ID not name
-	roleIds := map[string]int{}
-	for _, role := range rolesInfo {
-		for roleName, level := range userPerms {
-			if role["Name"] == roleName {
-				id := role["ID"].(string)
-				roleIds[id] = int(level.(float64))
-			}
-		}
-	}
-
-	for roleID, level := range roleIds {
-		if err := client.AddGenericPermissionToRole(sysKey, roleID, "users", level); err != nil {
-			return err
-		}
-	}
 
 	if !importUsers {
 		return nil
@@ -138,7 +121,14 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		fmt.Printf(" %s", user["email"].(string))
 		userId, err := createUser(sysKey, sysSec, user, client)
 		if err != nil {
-			return err
+			// don't return an error because we don't want to stop other users from being created
+			fmt.Printf("Error: Failed to create user %s - %s", user["email"].(string), err.Error())
+		}
+		if err := updateUserEmailToId(UserInfo{
+			UserID: userId,
+			Email:  user["email"].(string),
+		}); err != nil {
+			logErrorForUpdatingMapFile(getUserEmailToIdFullFilePath(), err)
 		}
 
 		if len(userCols) == 0 {
@@ -149,9 +139,11 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		for _, columnIF := range userCols {
 			column := columnIF.(map[string]interface{})
 			columnName := column["ColumnName"].(string)
-			if userVal, ok := user[columnName]; ok {
-				if userVal != nil {
-					updates[columnName] = userVal
+			if columnName != "user_id" {
+				if userVal, ok := user[columnName]; ok {
+					if userVal != nil {
+						updates[columnName] = userVal
+					}
 				}
 			}
 		}
@@ -161,23 +153,12 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		}
 
 		if err := client.UpdateUser(sysKey, userId, updates); err != nil {
-			return fmt.Errorf("Could not update user: %s", err.Error())
+			// don't return an error because we don't want to stop other users from being updated
+			fmt.Printf("Could not update user: %s", err.Error())
 		}
 	}
 
 	return nil
-}
-
-func mungeRoles(roles []interface{}) []string {
-	rval := []string{}
-	for _, role := range roles {
-		roleStr := role.(string)
-		if roleStr == "Authenticated" { // This automagically happens when user auth'd
-			continue
-		}
-		rval = append(rval, roleStr)
-	}
-	return rval
 }
 
 func unMungeRoles(roles []string) []interface{} {
@@ -292,19 +273,23 @@ func createAdaptors(systemInfo map[string]interface{}, client *cb.DevClient) err
 	return nil
 }
 
-func createCollections(systemInfo map[string]interface{}, client *cb.DevClient) error {
+func createCollections(systemInfo map[string]interface{}, client *cb.DevClient) ([]CollectionInfo, error) {
 	sysKey := systemInfo["systemKey"].(string)
 	collections, err := getCollections()
+	rtn := make([]CollectionInfo, 0)
 	if err != nil {
-		return err
+		return rtn, err
 	}
+
 	for _, collection := range collections {
 		fmt.Printf(" %s\n", collection["name"].(string))
-		if err := CreateCollection(sysKey, collection, client); err != nil {
-			return err
+		if info, err := CreateCollection(sysKey, collection, client); err != nil {
+			return rtn, err
+		} else {
+			rtn = append(rtn, info)
 		}
 	}
-	return nil
+	return rtn, nil
 }
 
 // Reads Filesystem and makes HTTP calls to platform to create edges and edge columns
@@ -403,23 +388,21 @@ func createDevices(systemInfo map[string]interface{}, client *cb.DevClient) ([]m
 				}
 			}
 		}
-		fmt.Printf(" %s", device["name"].(string))
-		var randomActiveKey string
-		activeKey, ok := device["active_key"].(string)
-		if !ok {
-			// Active key not present in json file. Creating a random one
-			fmt.Printf(" Active key not present. Creating a random one for device creation. Please update the active key from the ClearBlade Console after export\n")
-			randomActiveKey = randSeq(8)
-			device["active_key"] = randomActiveKey
-		} else {
-			if activeKey == "" || len(activeKey) < 6 {
-				fmt.Printf(" Active is either an empty string or less than 6 characters. Creating a random one for device creation. Please update the active key from the ClearBlade Console after export\n")
-				randomActiveKey = randSeq(8)
-				device["active_key"] = randomActiveKey
-			}
-		}
+		deviceName := device["name"].(string)
+		fmt.Printf(" %s", deviceName)
 		deviceInfo, err := createDevice(sysKey, device, client)
 		if err != nil {
+			return nil, err
+		}
+		deviceRoles, err := getDeviceRoles(deviceName)
+		if err != nil {
+			// system is probably in the legacy format, let's just set the roles to the default
+			deviceRoles = convertStringSliceToInterfaceSlice([]string{"Authenticated"})
+			logWarning(fmt.Sprintf("Could not find roles for device with name '%s'. This device will be created with only the default 'Authenticated' role.", deviceName))
+		}
+		defaultRoles := convertStringSliceToInterfaceSlice([]string{"Authenticated"})
+		roleDiff := diffRoles(deviceRoles, defaultRoles)
+		if err := client.UpdateDeviceRoles(sysKey, deviceName, convertInterfaceSliceToStringSlice(roleDiff.add), convertInterfaceSliceToStringSlice(roleDiff.remove)); err != nil {
 			return nil, err
 		}
 		devicesRval[idx] = deviceInfo
@@ -429,9 +412,18 @@ func createDevices(systemInfo map[string]interface{}, client *cb.DevClient) ([]m
 
 func createPortals(systemInfo map[string]interface{}, client *cb.DevClient) ([]map[string]interface{}, error) {
 	sysKey := systemInfo["systemKey"].(string)
-	portals, err := getPortals()
-	if err != nil {
-		return nil, err
+	var portals []map[string]interface{}
+	var err error
+	if hasLegacyPortalDirectory() {
+		portals, err = getLegacyPortals()
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		portals, err = getCompressedPortals()
+		if err != nil {
+			return nil, err
+		}
 	}
 	portalsRval := make([]map[string]interface{}, len(portals))
 	for idx, dash := range portals {
@@ -599,9 +591,15 @@ func devTokenHardAuthorize() (*cb.DevClient, error) {
 func importAllAssets(systemInfo map[string]interface{}, users []map[string]interface{}, cli *cb.DevClient) error {
 
 	// Common set of calls for a complete system import
-	fmt.Printf(" Done.\nImporting roles...")
 
-	err := createRoles(systemInfo, cli)
+	fmt.Printf(" Done.\nImporting collections...")
+	collectionsInfo, err := createCollections(systemInfo, cli)
+	if err != nil {
+		//  Don't return an err, just warn -- so we keep back compat with old systems
+		fmt.Printf("Could not create collections: %s", err.Error())
+	}
+	fmt.Printf(" Done.\nImporting roles...")
+	err = createRoles(systemInfo, collectionsInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create roles: %s", err.Error())
@@ -610,11 +608,6 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 	if err := createUsers(systemInfo, users, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create users: %s", err.Error())
-	}
-	fmt.Printf(" Done.\nImporting collections...")
-	if err := createCollections(systemInfo, cli); err != nil {
-		//  Don't return an err, just warn -- so we keep back compat with old systems
-		fmt.Printf("Could not create collections: %s", err.Error())
 	}
 	fmt.Printf(" Done.\nImporting code services...")
 	// Additonal modifications to the ImportIt functions
@@ -673,11 +666,6 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create plugins: %s", err.Error())
 	}
-	fmt.Printf(" Done.\nImporting edge deploy information...")
-	if err := createAllEdgeDeployment(systemInfo, cli); err != nil {
-		fmt.Printf(" Warning: Error creating edge deploy info. Endpoint probably shut off: %s", err)
-		//return fmt.Errorf("Could not create edge deploy information: %s", err.Error())
-	}
 	fmt.Printf(" Done. \nImporting adaptors...")
 	if err := createAdaptors(systemInfo, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
@@ -696,6 +684,9 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 func importIt(cli *cb.DevClient) error {
 	//fmt.Printf("Reading system configuration files...")
 	SetRootDir(".")
+	if err := setupDirectoryStructure(); err != nil {
+		return err
+	}
 	users, err := getUsers()
 	if err != nil {
 		return err
@@ -713,8 +704,10 @@ func importIt(cli *cb.DevClient) error {
 	}
 	//fmt.Printf("Done.\nImporting system...")
 	fmt.Printf("Importing system...")
-	if _, err := createSystem(systemInfo, cli); err != nil {
+	if data, err := createSystem(systemInfo, cli); err != nil {
 		return fmt.Errorf("Could not create system %s: %s", systemInfo["name"], err.Error())
+	} else {
+		logInfo(fmt.Sprintf("Successfully created new system. System key is - %s", data["systemKey"].(string)))
 	}
 
 	return importAllAssets(systemInfo, users, cli)

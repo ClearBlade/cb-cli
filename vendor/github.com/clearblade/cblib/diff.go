@@ -150,11 +150,6 @@ func doDiff(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
-	if CollectionName != "" {
-		if err := diffCollection(systemInfo, client, CollectionName); err != nil {
-			return err
-		}
-	}
 	if User != "" {
 		if err := diffUser(systemInfo, client, User); err != nil {
 			return err
@@ -191,11 +186,6 @@ func diffUserSchema(sys *System_meta, client *cb.DevClient) error {
 	if err != nil {
 		return err
 	}
-	roles, err := pullRoles(sys.Key, client, false)
-	rolesInfo = roles
-	if err != nil {
-		return err
-	}
 	remoteSchema, err := pullUserSchemaInfo(sys.Key, client, false)
 	remoteSchema["columns"] = dumbDownSchemaColumns(remoteSchema["columns"].([]map[string]interface{}))
 	if err != nil {
@@ -213,11 +203,6 @@ type LocalFunc func(name string) (map[string]interface{}, error)
 type RemoteFunc func(key, name string, client *cb.DevClient) (map[string]interface{}, error)
 
 func diffCodeAndMeta(sys *System_meta, client *cb.DevClient, thangType, thangName string, lf LocalFunc, rf RemoteFunc) error {
-	roles, err := pullRoles(sys.Key, client, false)
-	rolesInfo = roles
-	if err != nil {
-		return err
-	}
 	localThang, err := lf(thangName)
 	if err != nil {
 		return err
@@ -229,9 +214,7 @@ func diffCodeAndMeta(sys *System_meta, client *cb.DevClient, thangType, thangNam
 	}
 	lCode := localThang["code"].(string)
 	rCode := remoteThang["code"].(string)
-	if thangType == "service" {
-		cleanService(remoteThang)
-	}
+
 	if lCode[len(lCode)-1] != '\n' {
 		lCode = lCode + "\n"
 	}
@@ -328,39 +311,8 @@ func diffLibrary(sys *System_meta, client *cb.DevClient, libraryName string) err
 	return diffCodeAndMeta(sys, client, "library", libraryName, getLibrary, pullLibrary)
 }
 
-func diffCollection(sys *System_meta, client *cb.DevClient, collectionName string) error {
-	roles, err := pullRoles(sys.Key, client, false)
-	rolesInfo = roles
-	if err != nil {
-		return err
-	}
-	localCollection, err := getCollection(collectionName)
-	if err != nil {
-		return err
-	}
-
-	colId, ok := localCollection["collectionID"].(string)
-	if !ok {
-		colId = localCollection["collection_id"].(string)
-	}
-	ExportRows = false
-	remoteCollection, err := pullCollectionAndInfo(sys, colId, client)
-	if err != nil {
-		return err
-	}
-	delete(localCollection, "items")
-	delete(remoteCollection, "items")
-	names.push("collection")
-	defer names.pop()
-	printedDiffCount = 0
-	diffMap(localCollection, remoteCollection)
-	printSummary("collection", collectionName)
-	return nil
-}
-
 func diffUser(sys *System_meta, client *cb.DevClient, userName string) error {
-	ExportUsers = true
-	allUsers, err := pullUsers(sys, client, false)
+	allUsers, err := PullAndWriteUsers(sys.Key, PULL_ALL_USERS, client, false)
 	if err != nil {
 		return err
 	}
@@ -393,7 +345,7 @@ func diffRole(sys *System_meta, client *cb.DevClient, roleName string) error {
 		return err
 	}
 
-	daRoles, err := pullRoles(sys.Key, client, false)
+	daRoles, err := PullAndWriteRoles(sys.Key, client, false)
 	if err != nil {
 		return err
 	}

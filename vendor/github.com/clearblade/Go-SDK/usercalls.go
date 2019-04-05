@@ -78,6 +78,51 @@ func (u *UserClient) GetUserCount(systemKey string) (int, error) {
 	return theCount, nil
 }
 
+func (d *DevClient) GetUserCountWithQuery(systemKey string, query *Query) (CountResp, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+
+	qry, err := createQueryMap(query)
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+
+	resp, err := get(d, _USER_ADMIN+"/"+systemKey+"/count", qry, creds, nil)
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return CountResp{Count: 0}, err
+	}
+	rval, ok := resp.Body.(map[string]interface{})
+	if !ok {
+		return CountResp{Count: 0}, fmt.Errorf("Bad type returned by getDevicesCount: %T, %s", resp.Body, resp.Body.(string))
+	}
+
+	return CountResp{
+		Count: rval["count"].(float64),
+	}, nil
+}
+
+func (d *DevClient) GetUsersWithQuery(systemKey string, query *Query) ([]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+
+	qry, err := createQueryMap(query)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := get(d, _USER_ADMIN+"/"+systemKey, qry, creds, nil)
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body.([]interface{}), nil
+}
+
 //GetUserColumns returns the description of the columns in the user table
 //Returns a structure shaped []map[string]interface{}{map[string]interface{}{"ColumnName":"blah","ColumnType":"int"}}
 func (d *DevClient) GetUserColumns(systemKey string) ([]interface{}, error) {
