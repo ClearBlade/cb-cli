@@ -305,15 +305,15 @@ func (d *DevClient) UpdateDataByName(system_key, collection_name string, query *
 	return updatedataByName(d, system_key, collection_name, query, changes)
 }
 
-func (u *UserClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+func (u *UserClient) CreateDataByName(system_key, collection_name string, item interface{}) ([]interface{}, error) {
 	return createDataByName(u, system_key, collection_name, item)
 }
 
-func (d *DeviceClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+func (d *DeviceClient) CreateDataByName(system_key, collection_name string, item interface{}) ([]interface{}, error) {
 	return createDataByName(d, system_key, collection_name, item)
 }
 
-func (d *DevClient) CreateDataByName(system_key, collection_name string, item interface{}) error {
+func (d *DevClient) CreateDataByName(system_key, collection_name string, item interface{}) ([]interface{}, error) {
 	return createDataByName(d, system_key, collection_name, item)
 }
 
@@ -372,19 +372,19 @@ func updatedataByName(c cbClient, system_key, collection_name string, query *Que
 	}
 }
 
-func createDataByName(c cbClient, system_key, collection_name string, item interface{}) error {
+func createDataByName(c cbClient, system_key, collection_name string, item interface{}) ([]interface{}, error) {
 	creds, err := c.credentials()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	resp, err := post(c, _DATA_NAME_PREAMBLE+system_key+"/"+collection_name, item, creds, nil)
 	if err != nil {
-		return fmt.Errorf("Error updating data: %v", err)
+		return nil, fmt.Errorf("Error updating data: %v", err)
 	}
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Error updating data: %v", resp.Body)
+		return nil, fmt.Errorf("Error updating data: %v", resp.Body)
 	}
-	return nil
+	return resp.Body.([]interface{}), nil
 }
 
 //DeleteData removes data from a collection according to what matches the query. If the query is nil, then all data will be removed.

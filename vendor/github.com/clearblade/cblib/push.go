@@ -1728,7 +1728,7 @@ func updateCollection(meta *System_meta, collection map[string]interface{}, clie
 		if resp, err := client.UpdateDataByName(meta.Key, collection_name, query, row.(map[string]interface{})); err != nil {
 			fmt.Printf("Error updating item '%s'. Skipping. Error is - %s\n", row.(map[string]interface{})["item_id"], err.Error())
 		} else if resp.Count == 0 {
-			if err := client.CreateDataByName(meta.Key, collection_name, row.(map[string]interface{})); err != nil {
+			if _, err := client.CreateDataByName(meta.Key, collection_name, row.(map[string]interface{})); err != nil {
 				return fmt.Errorf("Failed to create item. Error is - %s", err.Error())
 			}
 		}
