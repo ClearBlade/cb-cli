@@ -578,9 +578,9 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 	}
 	// This was overwriting the rootdir set by cb_console
 	// Only set if it has not already been set
-	// if !RootDirIsSet {
-	SetRootDir(strings.Replace(sysMeta.Name, " ", "_", -1))
-	// }
+	if !RootDirIsSet {
+		SetRootDir(strings.Replace(sysMeta.Name, " ", "_", -1))
+	}
 
 	if CleanUp {
 		cleanUpDirectories(sysMeta)

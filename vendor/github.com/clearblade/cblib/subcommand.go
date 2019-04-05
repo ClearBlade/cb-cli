@@ -60,7 +60,7 @@ func (c *SubCommand) Execute( /*client *cb.DevClient,*/ args []string) error {
 			return err
 		}
 	}
-
+	RootDirIsSet = false
 	return c.run(c, client, c.flags.Args()...)
 }
 
