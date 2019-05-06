@@ -31,6 +31,7 @@ var (
 	DeviceSchema               bool
 	UserSchema                 bool
 	DataPageSize               int
+	MaxRetries                 int
 	Email                      string
 	Password                   string
 	CollectionSchema           string

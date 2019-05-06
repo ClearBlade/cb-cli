@@ -465,3 +465,26 @@ func getUserEmailByID(id string) (string, error) {
 	// couldn't find a match, just return the id
 	return id, nil
 }
+
+type requestFunc = func() (interface{}, error)
+
+func retryRequest(funk requestFunc, maxRetries int) (interface{}, error) {
+	numOfRetries := 0
+
+	var recur func() (interface{}, error)
+	recur = func() (interface{}, error) {
+		data, err := funk()
+		if err != nil {
+			retryNumber := numOfRetries + 1
+			logError(err.Error())
+			if numOfRetries < maxRetries {
+				logInfo(fmt.Sprintf("Retrying request number %d out of %d", retryNumber, maxRetries))
+				numOfRetries++
+				return recur()
+			}
+			return nil, err
+		}
+		return data, nil
+	}
+	return recur()
+}

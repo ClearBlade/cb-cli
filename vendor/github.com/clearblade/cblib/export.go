@@ -49,6 +49,7 @@ func init() {
 	myExportCommand.flags.BoolVar(&ExportItemId, "exportitemid", ExportItemIdDefault, "exports a collection rows' item_id column, Default: true")
 	myExportCommand.flags.BoolVar(&SortCollections, "sort-collections", SortCollectionsDefault, "Sort collections version control ease, Note: exportitemid must be enabled")
 	myExportCommand.flags.IntVar(&DataPageSize, "data-page-size", DataPageSizeDefault, "Number of rows in a collection to fetch at a time, Note: Large collections should increase up to 1000 rows")
+	myExportCommand.flags.IntVar(&MaxRetries, "max-retries", 3, "Number of retries to attempt if a request fails")
 	AddCommand("export", myExportCommand)
 }
 
@@ -190,11 +191,11 @@ func pullCollectionData(collection map[string]interface{}, client *cb.DevClient)
 	for j := 0; j < totalItems; j += DataPageSize {
 		dataQuery.PageNumber = (j / DataPageSize) + 1
 
-		data, err := client.GetData(colId, dataQuery)
+		data, err := retryRequest(func() (interface{}, error) { return client.GetData(colId, dataQuery) }, MaxRetries)
 		if err != nil {
 			return nil, err
 		}
-		curData := data["DATA"].([]interface{})
+		curData := data.(map[string]interface{})["DATA"].([]interface{})
 
 		//Loop through the array of maps and store the value of the item_id column in
 		//a map so that we can prevent adding duplicate rows
