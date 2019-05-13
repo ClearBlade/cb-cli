@@ -4,9 +4,12 @@
 
 The clearblade CLI tool provides easy to use commands for interacting with ClearBlade platform
 
-* Services can be written in editor of your choice after exporting
-* Push command allows to reflect these changes on the platform
-* Creating a mirror image of your system is easily achieved with the use of import command
+1) allows for easy promotion of system changes through dev, staging, QA, production systems
+2) allows for source control
+3) allows for integration with CI 
+4) allows for code transpilation (TypeScript, ES6+, etc. for the backend and TypeScript, React, Vue, etc. for the frontend)
+5) developers can use their favorite IDE/text editor
+6) write unit tests with your favorite test runner
 
 # Commands  
 
@@ -21,15 +24,58 @@ The clearblade CLI tool provides easy to use commands for interacting with Clear
  - [init](#init)
  - [create](#create)
  - [delete](#delete)
+ 
+# Developer workflow:
+ClearBlade recommends developers to work in isolated systems when working on a team. The steps below outline how to achieve this.
+## Initialize repo
+When a project is first started, a ClearBlade system and a source control repo should be created.
+1) create master system in platform via console UI
+2) create git repo
+ 
+```
+git clone
+cd my-cloned-repo
+cb-cli export -exportrows -exportusers
+echo ".cb-cli" >> .gitignore // ignore any system-specific changes
+git commit -am "init commit"
+git push origin master
+```
+ 
+ 
+## how to work in isolated development system
+Once the root system has been created, developers can clone the system with the `import` command. After importing, the `target` command must be run to point to the newly created system. Once targeted, developers will make changes against the isolated system.
+```
+git checkout -b feature-branch
+cb-cli import -importrows -importusers
+cb-cli target // target the newly imported system; this will update system.json with new system info. NOTE: the changes to system.json shouldn't be merged into the master branch
+```
+ 
+ 
+
+## how to update local system with changes from git repo
+The steps below outline how to pull in changes from other developers
+```
+git checkout master
+git pull origin master
+git checkout feature-branch
+git merge master
+cb-cli target // target feature-branch system
+cb-cli push -all // push all changes from master into feature-branch system
+```
 
 
-## File Structure
+# File Structure
 
 Before we start making changes and pushing to platform, we need to export the system
 
 The directory structure after export will look as:
 
-	|_.cbmeta
+	|_.cb-cli
+	| |_cbmeta
+	| |_map-name-to-id
+	| | |_collections.json
+	| | |_roles.json
+	| | |_users.json
 	|_code
 	| |_libraries
 	| |_services
@@ -37,15 +83,33 @@ The directory structure after export will look as:
 	| | | |_TestPull.js
 	| | | |_TestPull.json
 	|_data
+	| |_myCollection.json
 	|_roles
 	| |_Administrator.json
 	| |_Anonymous.json
 	| |_Authenticated.json
 	|_system.json
 	|_timers
+	| |_myTimer.json
 	|_triggers
+	| |_myTrigger.json
 	|_users
+	| |_roles
+	| | |_admin@clearblade.com.json
+	| |_admin@clearblade.com.json
 	| |_schema.json
+	|_devices
+	| |_roles
+	| | |_myDevice.json
+	| |_myDevice.json
+	| |_schema.json
+	|_portals
+	| |_myPortal
+	| | |_myPortal.json
+	| | |_config
+	| | | |_widgets
+	| | | |_datasources
+	| | | |_internalResources
 
 
 
