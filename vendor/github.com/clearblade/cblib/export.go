@@ -599,8 +599,6 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 		return err
 	}
 
-	fmt.Printf("\nDone.\n")
-
 	if err = storeSystemDotJSON(systemDotJSON); err != nil {
 		return err
 	}
@@ -615,7 +613,7 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 		return err
 	}
 
-	fmt.Printf("System '%s' has been exported into directory %s\n", sysMeta.Name, strings.Replace(sysMeta.Name, " ", "_", -1))
+	logInfo(fmt.Sprintf("System '%s' has been exported into directory %s\n", sysMeta.Name, strings.Replace(sysMeta.Name, " ", "_", -1)))
 	return nil
 }
 

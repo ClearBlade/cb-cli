@@ -13,7 +13,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.UserSchema || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling user schema")
+		logInfo("Pulling user schema")
 		if _, err := pullUserSchemaInfo(systemInfo.Key, client, true); err != nil {
 			logError(fmt.Sprintf("Failed to pull user schema - %s\n", err.Error()))
 		}
@@ -22,7 +22,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if (assets.AllUsers || assets.AllAssets) && assets.ExportUsers {
 		didSomething = true
-		fmt.Println("Pulling all users:")
+		logInfo("Pulling all users")
 		if _, err := PullAndWriteUsers(systemInfo.Key, PULL_ALL_USERS, client, true); err != nil {
 			logError(fmt.Sprintf("Failed to pull all users - %s\n", err.Error()))
 		}
@@ -34,7 +34,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.User != "" {
 		didSomething = true
-		fmt.Printf("Pulling user %+s\n", User)
+		logInfo(fmt.Sprintf("Pulling user %+s\n", User))
 		_, err := PullAndWriteUsers(systemInfo.Key, User, client, true)
 		if err != nil {
 			logError(fmt.Sprintf("Failed to pull users. %s", err.Error()))
@@ -48,7 +48,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllServices || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all services:")
+		logInfo("Pulling all services")
 		if _, err := PullServices(systemInfo.Key, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull services. %s", err.Error()))
 		}
@@ -57,7 +57,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.ServiceName != "" {
 		didSomething = true
-		fmt.Printf("Pulling service %+s\n", assets.ServiceName)
+		logInfo(fmt.Sprintf("Pulling service %+s\n", assets.ServiceName))
 		if err := PullAndWriteService(systemInfo.Key, assets.ServiceName, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull service. %s", err.Error()))
 		}
@@ -66,7 +66,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllLibraries || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all libraries:")
+		logInfo("Pulling all libraries")
 		if _, err := PullLibraries(systemInfo, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull libraries. %s", err.Error()))
 		}
@@ -75,7 +75,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.LibraryName != "" {
 		didSomething = true
-		fmt.Printf("Pulling library %s\n", assets.LibraryName)
+		logInfo(fmt.Sprintf("Pulling library %s\n", assets.LibraryName))
 		if lib, err := pullLibrary(systemInfo.Key, assets.LibraryName, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull library. %s", err.Error()))
 		} else {
@@ -86,7 +86,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllCollections || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all collections:")
+		logInfo("Pulling all collections")
 		if _, err := PullAndWriteCollections(systemInfo, client, true, assets.ExportRows, assets.ExportItemId); err != nil {
 			logError(fmt.Sprintf("Failed to pull all collections. %s", err.Error()))
 		}
@@ -95,7 +95,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.CollectionSchema != "" {
 		didSomething = true
-		fmt.Printf("Pulling collection schema for %s\n", CollectionSchema)
+		logInfo(fmt.Sprintf("Pulling collection schema for %s\n", CollectionSchema))
 		if _, err := pullAndWriteCollectionColumns(systemInfo, client, CollectionSchema); err != nil {
 			logError(fmt.Sprintf("Failed to pull collection schema. %s", err.Error()))
 		}
@@ -104,7 +104,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.CollectionName != "" {
 		didSomething = true
-		fmt.Printf("Pulling collection %+s\n", CollectionName)
+		logInfo(fmt.Sprintf("Pulling collection %+s\n", CollectionName))
 		err := PullAndWriteCollection(systemInfo, CollectionName, client, assets.ExportRows, assets.ExportItemId)
 		if err != nil {
 			logError(fmt.Sprintf("Failed to pull collection. %s", err.Error()))
@@ -114,7 +114,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllRoles || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all roles:")
+		logInfo("Pulling all roles:")
 		if _, err := PullAndWriteRoles(systemInfo.Key, client, true); err != nil {
 			logError(fmt.Sprintf("Failed to pull all roles. %s", err.Error()))
 		}
@@ -126,7 +126,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 		roles := make([]map[string]interface{}, 0)
 		splitRoles := strings.Split(RoleName, ",")
 		for _, role := range splitRoles {
-			fmt.Printf("Pulling role %+s\n", role)
+			logInfo(fmt.Sprintf("Pulling role %+s\n", role))
 			if r, err := pullRole(systemInfo.Key, role, client); err != nil {
 				logError(fmt.Sprintf("Failed to pull role. %s", err.Error()))
 			} else {
@@ -139,7 +139,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllTriggers || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all triggers:")
+		logInfo("Pulling all triggers")
 		if _, err := PullAndWriteTriggers(systemInfo, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull all triggers. %s", err.Error()))
 		}
@@ -148,7 +148,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.TriggerName != "" {
 		didSomething = true
-		fmt.Printf("Pulling trigger %+s\n", TriggerName)
+		logInfo(fmt.Sprintf("Pulling trigger %+s\n", TriggerName))
 		err := PullAndWriteTrigger(systemInfo.Key, TriggerName, client)
 		if err != nil {
 			logError(fmt.Sprintf("Failed to pull trigger. %s", err.Error()))
@@ -158,7 +158,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllTimers || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all timers:")
+		logInfo("Pulling all timers")
 		if _, err := PullAndWriteTimers(systemInfo, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull all timers. %s", err.Error()))
 		}
@@ -167,7 +167,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.TimerName != "" {
 		didSomething = true
-		fmt.Printf("Pulling timer %+s\n", TimerName)
+		logInfo(fmt.Sprintf("Pulling timer %+s\n", TimerName))
 		err := PullAndWriteTimer(systemInfo.Key, TimerName, client)
 		if err != nil {
 			logError(fmt.Sprintf("Failed to pull timer. %s", err.Error()))
@@ -177,7 +177,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.DeviceSchema || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling device schema")
+		logInfo("Pulling device schema")
 		if _, err := pullDevicesSchema(systemInfo.Key, client, true); err != nil {
 			logError(fmt.Sprintf("Failed to pull device schema. %s\n", err.Error()))
 		}
@@ -186,7 +186,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllDevices || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all devices:")
+		logInfo("Pulling all devices")
 		if _, err := PullDevices(systemInfo, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull all devices. %s", err.Error()))
 		}
@@ -198,7 +198,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.DeviceName != "" {
 		didSomething = true
-		fmt.Printf("Pulling device %+s\n", DeviceName)
+		logInfo(fmt.Sprintf("Pulling device %+s\n", DeviceName))
 		if device, err := pullDevice(systemInfo.Key, DeviceName, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull device. %s", err.Error()))
 		} else {
@@ -221,7 +221,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.EdgeSchema || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling edge schema")
+		logInfo("Pulling edge schema")
 		if _, err := pullEdgesSchema(systemInfo.Key, client, true); err != nil {
 			logError(fmt.Sprintf("Failed to pull edge schema. %s", err.Error()))
 		}
@@ -230,7 +230,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllEdges || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all edges:")
+		logInfo("Pulling all edges")
 		if _, err := PullEdges(systemInfo, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull all edges. %s", err.Error()))
 		}
@@ -242,7 +242,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.EdgeName != "" {
 		didSomething = true
-		fmt.Printf("Pulling edge %+s\n", EdgeName)
+		logInfo(fmt.Sprintf("Pulling edge %+s\n", EdgeName))
 		if edge, err := pullEdge(systemInfo.Key, EdgeName, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull edge. %s", err.Error()))
 		} else {
@@ -256,7 +256,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllPortals || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all portals:")
+		logInfo("Pulling all portals")
 		if _, err := PullPortals(systemInfo, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull all portals. %s", err.Error()))
 		}
@@ -265,7 +265,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.PortalName != "" {
 		didSomething = true
-		fmt.Printf("Pulling portal %+s\n", PortalName)
+		logInfo(fmt.Sprintf("Pulling portal %+s\n", PortalName))
 		if err := PullAndWritePortal(systemInfo.Key, PortalName, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull portal. %s", err.Error()))
 		}
@@ -274,7 +274,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllPlugins || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all plugins:")
+		logInfo("Pulling all plugins")
 		if _, err := PullPlugins(systemInfo, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull all plugins. %s", err.Error()))
 		}
@@ -283,7 +283,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.PluginName != "" {
 		didSomething = true
-		fmt.Printf("Pulling plugin %+s\n", PluginName)
+		logInfo(fmt.Sprintf("Pulling plugin %+s\n", PluginName))
 		if err := PullAndWritePlugin(systemInfo.Key, PluginName, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull plugin. %s", err.Error()))
 		}
@@ -292,7 +292,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllAdaptors || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all adapters:")
+		logInfo("Pulling all adapters")
 		if err := backupAndCleanDirectory(adaptorsDir); err != nil {
 			return false, err
 		}
@@ -311,7 +311,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AdaptorName != "" {
 		didSomething = true
-		fmt.Printf("Pulling adapter %+s\n", AdaptorName)
+		logInfo(fmt.Sprintf("Pulling adapter %+s\n", AdaptorName))
 		if err := PullAndWriteAdaptor(systemInfo.Key, AdaptorName, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull adapter. %s", err.Error()))
 		}
@@ -320,7 +320,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllDeployments || assets.AllAssets {
 		didSomething = true
-		fmt.Println("Pulling all deployments:")
+		logInfo("Pulling all deployments")
 		if _, err := pullDeployments(systemInfo, client); err != nil {
 			logError(fmt.Sprintf("Failed to pull all deployments. %s", err.Error()))
 		}
@@ -329,7 +329,7 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.DeploymentName != "" {
 		didSomething = true
-		fmt.Printf("Pulling deployment %+s\n", DeploymentName)
+		logInfo(fmt.Sprintf("Pulling deployment %+s\n", DeploymentName))
 		if _, err := pullAndWriteDeployment(systemInfo, client, DeploymentName); err != nil {
 			logError(fmt.Sprintf("Failed to pull deployment. %s", err.Error()))
 		}

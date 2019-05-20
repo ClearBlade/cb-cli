@@ -43,6 +43,7 @@ func init() {
 	myImportCommand.flags.StringVar(&Email, "email", "", "Developer email for login to import destination")
 	myImportCommand.flags.StringVar(&Password, "password", "", "Developer password at import destination")
 	myImportCommand.flags.IntVar(&DataPageSize, "data-page-size", DataPageSizeDefault, "Number of rows in a collection to push/import at a time")
+	myImportCommand.flags.IntVar(&MaxRetries, "max-retries", 3, "Number of retries to attempt if a request fails")
 	AddCommand("import", myImportCommand)
 	AddCommand("imp", myImportCommand)
 	AddCommand("im", myImportCommand)
@@ -592,24 +593,24 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 
 	// Common set of calls for a complete system import
 
-	fmt.Printf(" Done.\nImporting collections...")
+	logInfo("Importing collections...")
 	collectionsInfo, err := createCollections(systemInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create collections: %s", err.Error())
 	}
-	fmt.Printf(" Done.\nImporting roles...")
+	logInfo("Importing roles...")
 	err = createRoles(systemInfo, collectionsInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create roles: %s", err.Error())
 	}
-	fmt.Printf(" Done.\nImporting users...")
+	logInfo("Importing users...")
 	if err := createUsers(systemInfo, users, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create users: %s", err.Error())
 	}
-	fmt.Printf(" Done.\nImporting code services...")
+	logInfo("Importing code services...")
 	// Additonal modifications to the ImportIt functions
 	if err := createServices(systemInfo, cli); err != nil {
 		serr, _ := err.(*os.PathError)
@@ -620,7 +621,7 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 			fmt.Printf("Warning: Could not import code services... -- ignoring\n")
 		}
 	}
-	fmt.Printf(" Done.\nImporting code libraries...")
+	logInfo("Importing code libraries...")
 	if err := createLibraries(systemInfo, cli); err != nil {
 		serr, _ := err.(*os.PathError)
 		if err != serr {
@@ -630,54 +631,55 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 			fmt.Printf("Warning: Could not import code libraries... -- ignoring\n")
 		}
 	}
-	fmt.Printf(" Done.\nImporting triggers...")
+	logInfo("Importing triggers...")
 	_, err = createTriggers(systemInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create triggers: %s", err.Error())
 	}
-	fmt.Printf(" Done.\nImporting timers...")
+	logInfo("Importing timers...")
 	_, err = createTimers(systemInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create timers: %s", err.Error())
 	}
 
-	fmt.Printf(" Done.\nImporting edges...")
+	logInfo("Importing edges...")
 	if err := createEdges(systemInfo, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create edges: %s", err.Error())
 	}
-	fmt.Printf(" Done.\nImporting devices...")
+	logInfo("Importing devices...")
 	_, err = createDevices(systemInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create devices: %s", err.Error())
 	}
-	fmt.Printf(" Done.\nImporting portals...")
+	logInfo("Importing portals...")
 	_, err = createPortals(systemInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create portals: %s", err.Error())
 	}
-	fmt.Printf(" Done.\nImporting plugins...")
+	logInfo("Importing plugins...")
 	_, err = createPlugins(systemInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create plugins: %s", err.Error())
 	}
-	fmt.Printf(" Done. \nImporting adaptors...")
+	logInfo("Importing adaptors...")
 	if err := createAdaptors(systemInfo, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create adaptors: %s", err.Error())
 	}
-	fmt.Printf(" Done. \nImporting deployments...")
+	logInfo("Importing deployments...")
 	if _, err := createDeployments(systemInfo, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create deployments: %s", err.Error())
 	}
 
 	fmt.Printf(" Done\n")
+	logInfo(fmt.Sprintf("Success! New system key is: %s", systemInfo["systemKey"].(string)))
 	return nil
 }
 
@@ -703,7 +705,7 @@ func importIt(cli *cb.DevClient) error {
 		return err
 	}
 	//fmt.Printf("Done.\nImporting system...")
-	fmt.Printf("Importing system...")
+	logInfo("Importing system...")
 	if data, err := createSystem(systemInfo, cli); err != nil {
 		return fmt.Errorf("Could not create system %s: %s", systemInfo["name"], err.Error())
 	} else {

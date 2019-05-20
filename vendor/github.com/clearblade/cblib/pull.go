@@ -69,6 +69,8 @@ func init() {
 	pullCommand.flags.StringVar(&AdaptorName, "adapter", "", "Name of adapter to pull")
 	pullCommand.flags.StringVar(&DeploymentName, "deployment", "", "Name of deployment to pull")
 
+	pullCommand.flags.IntVar(&MaxRetries, "max-retries", 3, "Number of retries to attempt if a request fails")
+
 	AddCommand("pull", pullCommand)
 }
 

@@ -73,6 +73,7 @@ func init() {
 	pushCommand.flags.StringVar(&AdaptorName, "adapter", "", "Name of adapter to push")
 	pushCommand.flags.StringVar(&DeploymentName, "deployment", "", "Name of deployment to push")
 
+	pushCommand.flags.IntVar(&MaxRetries, "max-retries", 3, "Number of retries to attempt if a request fails")
 	pushCommand.flags.IntVar(&DataPageSize, "data-page-size", DataPageSizeDefault, "Number of rows in a collection to push/import at a time")
 
 	AddCommand("push", pushCommand)
@@ -1722,6 +1723,7 @@ func updateCollection(meta *System_meta, collection map[string]interface{}, clie
 		return err
 	}
 
+	fmt.Printf("Pushing collection data for '%s'", collection_name)
 	items := collection["items"].([]interface{})
 	for _, row := range items {
 		query := cb.NewQuery()
@@ -1794,6 +1796,8 @@ func CreateCollection(systemKey string, collection map[string]interface{}, clien
 	}
 	allItems := collection["items"].([]interface{})
 	totalItems := len(allItems)
+	totalPushed := 0
+
 	if totalItems == 0 {
 		return myInfo, nil
 	}
@@ -1802,7 +1806,7 @@ func CreateCollection(systemKey string, collection map[string]interface{}, clien
 	}
 
 	for i := 0; i < totalItems; i += DataPageSize {
-
+		pageNumber := (i / DataPageSize) + 1
 		beginningOfRange := i
 
 		// this will be equal to max index + 1
@@ -1819,9 +1823,12 @@ func CreateCollection(systemKey string, collection map[string]interface{}, clien
 		for i, item := range itemsInThisPage {
 			itemsInThisPage[i] = item.(map[string]interface{})
 		}
-		if _, err := client.CreateData(colId, itemsInThisPage); err != nil {
+
+		if _, err := retryRequest(func() (interface{}, error) { return client.CreateData(colId, itemsInThisPage) }, MaxRetries); err != nil {
 			return CollectionInfo{}, err
 		}
+		totalPushed += len(itemsInThisPage)
+		fmt.Printf("Pushed: \tPage(s): %v / %v \tItem(s): %v / %v\n", pageNumber, (totalItems/DataPageSize)+1, totalPushed, totalItems)
 	}
 	return myInfo, nil
 }
