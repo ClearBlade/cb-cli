@@ -1728,13 +1728,21 @@ func updateCollection(meta *System_meta, collection map[string]interface{}, clie
 	for _, row := range items {
 		query := cb.NewQuery()
 		query.EqualTo("item_id", row.(map[string]interface{})["item_id"])
-		if resp, err := client.UpdateDataByName(meta.Key, collection_name, query, row.(map[string]interface{})); err != nil {
-			fmt.Printf("Error updating item '%s'. Skipping. Error is - %s\n", row.(map[string]interface{})["item_id"], err.Error())
-		} else if resp.Count == 0 {
+
+		if row.(map[string]interface{})["item_id"] != nil {
+			if resp, err := client.UpdateDataByName(meta.Key, collection_name, query, row.(map[string]interface{})); err != nil {
+				fmt.Printf("Error updating item '%s'. Skipping. Error is - %s\n", row.(map[string]interface{})["item_id"], err.Error())
+			} else if resp.Count == 0 {
+				if _, err := client.CreateDataByName(meta.Key, collection_name, row.(map[string]interface{})); err != nil {
+					return fmt.Errorf("Failed to create item. Error is - %s", err.Error())
+				}
+			}
+		} else {
 			if _, err := client.CreateDataByName(meta.Key, collection_name, row.(map[string]interface{})); err != nil {
 				return fmt.Errorf("Failed to create item. Error is - %s", err.Error())
 			}
 		}
+
 	}
 	return nil
 }
