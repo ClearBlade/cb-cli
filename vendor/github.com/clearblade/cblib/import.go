@@ -91,7 +91,7 @@ func createRoles(systemInfo map[string]interface{}, collectionsInfo []Collection
 	return nil
 }
 
-func createUsers(systemInfo map[string]interface{}, users []map[string]interface{}, client *cb.DevClient) error {
+func createUsers(systemInfo map[string]interface{}, users []map[string]interface{}, client *cb.DevClient) ([]UserInfo, error) {
 	BLACKLISTED_USER_COLUMN := "user_id"
 	//  Create user columns first -- if any
 	sysKey := systemInfo["systemKey"].(string)
@@ -109,14 +109,15 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		}
 		columnType := column["ColumnType"].(string)
 		if err := client.CreateUserColumn(sysKey, columnName, columnType); err != nil {
-			return fmt.Errorf("Could not create user column %s: %s", columnName, err.Error())
+			return nil, fmt.Errorf("Could not create user column %s: %s", columnName, err.Error())
 		}
 	}
 
 	if !importUsers {
-		return nil
+		return nil, nil
 	}
 
+	rtn := make([]UserInfo, 0)
 	// Now, create users -- register, update roles, and update user-def colunms
 	for _, user := range users {
 		fmt.Printf(" %s", user["email"].(string))
@@ -125,10 +126,12 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 			// don't return an error because we don't want to stop other users from being created
 			fmt.Printf("Error: Failed to create user %s - %s", user["email"].(string), err.Error())
 		}
-		if err := updateUserEmailToId(UserInfo{
+		info := UserInfo{
 			UserID: userId,
 			Email:  user["email"].(string),
-		}); err != nil {
+		}
+		rtn = append(rtn, info)
+		if err := updateUserEmailToId(info); err != nil {
 			logErrorForUpdatingMapFile(getUserEmailToIdFullFilePath(), err)
 		}
 
@@ -159,7 +162,7 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 		}
 	}
 
-	return nil
+	return rtn, nil
 }
 
 func unMungeRoles(roles []string) []interface{} {
@@ -171,7 +174,16 @@ func unMungeRoles(roles []string) []interface{} {
 	return rval
 }
 
-func createTriggers(systemInfo map[string]interface{}, client *cb.DevClient) ([]map[string]interface{}, error) {
+func updateTriggerInfo(trigger map[string]interface{}, usersInfo []UserInfo) {
+	replaceEmailWithUserIdInTriggerKeyValuePairs(trigger, usersInfo)
+}
+
+func createTriggerWithUpdatedInfo(sysKey string, trigger map[string]interface{}, usersInfo []UserInfo, client *cb.DevClient) (map[string]interface{}, error) {
+	updateTriggerInfo(trigger, usersInfo)
+	return createTrigger(sysKey, trigger, client)
+}
+
+func createTriggers(systemInfo map[string]interface{}, collectionsInfo []UserInfo, client *cb.DevClient) ([]map[string]interface{}, error) {
 	sysKey := systemInfo["systemKey"].(string)
 	triggers, err := getTriggers()
 	if err != nil {
@@ -180,7 +192,7 @@ func createTriggers(systemInfo map[string]interface{}, client *cb.DevClient) ([]
 	triggersRval := make([]map[string]interface{}, len(triggers))
 	for idx, trigger := range triggers {
 		fmt.Printf(" %s", trigger["name"].(string))
-		trigVal, err := createTrigger(sysKey, trigger, client)
+		trigVal, err := createTriggerWithUpdatedInfo(sysKey, trigger, collectionsInfo, client)
 		if err != nil {
 			return nil, err
 		}
@@ -606,7 +618,8 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 		fmt.Printf("Could not create roles: %s", err.Error())
 	}
 	logInfo("Importing users...")
-	if err := createUsers(systemInfo, users, cli); err != nil {
+	usersInfo, err := createUsers(systemInfo, users, cli)
+	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create users: %s", err.Error())
 	}
@@ -632,7 +645,7 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 		}
 	}
 	logInfo("Importing triggers...")
-	_, err = createTriggers(systemInfo, cli)
+	_, err = createTriggers(systemInfo, usersInfo, cli)
 	if err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create triggers: %s", err.Error())

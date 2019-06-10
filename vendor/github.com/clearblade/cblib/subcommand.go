@@ -33,7 +33,7 @@ func (c *SubCommand) Execute( /*client *cb.DevClient,*/ args []string) error {
 	}
 	if err = GoToRepoRootDir(); err != nil {
 		if c.mustBeInRepo {
-			return fmt.Errorf("You must be in an initialized repo to run the '%s' command\n", c.name)
+			return fmt.Errorf("You must be in an initialized repo to run the '%s' command. Error: %s\n", c.name, err.Error())
 		}
 		if err.Error() != SpecialNoCBMetaError {
 			return err

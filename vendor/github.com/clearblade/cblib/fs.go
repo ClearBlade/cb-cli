@@ -526,7 +526,16 @@ func writeUserSchema(data map[string]interface{}) error {
 	return writeEntity(usersDir, "schema", data)
 }
 
+// we remove the collection ID from key_value_pairs since the ID changes between systems
+// the backend does not require collection ID when POSTing/PUTing a trigger
+func deleteCollectionIDFromKeyValuePairs(trig map[string]interface{}) {
+	if kv, ok := trig["key_value_pairs"].(map[string]interface{}); ok {
+		delete(kv, "collectionId")
+	}
+}
+
 func whitelistTrigger(data map[string]interface{}) map[string]interface{} {
+	deleteCollectionIDFromKeyValuePairs(data)
 	return map[string]interface{}{
 		"event_definition": data["event_definition"],
 		"key_value_pairs":  data["key_value_pairs"],

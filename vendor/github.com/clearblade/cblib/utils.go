@@ -488,3 +488,34 @@ func retryRequest(funk requestFunc, maxRetries int) (interface{}, error) {
 	}
 	return recur()
 }
+
+func replaceUserIdWithEmailInTriggerKeyValuePairs(trig map[string]interface{}, userEmailToId map[string]interface{}) {
+	// check to see
+	if kv, ok := trig["key_value_pairs"].(map[string]interface{}); ok {
+		if thisUserID, ok := kv["userId"]; ok {
+			for email, userID := range userEmailToId {
+				if thisUserID == userID {
+					delete(kv, "userId")
+					kv["email"] = email
+				}
+			}
+
+		}
+	}
+}
+
+func replaceEmailWithUserIdInTriggerKeyValuePairs(trig map[string]interface{}, usersInfo []UserInfo) {
+	if kv, ok := trig["key_value_pairs"]; ok {
+		if userEmail, ok := kv.(map[string]interface{})["email"]; ok {
+			// found an email that we stored on the FS. need to remove it and replace with the users new user_id
+			delete(kv.(map[string]interface{}), "email")
+			if usersInfo != nil {
+				for i := 0; i < len(usersInfo); i++ {
+					if usersInfo[i].Email == userEmail {
+						kv.(map[string]interface{})["userId"] = usersInfo[i].UserID
+					}
+				}
+			}
+		}
+	}
+}

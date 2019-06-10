@@ -262,12 +262,22 @@ func stripTriggerFields(trig map[string]interface{}) {
 	return
 }
 
+func writeTriggerWithUserInfo(name string, trig map[string]interface{}) error {
+	users, err := getUserEmailToId()
+	if err != nil {
+		logError("Unable to fetch user email map when writing trigger; Any user triggers in the system will be stored with userId rather than email which will affect their portability between systems. Any user triggers will need to be recreated after importing into a new system.")
+	} else {
+		replaceUserIdWithEmailInTriggerKeyValuePairs(trig, users)
+	}
+	return writeTrigger(name, trig)
+}
+
 func PullAndWriteTrigger(systemKey, trigName string, client *cb.DevClient) error {
 	if trigg, err := pullTrigger(systemKey, trigName, client); err != nil {
 		return err
 	} else {
 		stripTriggerFields(trigg)
-		err = writeTrigger(trigName, trigg)
+		err = writeTriggerWithUserInfo(trigName, trigg)
 		if err != nil {
 			return err
 		}
@@ -284,10 +294,9 @@ func PullAndWriteTriggers(sysMeta *System_meta, cli *cb.DevClient) ([]map[string
 	for _, trig := range trigs {
 		thisTrig := trig.(map[string]interface{})
 		fmt.Printf(" %s", thisTrig["name"].(string))
-		delete(thisTrig, "system_key")
-		delete(thisTrig, "system_secret")
+		stripTriggerFields(thisTrig)
 		triggers = append(triggers, thisTrig)
-		err = writeTrigger(thisTrig["name"].(string), thisTrig)
+		err = writeTriggerWithUserInfo(thisTrig["name"].(string), thisTrig)
 		if err != nil {
 			return nil, err
 		}
