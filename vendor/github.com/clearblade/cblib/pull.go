@@ -265,7 +265,7 @@ func stripTriggerFields(trig map[string]interface{}) {
 func writeTriggerWithUserInfo(name string, trig map[string]interface{}) error {
 	users, err := getUserEmailToId()
 	if err != nil {
-		logError("Unable to fetch user email map when writing trigger; Any user triggers in the system will be stored with userId rather than email which will affect their portability between systems. Any user triggers will need to be recreated after importing into a new system.")
+		logWarning(fmt.Sprintf("Unable to fetch user email map when writing trigger. This can be ignored if your system doesn't have users or doesn't have any user triggers; Any user triggers in the system will be stored with userId rather than email which will affect their portability between systems. Any user triggers will need to be recreated after importing into a new system. Message: %s", err.Error()))
 	} else {
 		replaceUserIdWithEmailInTriggerKeyValuePairs(trig, users)
 	}
