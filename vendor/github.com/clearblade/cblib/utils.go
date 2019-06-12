@@ -504,17 +504,34 @@ func replaceUserIdWithEmailInTriggerKeyValuePairs(trig map[string]interface{}, u
 	}
 }
 
-func replaceEmailWithUserIdInTriggerKeyValuePairs(trig map[string]interface{}, usersInfo []UserInfo) {
+func isTriggerForSpecificUser(trig map[string]interface{}) (string, map[string]interface{}, bool) {
 	if kv, ok := trig["key_value_pairs"]; ok {
 		if userEmail, ok := kv.(map[string]interface{})["email"]; ok {
-			// found an email that we stored on the FS. need to remove it and replace with the users new user_id
-			delete(kv.(map[string]interface{}), "email")
-			if usersInfo != nil {
-				for i := 0; i < len(usersInfo); i++ {
-					if usersInfo[i].Email == userEmail {
-						kv.(map[string]interface{})["userId"] = usersInfo[i].UserID
-					}
+			return userEmail.(string), kv.(map[string]interface{}), ok
+		}
+	}
+	return "", nil, false
+}
+
+func replaceEmailWithUserIdInTriggerKeyValuePairs(trig map[string]interface{}, usersInfo []UserInfo) {
+	if userEmail, kv, ok := isTriggerForSpecificUser(trig); ok {
+		// found an email that we stored on the FS. need to remove it and replace with the users new user_id
+		delete(kv, "email")
+		if usersInfo != nil {
+			for i := 0; i < len(usersInfo); i++ {
+				if usersInfo[i].Email == userEmail {
+					kv["userId"] = usersInfo[i].UserID
 				}
+			}
+		}
+	}
+}
+
+func replaceEmailWithUserIdForServiceRunAs(service map[string]interface{}, usersInfo []UserInfo) {
+	if email, ok := service[runUserKey]; ok {
+		for i := 0; i < len(usersInfo); i++ {
+			if usersInfo[i].Email == email {
+				service[runUserKey] = usersInfo[i].UserID
 			}
 		}
 	}

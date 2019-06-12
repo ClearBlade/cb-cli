@@ -183,7 +183,7 @@ func createTriggerWithUpdatedInfo(sysKey string, trigger map[string]interface{},
 	return createTrigger(sysKey, trigger, client)
 }
 
-func createTriggers(systemInfo map[string]interface{}, collectionsInfo []UserInfo, client *cb.DevClient) ([]map[string]interface{}, error) {
+func createTriggers(systemInfo map[string]interface{}, usersInfo []UserInfo, client *cb.DevClient) ([]map[string]interface{}, error) {
 	sysKey := systemInfo["systemKey"].(string)
 	triggers, err := getTriggers()
 	if err != nil {
@@ -192,7 +192,7 @@ func createTriggers(systemInfo map[string]interface{}, collectionsInfo []UserInf
 	triggersRval := make([]map[string]interface{}, len(triggers))
 	for idx, trigger := range triggers {
 		fmt.Printf(" %s", trigger["name"].(string))
-		trigVal, err := createTriggerWithUpdatedInfo(sysKey, trigger, collectionsInfo, client)
+		trigVal, err := createTriggerWithUpdatedInfo(sysKey, trigger, usersInfo, client)
 		if err != nil {
 			return nil, err
 		}
@@ -237,7 +237,7 @@ func createDeployments(systemInfo map[string]interface{}, client *cb.DevClient) 
 	return deploymentsRval, nil
 }
 
-func createServices(systemInfo map[string]interface{}, client *cb.DevClient) error {
+func createServices(systemInfo map[string]interface{}, usersInfo []UserInfo, client *cb.DevClient) error {
 	sysKey := systemInfo["systemKey"].(string)
 	services, err := getServices()
 	if err != nil {
@@ -246,7 +246,7 @@ func createServices(systemInfo map[string]interface{}, client *cb.DevClient) err
 	}
 	for _, service := range services {
 		fmt.Printf(" %s", service["name"].(string))
-		if err := createService(sysKey, service, client); err != nil {
+		if err := createServiceWithUpdatedInfo(sysKey, service, usersInfo, client); err != nil {
 			fmt.Printf("createService Failed: %s\n", err)
 			return err
 		}
@@ -625,7 +625,7 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 	}
 	logInfo("Importing code services...")
 	// Additonal modifications to the ImportIt functions
-	if err := createServices(systemInfo, cli); err != nil {
+	if err := createServices(systemInfo, usersInfo, cli); err != nil {
 		serr, _ := err.(*os.PathError)
 		if err != serr {
 			return err
