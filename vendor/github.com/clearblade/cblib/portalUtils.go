@@ -81,7 +81,7 @@ func getPortalInternalResourceCode(internalResourceDir, fileName string) (string
 }
 
 func isInsideDirectory(dir, currentPath string) bool {
-	split := strings.Split(currentPath, "/")
+	split := strings.Split(currentPath, string(os.PathSeparator))
 	return split[len(split)-2] == dir
 }
 
