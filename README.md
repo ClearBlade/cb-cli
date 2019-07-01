@@ -20,7 +20,6 @@ The clearblade CLI tool provides easy to use commands for interacting with Clear
  - [target](#target)
  - [test](#test)
  - [update](#update)
- - [diff](#diff)
  - [init](#init)
  - [create](#create)
  - [delete](#delete)
@@ -357,10 +356,10 @@ cb-cli push
 ```
 
 ## Description ##
-The push command allows you upload changes to local copies of ClearBlade objects back out the the remote ClearBlade system. Obviously, it is the opposite of the pull command. Again, it has the same options as the diff and pull commands. 
+The push command allows you upload changes to local copies of ClearBlade objects back out the the remote ClearBlade system. Obviously, it is the opposite of the pull command. Again, it has the same options as the pull command. 
 
 {{< note title="Note" >}}
-You can combine these options on a single command line just like with diff and pull
+You can combine these options on a single command line just like with pull
 {{< /note >}}
 
 ## Options ## 
@@ -577,7 +576,7 @@ cb-cli test
 The test command allows you execute your code services from your local machine, along with update the code itself, and send MQTT Messages
 
 {{< note title="Note" >}}
-You can combine these options on a single command line just like with diff and pull
+You can combine these options on a single command line just like with pull
 {{< /note >}}
 
 ## Options ## 
@@ -600,76 +599,6 @@ You can combine these options on a single command line just like with diff and p
 ### Examples ###
 `cb-cli test -service=MyService`
 
-# Diff
-
-## Name ##
-**cb-cli diff** - Compares the local files with the versions stored on the ClearBlade platform System
-
-## Synopsis ##
-
-```
-cb-cli diff 
-	[-all-services]
-	[-all-libraries]
-	[-service = <SERVICE_NAME>]
-	[-userschema] 
-	[-collection = <COLLECTION_NAME>] 
-	[-user = <EMAIL>]
-	[-role = <ROLE_NAME>]
-	[-trigger = <TRIGGER_NAME>]
-	[-timer = <TIMER_NAME>]
-```
-
-## Description ##
-This command allows you to do a “diff” between an object in your current repo and the corresponding object residing in the associated remote ClearBlade system. This involves diffing the meta data for the object, and if the object is a code service or library, also performing a traditional diff on the code. For example, consider a code service. If you (locally) changed the actual code for the service, and also (locally) changed the library dependencies for the service, the diff command will report both changes.
-
-
-## Options 
-The following options are available
-
-- **all-services**   
-	Diffs all the services stored in the repo
-
-- **all-libraries**  
-	Diffs all of the libraries stored in the repo
-
-- **service = < service_name >**   
-	Diffs the local and remote versions of <svc_name>
-
-- **library=< library_name >**   
-	Diffs the local and remote versions of <lib_name>
-
-- **userschema**     
-	Diffs the local and remote versions of the users table schema
-
-- **collection = < collection_name >**     
-	Diffs the local and remote versions of the collections meta-data. Does not diff the items of the collection.
-
-- **user = < email >**   
-	Diffs the local and remote versions of the user record. Also diffs the users roles
-
-- **role = < role_name >**    
-	Diffs all the capability details of the specific role
-
-- **trigger = < trigger_name >**   
-	Diffs triggers 
-
-- **timer = < timer_name >**   
-	Diffs timers 
-
-## Example ##
-`cb-cli diff -collection=fgbfgb`
-
-Output: 
-
-	<         host:"smtp.gmail.com",
-	---
-	>         host:"mtp.gmail.com",
-
-`cb-cli diff -collection=samplecollection`
-
-
-_
 
 # Target
 
@@ -752,7 +681,7 @@ This step represents a typical developer activity of making a modification to a 
 
 **Action:**
 
-	$ cb-cli diff -service=helloworld
+	$ git diff path/to/servicename.js
 
 **Result:**
 
