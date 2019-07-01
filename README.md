@@ -656,17 +656,19 @@ This process will bring all the schema and asset definitions to your local envir
 Your folder should now be filled with a structure that looks like
 
 	-/<SYSTEM_NAME>
-	  |- .cbmeta
+	  |- .cb-cli
+	  	  |- .cbmeta
 	  |- system.json
 	  |- services
-	      |- helloworld.js
+	      |- helloworld
+		  	|- helloworld.js
+			|- helloworld.json  
 	  |- libraries
 	  |- data
 	  |- roles
 	  |- users
 	  |- triggers
 	  |- timers
-
 
 ## Step 3:  Developer modifies a local service
 
