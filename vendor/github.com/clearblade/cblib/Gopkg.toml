@@ -31,7 +31,7 @@
 
 [[constraint]]
   name = "github.com/clearblade/Go-SDK"
-  version = "3.0.3"
+  version = "3.1.0"
 
 [[constraint]]
   name = "github.com/clearblade/cbjson"

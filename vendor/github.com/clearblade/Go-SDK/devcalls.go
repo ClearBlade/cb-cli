@@ -367,10 +367,11 @@ func (d *DevClient) CreateRole(systemKey, role_id string) (interface{}, error) {
 		return nil, err
 	}
 	data := map[string]interface{}{
-		"name":        role_id,
-		"collections": []map[string]interface{}{},
-		"topics":      []map[string]interface{}{},
-		"services":    []map[string]interface{}{},
+		"name":          role_id,
+		"collections":   []map[string]interface{}{},
+		"topics":        []map[string]interface{}{},
+		"services":      []map[string]interface{}{},
+		"servicecaches": []map[string]interface{}{},
 	}
 	resp, err := post(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
 	if err != nil {
@@ -386,10 +387,11 @@ func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]inter
 	data := map[string]interface{}{
 		"name": roleName,
 		"changes": map[string]interface{}{
-			"collections": []map[string]interface{}{},
-			"topics":      []map[string]interface{}{},
-			"services":    []map[string]interface{}{},
-			"portals":     []map[string]interface{}{},
+			"collections":   []map[string]interface{}{},
+			"topics":        []map[string]interface{}{},
+			"services":      []map[string]interface{}{},
+			"portals":       []map[string]interface{}{},
+			"servicecaches": []map[string]interface{}{},
 		},
 	}
 	changes := data["changes"].(map[string]interface{})
@@ -444,6 +446,9 @@ func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]inter
 	}
 	if roles, ok := permissions["roles"]; ok {
 		changes["roles"] = roles
+	}
+	if servicecaches, ok := permissions["servicecaches"]; ok {
+		changes["servicecaches"] = servicecaches
 	}
 	// Just to be safe, this is silly
 	data["changes"] = changes
@@ -521,11 +526,6 @@ func (d *DevClient) GetAllUsers(systemKey string) ([]map[string]interface{}, err
 		return nil, err
 	}
 
-	/*
-		allQuery := NewQuery()
-		queryMap := allQuery.serialize()
-		queryBytes, err := json.Marshal(queryMap)
-	*/
 	if err != nil {
 		return nil, err
 	}
@@ -856,6 +856,35 @@ func (d *DevClient) AddTopicToRole(systemKey, topic, roleId string, level int) e
 	}
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Error updating a role to have a topic: %v", resp.Body)
+	}
+	return nil
+}
+
+//AddServiceCacheMetaToRole associates some kind of permission dealing with the specified code cache meta to the role
+func (d *DevClient) AddServiceCacheMetaToRole(systemKey, cacheName, roleId string, level int) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{
+		"id": roleId,
+		"changes": map[string]interface{}{
+			"servicecaches": []map[string]interface{}{
+				map[string]interface{}{
+					"itemInfo": map[string]interface{}{
+						"name": cacheName,
+					},
+					"permissions": level,
+				},
+			},
+		},
+	}
+	resp, err := put(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating a role to have a service cache: %v", resp.Body)
 	}
 	return nil
 }

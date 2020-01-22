@@ -51,6 +51,8 @@ var (
 	PluginName                 string
 	AdaptorName                string
 	DeploymentName             string
+	ServiceCacheName           string
+	WebhookName                string
 	Message                    bool
 	Topic                      string
 	Payload                    string
@@ -71,6 +73,8 @@ var (
 	AllAssets                  bool
 	AllTriggers                bool
 	AllTimers                  bool
+	AllServiceCaches           bool
+	AllWebhooks                bool
 	AutoApprove                bool
 	TempDir                    string
 )
@@ -104,6 +108,8 @@ type AffectedAssets struct {
 	AllUsers         bool
 	AllTriggers      bool
 	AllTimers        bool
+	AllServiceCaches bool
+	AllWebhooks      bool
 	DeviceSchema     bool
 	UserSchema       bool
 	EdgeSchema       bool
@@ -121,6 +127,8 @@ type AffectedAssets struct {
 	PluginName       string
 	AdaptorName      string
 	DeploymentName   string
+	ServiceCacheName string
+	WebhookName      string
 	ExportUsers      bool
 	ExportRows       bool
 	ExportItemId     bool
@@ -140,6 +148,8 @@ func createAffectedAssets() AffectedAssets {
 		AllCollections:   AllCollections,
 		AllRoles:         AllRoles,
 		AllUsers:         AllUsers,
+		AllServiceCaches: AllServiceCaches,
+		AllWebhooks:      AllWebhooks,
 		UserSchema:       UserSchema,
 		DeviceSchema:     DeviceSchema,
 		EdgeSchema:       EdgeSchema,
@@ -159,6 +169,8 @@ func createAffectedAssets() AffectedAssets {
 		PluginName:       PluginName,
 		AdaptorName:      AdaptorName,
 		DeploymentName:   DeploymentName,
+		ServiceCacheName: ServiceCacheName,
+		WebhookName:      WebhookName,
 		ExportUsers:      ExportUsers,
 		ExportRows:       ExportRows,
 		ExportItemId:     ExportItemId,
