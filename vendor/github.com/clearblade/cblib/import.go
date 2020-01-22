@@ -28,12 +28,11 @@ func init() {
 	cb-cli import -importrows=false -importusers=false			# prompts for credentials, excludes all collection-rows and users
 	`
 	myImportCommand := &SubCommand{
-		name:         "import",
-		usage:        usage,
-		needsAuth:    false,
-		mustBeInRepo: true,
-		run:          doImport,
-		example:      example,
+		name:      "import",
+		usage:     usage,
+		needsAuth: false,
+		run:       doImport,
+		example:   example,
 	}
 	DEFAULT_IMPORT_ROWS := true
 	DEFAULT_IMPORT_USERS := true
@@ -722,10 +721,10 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create deployments: %s", err.Error())
 	}
-	logInfo("Importing service caches...")
+	logInfo("Importing shared caches...")
 	if _, err := createServiceCaches(systemInfo, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
-		fmt.Printf("Could not create service caches: %s", err.Error())
+		fmt.Printf("Could not create shared caches: %s", err.Error())
 	}
 	logInfo("Importing webhooks...")
 	if _, err := createWebhooks(systemInfo, cli); err != nil {

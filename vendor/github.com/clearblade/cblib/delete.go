@@ -2,27 +2,27 @@ package cblib
 
 import (
 	"fmt"
+
 	cb "github.com/clearblade/Go-SDK"
 )
 
 func init() {
-	usage := 
-	`
+	usage :=
+		`
 	Deletes a specified resource from the remote system on the Platform"
 	`
 
-	example := 
-	`
+	example :=
+		`
 	  cb-cli delete -service=ServiceToDelete      # Deletes ServiceToDelete from Platform's System
 	  cb-cli delete -collection=CollectonToDelete # Deletes CollectonToDelete from Platform's System
 	`
 	deleteCommand := &SubCommand{
-		name:         "delete",
-		usage:        usage,
-		needsAuth:    true,
-		mustBeInRepo: true,
-		run:          doDelete,
-		example:	  example,
+		name:      "delete",
+		usage:     usage,
+		needsAuth: true,
+		run:       doDelete,
+		example:   example,
 	}
 	deleteCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to delete")
 	deleteCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to delete")

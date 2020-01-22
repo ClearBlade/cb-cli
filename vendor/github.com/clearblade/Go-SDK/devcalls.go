@@ -450,6 +450,9 @@ func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]inter
 	if servicecaches, ok := permissions["servicecaches"]; ok {
 		changes["servicecaches"] = servicecaches
 	}
+	if manageusers, ok := permissions["manageusers"]; ok {
+		changes["manageusers"] = manageusers
+	}
 	// Just to be safe, this is silly
 	data["changes"] = changes
 	creds, err := d.credentials()

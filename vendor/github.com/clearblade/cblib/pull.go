@@ -28,12 +28,11 @@ func init() {
 	cb-cli pull -collection=Collection1 -sort-collections=true		# Pulls Collection1 from Platform to local filesystem, with all rows, sorted
 	`
 	pullCommand := &SubCommand{
-		name:         "pull",
-		usage:        usage,
-		needsAuth:    true,
-		mustBeInRepo: true,
-		run:          doPull,
-		example:      example,
+		name:      "pull",
+		usage:     usage,
+		needsAuth: true,
+		run:       doPull,
+		example:   example,
 	}
 
 	pullCommand.flags.BoolVar(&AllServices, "all-services", false, "pull all services from system")
@@ -51,7 +50,7 @@ func init() {
 	pullCommand.flags.BoolVar(&AllAssets, "all", false, "pull all assets from system")
 	pullCommand.flags.BoolVar(&AllTriggers, "all-triggers", false, "pull all triggers from system")
 	pullCommand.flags.BoolVar(&AllTimers, "all-timers", false, "pull all timers from system")
-	pullCommand.flags.BoolVar(&AllServiceCaches, "all-service-caches", false, "pull all service caches from system")
+	pullCommand.flags.BoolVar(&AllServiceCaches, "all-shared-caches", false, "pull all shared caches from system")
 	pullCommand.flags.BoolVar(&AllWebhooks, "all-webhooks", false, "pull all webhooks from system")
 
 	pullCommand.flags.StringVar(&CollectionSchema, "collectionschema", "", "Name of collection schema to pull")
@@ -70,7 +69,7 @@ func init() {
 	pullCommand.flags.StringVar(&PluginName, "plugin", "", "Name of plugin to pull")
 	pullCommand.flags.StringVar(&AdaptorName, "adapter", "", "Name of adapter to pull")
 	pullCommand.flags.StringVar(&DeploymentName, "deployment", "", "Name of deployment to pull")
-	pullCommand.flags.StringVar(&ServiceCacheName, "service-cache", "", "Name of service cache to pull")
+	pullCommand.flags.StringVar(&ServiceCacheName, "shared-cache", "", "Name of shared cache to pull")
 	pullCommand.flags.StringVar(&WebhookName, "webhook", "", "Name of webhook to pull")
 
 	pullCommand.flags.IntVar(&MaxRetries, "max-retries", 3, "Number of retries to attempt if a request fails")
@@ -108,6 +107,17 @@ func doPull(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 	return nil
 }
 
+var userColumnsToSkip = []string{"email", "creation_date", "cb_service_account", "cb_ttl_override", "cb_token"}
+
+func isInList(list []string, item string) bool {
+	for i := 0; i < len(list); i++ {
+		if list[i] == item {
+			return true
+		}
+	}
+	return false
+}
+
 func pullUserSchemaInfo(systemKey string, cli *cb.DevClient, writeThem bool) (map[string]interface{}, error) {
 	resp, err := cli.GetUserColumns(systemKey)
 	if err != nil {
@@ -116,7 +126,7 @@ func pullUserSchemaInfo(systemKey string, cli *cb.DevClient, writeThem bool) (ma
 	columns := []map[string]interface{}{}
 	for _, colIF := range resp {
 		col := colIF.(map[string]interface{})
-		if col["ColumnName"] == "email" || col["ColumnName"] == "creation_date" {
+		if isInList(userColumnsToSkip, col["ColumnName"].(string)) {
 			continue
 		}
 		columns = append(columns, col)

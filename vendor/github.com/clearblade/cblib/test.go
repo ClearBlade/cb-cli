@@ -21,12 +21,11 @@ func init() {
 	systemDotJSON = map[string]interface{}{}
 	svcCode = map[string]interface{}{}
 	myTestCommand := &SubCommand{
-		name:         "test",
-		usage:        usage,
-		run:          doTest,
-		needsAuth:    true,
-		mustBeInRepo: true,
-		example:      example,
+		name:      "test",
+		usage:     usage,
+		run:       doTest,
+		needsAuth: true,
+		example:   example,
 	}
 	myTestCommand.flags.StringVar(&ServiceName, "service", "", "name of service to test")
 	myTestCommand.flags.StringVar(&Params, "params", "", "params to service in json stringified format")

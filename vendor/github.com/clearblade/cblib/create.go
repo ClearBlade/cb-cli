@@ -18,12 +18,11 @@ func init() {
 	  cb-cli create -collection=FreshCollection # Creates a new code library: ./code/libraries/FreshCollection/
 	`
 	createCommand := &SubCommand{
-		name:         "create",
-		usage:        usage,
-		needsAuth:    true,
-		mustBeInRepo: true,
-		run:          doCreate,
-		example:      example,
+		name:      "create",
+		usage:     usage,
+		needsAuth: true,
+		run:       doCreate,
+		example:   example,
 	}
 	createCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to create")
 	createCommand.flags.StringVar(&LibraryName, "library", "", "Name of library to create")

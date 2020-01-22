@@ -338,18 +338,18 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 
 	if assets.AllServiceCaches || assets.AllAssets {
 		didSomething = true
-		logInfo("Pulling all service caches")
+		logInfo("Pulling all shared caches")
 		if _, err := pullServiceCaches(systemInfo, client); err != nil {
-			logError(fmt.Sprintf("Failed to pull all service caches. %s", err.Error()))
+			logError(fmt.Sprintf("Failed to pull all shared caches. %s", err.Error()))
 		}
 		fmt.Printf("\n")
 	}
 
 	if assets.ServiceCacheName != "" {
 		didSomething = true
-		logInfo(fmt.Sprintf("Pulling service cache %+s\n", ServiceCacheName))
+		logInfo(fmt.Sprintf("Pulling shared cache %+s\n", ServiceCacheName))
 		if _, err := pullAndWriteServiceCache(systemInfo, client, ServiceCacheName); err != nil {
-			logError(fmt.Sprintf("Failed to pull service cache. %s", err.Error()))
+			logError(fmt.Sprintf("Failed to pull shared cache. %s", err.Error()))
 		}
 		fmt.Printf("\n")
 	}

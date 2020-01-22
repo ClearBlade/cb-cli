@@ -291,26 +291,6 @@ func copyDir(src string, dst string) (err error) {
 	return
 }
 
-func IsInRepo() bool {
-	return FoundSystemDotJSON()
-}
-
-func FoundSystemDotJSON() bool {
-	if _, err := getDict("system.json"); err == nil {
-		return true
-	}
-	return false
-
-}
-
-func FoundCBMeta() bool {
-	if _, err := getCbMeta(); err == nil {
-		return true
-	}
-	return false
-
-}
-
 // These keys are generated upon GET, and not representative of the data model
 // If we store to filesystem with these keys, the corresponding PUT/POST for portal fails
 func removeBlacklistedPortalKeys(portal map[string]interface{}) map[string]interface{} {
