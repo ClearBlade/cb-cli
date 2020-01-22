@@ -43,8 +43,25 @@ func (u Uuid) MarshalJSON() ([]byte, error) {
 	return b, nil
 }
 
+func (u *Uuid) UnmarshalJSON(b []byte) error {
+	if u == nil {
+		return fmt.Errorf("Uuid receiver nil")
+	}
+	var uuid string
+	err := json.Unmarshal(b, &uuid)
+	if err != nil {
+		return err
+	}
+	uid, err := ParseUuid(uuid)
+	if err != nil {
+		return err
+	}
+	*u = uid
+	return nil
+}
+
 func (u Uuid) Equals(uu Uuid) bool {
-	return bytes.Compare(u[:], uu[:]) == 0
+	return bytes.Equal(u[:], uu[:])
 }
 
 var empty = Uuid{}

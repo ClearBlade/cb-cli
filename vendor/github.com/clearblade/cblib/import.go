@@ -237,6 +237,38 @@ func createDeployments(systemInfo map[string]interface{}, client *cb.DevClient) 
 	return deploymentsRval, nil
 }
 
+func createServiceCaches(systemInfo map[string]interface{}, client *cb.DevClient) ([]map[string]interface{}, error) {
+	sysKey := systemInfo["systemKey"].(string)
+	caches, err := getServiceCaches()
+	if err != nil {
+		return nil, err
+	}
+	for _, cache := range caches {
+		fmt.Printf(" %s", cache["name"].(string))
+		err := createServiceCache(sysKey, cache, client)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return caches, nil
+}
+
+func createWebhooks(systemInfo map[string]interface{}, client *cb.DevClient) ([]map[string]interface{}, error) {
+	sysKey := systemInfo["systemKey"].(string)
+	hooks, err := getWebhooks()
+	if err != nil {
+		return nil, err
+	}
+	for _, hook := range hooks {
+		fmt.Printf(" %s", hook["name"].(string))
+		err := createWebhook(sysKey, hook, client)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return hooks, nil
+}
+
 func createServices(systemInfo map[string]interface{}, usersInfo []UserInfo, client *cb.DevClient) error {
 	sysKey := systemInfo["systemKey"].(string)
 	services, err := getServices()
@@ -689,6 +721,16 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 	if _, err := createDeployments(systemInfo, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create deployments: %s", err.Error())
+	}
+	logInfo("Importing service caches...")
+	if _, err := createServiceCaches(systemInfo, cli); err != nil {
+		//  Don't return an err, just warn -- so we keep back compat with old systems
+		fmt.Printf("Could not create service caches: %s", err.Error())
+	}
+	logInfo("Importing webhooks...")
+	if _, err := createWebhooks(systemInfo, cli); err != nil {
+		//  Don't return an err, just warn -- so we keep back compat with old systems
+		fmt.Printf("Could not create webhooks: %s", err.Error())
 	}
 
 	fmt.Printf(" Done\n")

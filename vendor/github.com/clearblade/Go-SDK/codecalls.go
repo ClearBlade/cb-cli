@@ -5,8 +5,10 @@ import (
 )
 
 const (
-	_CODE_PREAMBLE      = "/api/v/1/code"
-	_CODE_USER_PREAMBLE = "/api/v/3/code"
+	_CODE_PREAMBLE            = "/api/v/1/code"
+	_CODE_USER_PREAMBLE       = "/api/v/3/code"
+	_CODE_CACHE_META_PREAMBLE = "/admin/v/4/service_caches"
+	_WEBHOOK_PREAMBLE         = "/admin/v/4/webhook"
 )
 
 func GetServiceNames(c cbClient, systemKey string) ([]string, error) {
@@ -188,4 +190,186 @@ func (u *UserClient) UpdateTrigger(systemKey, name string, data map[string]inter
 
 func (u *UserClient) GetTrigger(systemKey, name string) (map[string]interface{}, error) {
 	return u.GetEventHandler(systemKey, name)
+}
+
+func (d *DevClient) CreateServiceCacheMeta(systemKey, name string, meta map[string]interface{}) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := post(d, _CODE_CACHE_META_PREAMBLE+"/"+systemKey+"/"+name, meta, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error creating new code cache meta: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error creating new code cache meta: %v", resp.Body)
+	}
+	return nil
+}
+
+func (d *DevClient) UpdateServiceCacheMeta(systemKey, name string, changes map[string]interface{}) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := put(d, _CODE_CACHE_META_PREAMBLE+"/"+systemKey+"/"+name, changes, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error updating code cache meta: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating code cache meta: %v", resp.Body)
+	}
+	return nil
+}
+
+func (d *DevClient) DeleteServiceCacheMeta(systemKey, name string) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := delete(d, _CODE_CACHE_META_PREAMBLE+"/"+systemKey+"/"+name, nil, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error deleting code cache meta: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error deleting code cache meta: %v", resp.Body)
+	}
+	return nil
+}
+
+func (d *DevClient) GetServiceCacheMeta(systemKey, name string) (map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(d, _CODE_CACHE_META_PREAMBLE+"/"+systemKey+"/"+name, nil, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting code cache meta: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting code cache meta: %v", resp.Body)
+	}
+	mapBody, ok := resp.Body.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("Invalid response received for getting code cache meta: %+v", resp.Body)
+	}
+	return mapBody, nil
+}
+
+func (d *DevClient) GetAllServiceCacheMeta(systemKey string) ([]map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(d, _CODE_CACHE_META_PREAMBLE+"/"+systemKey, nil, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting all code cache meta for system: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting all code cache meta for system: %v", resp.Body)
+	}
+	tmp, ok := resp.Body.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("Invalid response received for getting all code cache meta for system: %T", resp.Body)
+	}
+	allCaches := []map[string]interface{}{}
+	for _, data := range tmp {
+		t, ok := data.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("Failed to parse response body")
+		}
+		allCaches = append(allCaches, t)
+	}
+	return allCaches, nil
+}
+
+func (d *DevClient) CreateWebhook(systemKey, name string, meta map[string]interface{}) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := post(d, _WEBHOOK_PREAMBLE+"/"+systemKey+"/"+name, meta, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error creating new webhook: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error creating new webhook: %v", resp.Body)
+	}
+	return nil
+}
+
+func (d *DevClient) UpdateWebhook(systemKey, name string, changes map[string]interface{}) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := put(d, _WEBHOOK_PREAMBLE+"/"+systemKey+"/"+name, changes, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error updating webhook: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating webhook: %v", resp.Body)
+	}
+	return nil
+}
+
+func (d *DevClient) DeleteWebhook(systemKey, name string) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := delete(d, _WEBHOOK_PREAMBLE+"/"+systemKey+"/"+name, nil, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error deleting webhook: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error deleting webhook: %v", resp.Body)
+	}
+	return nil
+}
+
+func (d *DevClient) GetWebhook(systemKey, name string) (map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(d, _WEBHOOK_PREAMBLE+"/"+systemKey+"/"+name, nil, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting webhook: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting webhook: %v", resp.Body)
+	}
+	mapBody, ok := resp.Body.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("Invalid response received for getting webhook: %+v", resp.Body)
+	}
+	return mapBody, nil
+}
+
+func (d *DevClient) GetAllWebhooks(systemKey string) ([]map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(d, _WEBHOOK_PREAMBLE+"/"+systemKey, nil, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting all webhooks for system: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting all webhooks for system: %v", resp.Body)
+	}
+	tmp, ok := resp.Body.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("Invalid response received for getting all webhooks for system: %T", resp.Body)
+	}
+	allWebhooks := []map[string]interface{}{}
+	for _, data := range tmp {
+		t, ok := data.(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("Failed to parse response body")
+		}
+		allWebhooks = append(allWebhooks, t)
+	}
+	return allWebhooks, nil
 }

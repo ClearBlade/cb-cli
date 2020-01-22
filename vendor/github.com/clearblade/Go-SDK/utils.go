@@ -674,7 +674,10 @@ func do(c cbClient, r *CbReq, creds [][]string) (*CbResp, error) {
 		req.Header.Add(c[0], c[1])
 	}
 
-	cli := &http.Client{Transport: tr}
+	cli := &http.Client{
+		Transport: tr,
+		Timeout:   time.Minute * 5,
+	}
 	resp, err := cli.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("Error Making Request: %v", err)

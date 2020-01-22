@@ -1,7 +1,7 @@
 [[constraint]]
 
   name = "github.com/clearblade/cblib"
-  version = "5.0.0"
+  version = "5.1.0"
 
 [prune]
   go-tests = true

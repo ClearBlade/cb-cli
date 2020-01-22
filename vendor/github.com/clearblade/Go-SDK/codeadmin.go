@@ -328,7 +328,7 @@ func (d *DevClient) DeleteFailedServices(systemKey string, ids []string) ([]map[
 	return services, nil
 }
 
-func (d *DevClient) SetLongRunningServiceParams(systemKey, name string, autoRestart bool, concurrency int) error {
+func (d *DevClient) SetLongRunningServiceParams(systemKey, name string, autoRestart, autoBalance bool, concurrency int) error {
 	creds, err := d.credentials()
 	if err != nil {
 		return err
@@ -337,6 +337,7 @@ func (d *DevClient) SetLongRunningServiceParams(systemKey, name string, autoRest
 		"execution_timeout": -1,
 		"auto_restart":      autoRestart,
 		"concurrency":       concurrency,
+		"auto_balance":      autoBalance,
 	}
 
 	_, err = put(d, _CODE_ADMIN_PREAMBLE_V2+"/"+systemKey+"/"+name, params, creds, nil)

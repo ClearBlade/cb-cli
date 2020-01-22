@@ -13,6 +13,7 @@ const (
 	_DEVICES_USER_PREAMBLE   = "/api/v/2/devices/"
 	_DEVICE_SESSION          = "/admin/v/4/session"
 	_DEVICE_V3_USER_PREAMBLE = "/api/v/3/devices/"
+	_DEVICE_V4_PREAMBLE      = "/api/v/4/devices/"
 )
 
 func (d *DevClient) GetDevices(systemKey string, query *Query) ([]interface{}, error) {
@@ -537,7 +538,7 @@ func (dvc *DeviceClient) preamble() string {
 }
 
 func (dvc *DeviceClient) setToken(tok string) {
-	dvc.DeviceName = tok
+	dvc.DeviceToken = tok
 }
 
 func (dvc *DeviceClient) getToken() string {
@@ -558,4 +559,43 @@ func (dvc *DeviceClient) getHttpAddr() string {
 
 func (dvc *DeviceClient) getMqttAddr() string {
 	return dvc.MqttAddr
+}
+
+func ConnectedDevices(client cbClient, systemKey string) (map[string]interface{}, error) {
+	creds, err := client.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(client, _DEVICE_V4_PREAMBLE+systemKey+"/connections", nil, creds, nil)
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body.(map[string]interface{}), nil
+}
+
+func DeviceConnections(client cbClient, systemKey, deviceName string) (map[string]interface{}, error) {
+	creds, err := client.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(client, _DEVICE_V4_PREAMBLE+systemKey+"/connections/"+deviceName, nil, creds, nil)
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body.(map[string]interface{}), nil
+}
+
+func ConnectedDeviceCount(client cbClient, systemKey string) (map[string]interface{}, error) {
+	creds, err := client.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(client, _DEVICE_V4_PREAMBLE+systemKey+"/connectioncount", nil, creds, nil)
+	resp, err = mapResponse(resp, err)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body.(map[string]interface{}), nil
 }

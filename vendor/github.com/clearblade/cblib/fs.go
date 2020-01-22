@@ -26,25 +26,27 @@ const runUserKey = "run_user"
 var (
 	RootDirIsSet bool
 
-	rootDir         string
-	dataDir         string
-	svcDir          string
-	libDir          string
-	usersDir        string
-	usersRolesDir   string
-	timersDir       string
-	triggersDir     string
-	rolesDir        string
-	edgesDir        string
-	devicesDir      string
-	devicesRolesDir string
-	portalsDir      string
-	pluginsDir      string
-	adaptorsDir     string
-	deploymentsDir  string
-	cliHiddenDir    string
-	mapNameToIdDir  string
-	arrDir          [17]string //this is used to set up the directory structure for a system
+	rootDir          string
+	dataDir          string
+	svcDir           string
+	libDir           string
+	usersDir         string
+	usersRolesDir    string
+	timersDir        string
+	triggersDir      string
+	rolesDir         string
+	edgesDir         string
+	devicesDir       string
+	devicesRolesDir  string
+	portalsDir       string
+	pluginsDir       string
+	adaptorsDir      string
+	deploymentsDir   string
+	serviceCachesDir string
+	webhooksDir      string
+	cliHiddenDir     string
+	mapNameToIdDir   string
+	arrDir           [19]string //this is used to set up the directory structure for a system
 )
 
 func SetRootDir(theRootDir string) {
@@ -66,6 +68,8 @@ func SetRootDir(theRootDir string) {
 	pluginsDir = rootDir + "/plugins"
 	adaptorsDir = rootDir + "/adapters"
 	deploymentsDir = rootDir + "/deployments"
+	serviceCachesDir = rootDir + "/service-caches"
+	webhooksDir = rootDir + "/webhooks"
 	cliHiddenDir = rootDir + "/.cb-cli"
 	mapNameToIdDir = cliHiddenDir + "/map-name-to-id"
 	arrDir[0] = svcDir
@@ -85,6 +89,8 @@ func SetRootDir(theRootDir string) {
 	arrDir[14] = deploymentsDir
 	arrDir[15] = cliHiddenDir
 	arrDir[16] = mapNameToIdDir
+	arrDir[17] = serviceCachesDir
+	arrDir[18] = webhooksDir
 }
 
 func setupDirectoryStructure() error {
@@ -585,6 +591,37 @@ func writeDeployment(name string, data map[string]interface{}) error {
 	return writeEntity(deploymentsDir, name, whitelistDeployment(data))
 }
 
+func whitelistServiceCache(data map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"description": data["description"],
+		"ttl":         data["ttl"],
+		"name":        data["name"],
+	}
+}
+
+func whitelistWebhook(data map[string]interface{}) map[string]interface{} {
+	return map[string]interface{}{
+		"auth_method":  data["auth_method"],
+		"description":  data["description"],
+		"name":         data["name"],
+		"service_name": data["service_name"],
+	}
+}
+
+func writeServiceCache(name string, data map[string]interface{}) error {
+	if err := os.MkdirAll(serviceCachesDir, 0777); err != nil {
+		return err
+	}
+	return writeEntity(serviceCachesDir, name, whitelistServiceCache(data))
+}
+
+func writeWebhook(name string, data map[string]interface{}) error {
+	if err := os.MkdirAll(webhooksDir, 0777); err != nil {
+		return err
+	}
+	return writeEntity(webhooksDir, name, whitelistWebhook(data))
+}
+
 func whitelistServicesPermissions(data []interface{}) []map[string]interface{} {
 	rtn := make([]map[string]interface{}, 0)
 	var mapped map[string]interface{}
@@ -990,6 +1027,14 @@ func getDeployments() ([]map[string]interface{}, error) {
 	return getObjectList(deploymentsDir, []string{})
 }
 
+func getServiceCaches() ([]map[string]interface{}, error) {
+	return getObjectList(serviceCachesDir, []string{})
+}
+
+func getWebhooks() ([]map[string]interface{}, error) {
+	return getObjectList(webhooksDir, []string{})
+}
+
 func getDeployment(name string) (map[string]interface{}, error) {
 	return getObject(deploymentsDir, name+".json")
 }
@@ -1166,6 +1211,14 @@ func readFileAsString(absFilePath string) (string, error) {
 
 func getPlugin(name string) (map[string]interface{}, error) {
 	return getObject(pluginsDir, name+".json")
+}
+
+func getServiceCache(name string) (map[string]interface{}, error) {
+	return getObject(serviceCachesDir, name+".json")
+}
+
+func getWebhook(name string) (map[string]interface{}, error) {
+	return getObject(webhooksDir, name+".json")
 }
 
 func getCollection(name string) (map[string]interface{}, error) {
