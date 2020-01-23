@@ -10,12 +10,12 @@
   version = "v0.1.0"
 
 [[projects]]
-  digest = "1:12fb416d55aadeb2ea9ca109695a530e22c02916b311e25fcf9765001a55640e"
+  digest = "1:af63c7115edeb7996ebfdd992ca716bae423f43945714a01c7a74c912dc2700d"
   name = "github.com/clearblade/Go-SDK"
   packages = ["."]
   pruneopts = "UT"
-  revision = "cc67424c74d043b36ca77c80c6b2a61f74e6cad2"
-  version = "3.1.0"
+  revision = "0d97950ef88afe4d00bded1ba6fc2c22ff541f63"
+  version = "3.1.1"
 
 [[projects]]
   digest = "1:1a58a688cb20f2c431e1a3a85347559f5ad145b92fd83d144f832906f8675fa1"
@@ -26,15 +26,15 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:39a0b36e3c655728c5fa0ef89663b0605a9d2adfd418a130d940922dcd3aa3a7"
+  digest = "1:86979bb6ffc28a4a4f063b7e8bd101354881404a2618af56592ebbd1ee2bb593"
   name = "github.com/clearblade/cblib"
   packages = [
     ".",
     "models",
   ]
   pruneopts = "UT"
-  revision = "c1013a8e34e918da0480652492514b9c51ff7b37"
-  version = "5.1.0"
+  revision = "9bf56356cad041950db1c07cd1823784cc3e173c"
+  version = "6.0.0"
 
 [[projects]]
   digest = "1:a39cd1a36849f0eab14d9351a72667f604a422c44c89f30f2dd25a2328415d26"

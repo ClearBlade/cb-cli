@@ -68,7 +68,7 @@ func SetRootDir(theRootDir string) {
 	pluginsDir = rootDir + "/plugins"
 	adaptorsDir = rootDir + "/adapters"
 	deploymentsDir = rootDir + "/deployments"
-	serviceCachesDir = rootDir + "/service-caches"
+	serviceCachesDir = rootDir + "/shared-caches"
 	webhooksDir = rootDir + "/webhooks"
 	cliHiddenDir = rootDir + "/.cb-cli"
 	mapNameToIdDir = cliHiddenDir + "/map-name-to-id"

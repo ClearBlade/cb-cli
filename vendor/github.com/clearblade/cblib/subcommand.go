@@ -9,37 +9,25 @@ import (
 )
 
 type SubCommand struct {
-	name            string
-	usage           string
-	needsAuth       bool
-	mustBeInRepo    bool
-	mustNotBeInRepo bool
-	flags           flag.FlagSet
-	run             func(cmd *SubCommand, client *cb.DevClient, args ...string) error
-	example         string
+	name      string
+	usage     string
+	needsAuth bool
+	flags     flag.FlagSet
+	run       func(cmd *SubCommand, client *cb.DevClient, args ...string) error
+	example   string
 }
 
 var (
 	subCommands = map[string]*SubCommand{}
 )
 
-func (c *SubCommand) Execute( /*client *cb.DevClient,*/ args []string) error {
+func (c *SubCommand) Execute(args []string) error {
 	var client *cb.DevClient
 	var err error
 	c.flags.Parse(args)
 
 	if URL != "" && MsgURL != "" {
 		setupAddrs(URL, MsgURL)
-	}
-	if err = GoToRepoRootDir(); err != nil {
-		if c.mustBeInRepo {
-			return fmt.Errorf("You must be in an initialized repo to run the '%s' command. Error: %s\n", c.name, err.Error())
-		}
-		if err.Error() != SpecialNoCBMetaError {
-			return err
-		}
-	} else if c.mustNotBeInRepo {
-		return fmt.Errorf("You cannot run the '%s' command in an existing ClearBlade repository", c.name)
 	}
 
 	SetRootDir(".")

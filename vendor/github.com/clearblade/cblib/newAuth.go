@@ -85,27 +85,6 @@ func fillInTheBlanks(defaults *DefaultInfo) {
 	}
 }
 
-func GoToRepoRootDir() error {
-	var err error
-	whereIReallyAm, _ := os.Getwd()
-	for {
-		dirname, dirErr := os.Getwd()
-		if dirErr != nil {
-			return dirErr
-		}
-		if dirname == "/" || strings.HasSuffix(dirname, ":\\") {
-			os.Chdir(whereIReallyAm) //  go back in case this err is ignored
-			return fmt.Errorf(SpecialNoCBMetaError)
-		}
-		if IsInRepo() {
-			// Exit
-			return nil
-		} else if err = os.Chdir(".."); err != nil {
-			return fmt.Errorf("Error changing directory: %s", err.Error())
-		}
-	}
-}
-
 func makeClientFromMetaInfo() *cb.DevClient {
 	var newSchema bool
 	devToken := MetaInfo["token"].(string)

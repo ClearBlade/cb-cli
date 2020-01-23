@@ -31,12 +31,11 @@ func init() {
 	systemDotJSON = map[string]interface{}{}
 	svcCode = map[string]interface{}{}
 	myExportCommand := &SubCommand{
-		name:         "export",
-		usage:        usage,
-		needsAuth:    false,
-		mustBeInRepo: false,
-		run:          doExport,
-		example:      example,
+		name:      "export",
+		usage:     usage,
+		needsAuth: false,
+		run:       doExport,
+		example:   example,
 	}
 	myExportCommand.flags.StringVar(&URL, "url", "https://platform.clearblade.com", "Clearblade Platform URL where system is hosted")
 	myExportCommand.flags.StringVar(&MsgURL, "messaging-url", "platform.clearblade.com", "Clearblade messaging url for target system")
@@ -314,7 +313,7 @@ func pullAndWriteServiceCache(sysMeta *System_meta, cli *cb.DevClient, name stri
 func pullServiceCaches(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
 	theCaches, err := cli.GetAllServiceCacheMeta(sysMeta.Key)
 	if err != nil {
-		return nil, fmt.Errorf("Could not pull service caches out of system %s: %s", sysMeta.Key, err)
+		return nil, fmt.Errorf("Could not pull shared caches out of system %s: %s", sysMeta.Key, err)
 	}
 	for _, cache := range theCaches {
 		cacheName := cache["name"].(string)
@@ -455,7 +454,7 @@ func pullDevicesSchema(systemKey string, cli *cb.DevClient, writeThem bool) (map
 	for _, colIF := range deviceCustomColumns {
 		col := colIF.(map[string]interface{})
 		switch strings.ToLower(col["ColumnName"].(string)) {
-		case "device_key", "name", "system_key", "type", "state", "description", "enabled", "allow_key_auth", "active_key", "keys", "allow_certificate_auth", "certificate", "created_date", "last_active_date", "salt":
+		case "device_key", "name", "system_key", "type", "state", "description", "enabled", "allow_key_auth", "active_key", "keys", "allow_certificate_auth", "certificate", "created_date", "last_active_date", "salt", "cb_service_account", "cb_token", "cb_ttl_override":
 			continue
 		default:
 			columns = append(columns, col)
@@ -624,7 +623,6 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 	var err error
 	if inARepo {
 		sysMeta, err = getSysMeta()
-		os.Chdir("..")
 	} else {
 		sysMeta, err = pullSystemMeta(sysKey, cli)
 	}
@@ -634,7 +632,7 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 	// This was overwriting the rootdir set by cb_console
 	// Only set if it has not already been set
 	if !RootDirIsSet {
-		SetRootDir(strings.Replace(sysMeta.Name, " ", "_", -1))
+		SetRootDir(".")
 	}
 
 	if CleanUp {
@@ -667,7 +665,7 @@ func ExportSystem(cli *cb.DevClient, sysKey string) error {
 		return err
 	}
 
-	logInfo(fmt.Sprintf("System '%s' has been exported into directory %s\n", sysMeta.Name, strings.Replace(sysMeta.Name, " ", "_", -1)))
+	logInfo(fmt.Sprintf("System '%s' has been exported into the current directory\n", sysMeta.Name))
 	return nil
 }
 
