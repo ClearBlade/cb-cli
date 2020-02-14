@@ -230,6 +230,7 @@ cb-cli init
 	[-system-key = <SYSTEM_KEY>]
 	[-email = <DEVELOPER_EMAIL>]
 	[-password = <PASSWORD>]
+        [-skip-update-map-name-to-id]
 ```
 
 ### Description
