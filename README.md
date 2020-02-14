@@ -277,6 +277,9 @@ Once you’ve successfully executed the init command, you should cd into and liv
 - **password**  
    Your password for the ClearBlade platform system
 
+- **skip-update-map-name-to-id**
+  Set this to true to skip pulling the IDs for roles, collections, and users. This is useful if the system has lots of these types of assets and the goal is to retrieve the schema for the tables after initialization.
+
 You can specify all, some, or none of these options on the command line itself. For those that you didn’t specify, The system will prompt you for the values.
 
 ## Import

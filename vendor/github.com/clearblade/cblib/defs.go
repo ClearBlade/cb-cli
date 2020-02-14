@@ -77,6 +77,7 @@ var (
 	AllWebhooks                bool
 	AutoApprove                bool
 	TempDir                    string
+	SkipUpdateMapNameToIdFiles bool
 )
 
 var (

@@ -26,15 +26,15 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:86979bb6ffc28a4a4f063b7e8bd101354881404a2618af56592ebbd1ee2bb593"
+  digest = "1:6c265ea7ee179cb4ff8a3508c3daac9a5816c1fe9e81baedc3520358712ee08d"
   name = "github.com/clearblade/cblib"
   packages = [
     ".",
     "models",
   ]
   pruneopts = "UT"
-  revision = "9bf56356cad041950db1c07cd1823784cc3e173c"
-  version = "6.0.0"
+  revision = "d539f8449f033b8d963a8843d83572cf3e4de148"
+  version = "6.1.0"
 
 [[projects]]
   digest = "1:a39cd1a36849f0eab14d9351a72667f604a422c44c89f30f2dd25a2328415d26"

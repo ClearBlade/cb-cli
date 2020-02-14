@@ -34,6 +34,7 @@ func init() {
 	myInitCommand.flags.StringVar(&SystemKey, "system-key", "", "System Key for target system, ex 9b9eea9c0bda8896a3dab5aeec9601")
 	myInitCommand.flags.StringVar(&Email, "email", "", "Developer email for login")
 	myInitCommand.flags.StringVar(&Password, "password", "", "Developer password")
+	myInitCommand.flags.BoolVar(&SkipUpdateMapNameToIdFiles, "skip-update-map-name-to-id", false, "Set this to true to skip pulling the IDs for roles, collections, and users. This is useful if the system has lots of these types of assets and the goal is to retrieve the schema for the tables after initialization.")
 	AddCommand("init", myInitCommand)
 }
 
@@ -77,8 +78,10 @@ func reallyInit(cli *cb.DevClient, sysKey string) error {
 		return err
 	}
 
-	logInfo("Updating map name to ID files...")
-	updateMapNameToIDFiles(sysMeta, cli)
+	if !SkipUpdateMapNameToIdFiles {
+		logInfo("Updating map name to ID files...")
+		updateMapNameToIDFiles(sysMeta, cli)
+	}
 
 	fmt.Printf("System '%s' has been initialized in the current directory.\n", sysMeta.Name)
 	return nil
