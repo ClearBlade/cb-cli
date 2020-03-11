@@ -91,7 +91,6 @@ func createRoles(systemInfo map[string]interface{}, collectionsInfo []Collection
 }
 
 func createUsers(systemInfo map[string]interface{}, users []map[string]interface{}, client *cb.DevClient) ([]UserInfo, error) {
-	BLACKLISTED_USER_COLUMN := "user_id"
 	//  Create user columns first -- if any
 	sysKey := systemInfo["systemKey"].(string)
 	sysSec := systemInfo["systemSecret"].(string)
@@ -103,7 +102,8 @@ func createUsers(systemInfo map[string]interface{}, users []map[string]interface
 	for _, columnIF := range userCols {
 		column := columnIF.(map[string]interface{})
 		columnName := column["ColumnName"].(string)
-		if columnName == BLACKLISTED_USER_COLUMN {
+		if columnName == "user_id" || columnName == "cb_service_account" || columnName == "cb_ttl_override" || columnName == "cb_token" {
+			fmt.Printf("Warning: ignoring exported '%s' column\n", columnName)
 			continue
 		}
 		columnType := column["ColumnType"].(string)
@@ -396,8 +396,8 @@ func createDevices(systemInfo map[string]interface{}, client *cb.DevClient) ([]m
 			for _, columnIF := range deviceCols {
 				column := columnIF.(map[string]interface{})
 				columnName := column["ColumnName"].(string)
-				if columnName == "salt" {
-					fmt.Printf("Warning: ignoring exported 'salt' column\n")
+				if columnName == "salt" || columnName == "cb_service_account" || columnName == "cb_ttl_override" || columnName == "cb_token" {
+					fmt.Printf("Warning: ignoring exported '%s' column\n", columnName)
 					continue
 				}
 				columnType := column["ColumnType"].(string)
