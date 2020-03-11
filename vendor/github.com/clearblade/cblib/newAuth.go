@@ -141,11 +141,38 @@ func Authorize(defaults *DefaultInfo) (*cb.DevClient, error) {
 	fmt.Printf("Using ClearBlade platform at '%s'\n", cb.CB_ADDR)
 	fmt.Printf("Using ClearBlade messaging at '%s'\n", cb.CB_MSG_ADDR)
 	cli := cb.NewDevClient(Email, Password)
-	if err := cli.Authenticate(); err != nil {
+	info, err := cli.Authenticate()
+	if err != nil {
 		fmt.Printf("Authenticate failed: %s\n", err)
 		return nil, err
 	}
+	if info.IsTwoFactor {
+		prompt := getPromptBasedOnTwoFactorMethod(info.TwoFactorMethod)
+		code := getAnswer(getOneItem(buildPrompt(prompt, ""), false), "")
+		err := cli.VerifyAuthentication(cb.VerifyAuthenticationParams{
+			Code:            code,
+			TwoFactorMethod: info.TwoFactorMethod,
+			OtpID:           info.OtpID,
+			OtpIssued:       info.OtpIssued,
+		})
+		if err != nil {
+			fmt.Printf("Authentication verification failed: %s\n", err.Error())
+			return nil, err
+		}
+	}
 	return cli, nil
+}
+
+func getPromptBasedOnTwoFactorMethod(method string) string {
+	switch method {
+	case "email":
+		return "Please enter the code sent to your email inbox"
+	case "sms":
+		return "Please enter the code sent to your device"
+	case "email_sms":
+		return "Please enter the code sent to your email inbox and device"
+	}
+	return "Please enter the code"
 }
 
 func checkIfTokenHasExpired(client *cb.DevClient, systemKey string) (*cb.DevClient, error) {

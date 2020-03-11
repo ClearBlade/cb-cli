@@ -114,6 +114,21 @@ func (d *DevClient) DeleteSystem(s string) error {
 	return nil
 }
 
+func (d *DevClient) UpdateDevInfo(changes map[string]interface{}) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	resp, err := put(d, d.preamble()+"/userinfo", changes, creds, nil)
+	if err != nil {
+		return fmt.Errorf("Error updating developer info: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating developer info: %v", resp.Body)
+	}
+	return nil
+}
+
 //SetSystemName can change the name of the system
 func (d *DevClient) SetSystemName(system_key, system_name string) error {
 	creds, err := d.credentials()
@@ -367,11 +382,12 @@ func (d *DevClient) CreateRole(systemKey, role_id string) (interface{}, error) {
 		return nil, err
 	}
 	data := map[string]interface{}{
-		"name":          role_id,
-		"collections":   []map[string]interface{}{},
-		"topics":        []map[string]interface{}{},
-		"services":      []map[string]interface{}{},
-		"servicecaches": []map[string]interface{}{},
+		"name":              role_id,
+		"collections":       []map[string]interface{}{},
+		"externaldatabases": []map[string]interface{}{},
+		"topics":            []map[string]interface{}{},
+		"services":          []map[string]interface{}{},
+		"servicecaches":     []map[string]interface{}{},
 	}
 	resp, err := post(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
 	if err != nil {
@@ -387,11 +403,12 @@ func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]inter
 	data := map[string]interface{}{
 		"name": roleName,
 		"changes": map[string]interface{}{
-			"collections":   []map[string]interface{}{},
-			"topics":        []map[string]interface{}{},
-			"services":      []map[string]interface{}{},
-			"portals":       []map[string]interface{}{},
-			"servicecaches": []map[string]interface{}{},
+			"collections":       []map[string]interface{}{},
+			"topics":            []map[string]interface{}{},
+			"externaldatabases": []map[string]interface{}{},
+			"services":          []map[string]interface{}{},
+			"portals":           []map[string]interface{}{},
+			"servicecaches":     []map[string]interface{}{},
 		},
 	}
 	changes := data["changes"].(map[string]interface{})
@@ -410,6 +427,9 @@ func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]inter
 	}
 	if topics, ok := permissions["topics"]; ok {
 		changes["topics"] = topics
+	}
+	if externalDBs, ok := permissions["externaldatabases"]; ok {
+		changes["externaldatabases"] = externalDBs
 	}
 	if services, ok := permissions["services"]; ok {
 		changes["services"] = services
@@ -773,6 +793,34 @@ func (d *DevClient) AddCollectionToRole(systemKey, collection_id, role_id string
 	}
 	if resp.StatusCode != 200 {
 		return fmt.Errorf("Error updating a role to have a collection: %v", resp.Body)
+	}
+	return nil
+}
+
+func (d *DevClient) AddExternalDBToRole(systemKey, name, role_id string, level int) error {
+	creds, err := d.credentials()
+	if err != nil {
+		return err
+	}
+	data := map[string]interface{}{
+		"id": role_id,
+		"changes": map[string]interface{}{
+			"externaldatabases": []map[string]interface{}{
+				map[string]interface{}{
+					"itemInfo": map[string]interface{}{
+						"name": name,
+					},
+					"permissions": level,
+				},
+			},
+		},
+	}
+	resp, err := put(d, d.preamble()+"/user/"+systemKey+"/roles", data, creds, nil)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != 200 {
+		return fmt.Errorf("Error updating a role to have an external database: %v", resp.Body)
 	}
 	return nil
 }
