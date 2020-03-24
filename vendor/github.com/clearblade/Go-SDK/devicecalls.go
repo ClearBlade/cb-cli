@@ -522,9 +522,9 @@ func (dvc *DeviceClient) credentials() ([][]string, error) {
 //func (d *DeviceClient) AuthenticateDeviceWithKey(systemKey, name, activeKey string) (map[string]interface{}, error) {
 
 // "Login and logout"
-func (dvc *DeviceClient) Authenticate() error {
+func (dvc *DeviceClient) Authenticate() (*AuthResponse, error) {
 	_, err := dvc.AuthenticateDeviceWithKey(dvc.SystemKey, dvc.DeviceName, dvc.ActiveKey)
-	return err
+	return nil, err
 }
 
 func (dvc *DeviceClient) Logout() error {

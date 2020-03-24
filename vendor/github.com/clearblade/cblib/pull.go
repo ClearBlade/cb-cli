@@ -232,7 +232,6 @@ func PullAndWriteUsers(systemKey string, userName string, client *cb.DevClient, 
 		}
 
 	}
-	return nil, nil
 }
 
 func PullAndWriteCollection(systemInfo *System_meta, collectionName string, client *cb.DevClient, shouldExportRows, shouldExportItemId bool) error {

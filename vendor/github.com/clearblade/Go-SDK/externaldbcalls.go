@@ -8,12 +8,12 @@ const (
 	_EXTERNAL_DB_PREAMBLE = "/api/v/4/external-db/"
 )
 
-func (d *DevClient) AddExternalDBConnection(systemKey, name string, data map[string]interface{}) error {
-	return addExternalDBConnection(d, systemKey, name, data)
+func (d *DevClient) AddExternalDBConnection(systemKey string, data map[string]interface{}) error {
+	return addExternalDBConnection(d, systemKey, data)
 }
 
-func (u *UserClient) AddExternalDBConnection(systemKey, name string, data map[string]interface{}) error {
-	return addExternalDBConnection(u, systemKey, name, data)
+func (u *UserClient) AddExternalDBConnection(systemKey string, data map[string]interface{}) error {
+	return addExternalDBConnection(u, systemKey, data)
 }
 
 func (d *DevClient) GetAllExternalDBConnections(systemKey string) ([]interface{}, error) {
@@ -52,12 +52,12 @@ func (u *UserClient) PerformExternalDBOperation(systemKey, name string, operatio
 	return performExternalDBOperation(u, systemKey, name, operation)
 }
 
-func addExternalDBConnection(c cbClient, systemKey, name string, data map[string]interface{}) error {
+func addExternalDBConnection(c cbClient, systemKey string, data map[string]interface{}) error {
 	creds, err := c.credentials()
 	if err != nil {
 		return err
 	}
-	resp, err := post(c, _EXTERNAL_DB_PREAMBLE+systemKey+"/"+name, data, creds, nil)
+	resp, err := post(c, _EXTERNAL_DB_PREAMBLE+systemKey, data, creds, nil)
 	if err != nil {
 		return fmt.Errorf("Error adding external db connection: %v", err)
 	}

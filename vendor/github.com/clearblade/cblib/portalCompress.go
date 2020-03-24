@@ -90,8 +90,6 @@ func compressDatasources(portal *unstructured.Data, decompressedPortalDir string
 		}
 		return nil
 	})
-
-	return nil
 }
 
 func recursivelyFindKeyPath(queryKey string, data map[string]interface{}, keysToIgnoreInData map[string]interface{}, keyPath string) string {

@@ -141,11 +141,12 @@ func Authorize(defaults *DefaultInfo) (*cb.DevClient, error) {
 	fmt.Printf("Using ClearBlade platform at '%s'\n", cb.CB_ADDR)
 	fmt.Printf("Using ClearBlade messaging at '%s'\n", cb.CB_MSG_ADDR)
 	cli := cb.NewDevClient(Email, Password)
-	info, err := cli.Authenticate()
+	authResp, err := cli.Authenticate()
 	if err != nil {
 		fmt.Printf("Authenticate failed: %s\n", err)
 		return nil, err
 	}
+	info := authResp.DevResponse
 	if info.IsTwoFactor {
 		prompt := getPromptBasedOnTwoFactorMethod(info.TwoFactorMethod)
 		code := getAnswer(getOneItem(buildPrompt(prompt, ""), false), "")

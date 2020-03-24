@@ -42,7 +42,7 @@ const (
 //Client is a convience interface for API consumers, if they want to use the same functions for both developer users and unprivleged users
 type Client interface {
 	//session bookkeeping calls
-	Authenticate() error
+	Authenticate() (*AuthResponse, error)
 	Logout() error
 
 	//data calls
@@ -176,6 +176,20 @@ type CbReq struct {
 type CbResp struct {
 	Body       interface{}
 	StatusCode int
+}
+
+type AuthResponse struct {
+	DevResponse *DevAuthResponse
+}
+
+type DevAuthResponse struct {
+	DevToken          string `json:"dev_token"`
+	IsTwoFactor       bool   `json:"is_two_factor"`
+	NextStepURL       string `json:"next_step_url"`
+	IntermediateToken string `json:"intermediate_token"`
+	TwoFactorMethod   string `json:"two_factor_method"`
+	OtpID             string `json:"otp_id"`
+	OtpIssued         string `json:"otp_issued"`
 }
 
 func (u *UserClient) getHttpAddr() string {
@@ -389,43 +403,36 @@ func (d *DeviceClient) stopProxyToEdge() error {
 }
 
 //Authenticate retrieves a token from the specified Clearblade Platform
-func (u *UserClient) Authenticate() error {
-	return authenticate(u, u.Email, u.Password)
+func (u *UserClient) Authenticate() (*AuthResponse, error) {
+	if err := authenticate(u, u.Email, u.Password); err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
 
 func (u *UserClient) AuthAnon() error {
 	return authAnon(u)
 }
 
-type DevAuthResponse struct {
-	DevToken          string `json:"dev_token"`
-	IsTwoFactor       bool   `json:"is_two_factor"`
-	NextStepURL       string `json:"next_step_url"`
-	IntermediateToken string `json:"intermediate_token"`
-	TwoFactorMethod   string `json:"two_factor_method"`
-	OtpID             string `json:"otp_id"`
-	OtpIssued         string `json:"otp_issued"`
-}
-
 //Authenticate retrieves a token from the specified Clearblade Platform
-func (d *DevClient) Authenticate() (DevAuthResponse, error) {
+func (d *DevClient) Authenticate() (*AuthResponse, error) {
 	var creds [][]string
 	resp, err := post(d, d.preamble()+"/auth", map[string]interface{}{
 		"email":    d.Email,
 		"password": d.Password,
 	}, creds, nil)
 	if err != nil {
-		return DevAuthResponse{}, err
+		return nil, err
 	}
 	if resp.StatusCode != 200 {
-		return DevAuthResponse{}, cbErr.CreateResponseFromMap(resp.Body)
+		return nil, cbErr.CreateResponseFromMap(resp.Body)
 	}
 
 	body := resp.Body.(map[string]interface{})
-	var authResp DevAuthResponse
+	var devAuthResp *DevAuthResponse
 
 	if val, ok := body["is_two_factor"]; ok && val.(bool) {
-		authResp = DevAuthResponse{
+		devAuthResp = &DevAuthResponse{
 			DevToken:          body["dev_token"].(string),
 			IsTwoFactor:       body["is_two_factor"].(bool),
 			NextStepURL:       body["next_step_url"].(string),
@@ -435,7 +442,7 @@ func (d *DevClient) Authenticate() (DevAuthResponse, error) {
 			OtpIssued:         body["otp_issued"].(string),
 		}
 	} else {
-		authResp = DevAuthResponse{
+		devAuthResp = &DevAuthResponse{
 			DevToken:          body["dev_token"].(string),
 			IsTwoFactor:       false,
 			NextStepURL:       "",
@@ -447,17 +454,19 @@ func (d *DevClient) Authenticate() (DevAuthResponse, error) {
 	}
 
 	var token string
-	if authResp.IsTwoFactor {
-		token = authResp.IntermediateToken
+	if devAuthResp.IsTwoFactor {
+		token = devAuthResp.IntermediateToken
 	} else {
-		token = authResp.DevToken
+		token = devAuthResp.DevToken
 	}
 
 	if token == "" {
-		return DevAuthResponse{}, fmt.Errorf("Token not present in response from platform %+v", resp.Body)
+		return nil, fmt.Errorf("Token not present in response from platform %+v", resp.Body)
 	}
 	d.setToken(token)
-	return authResp, nil
+	return &AuthResponse{
+		DevResponse: devAuthResp,
+	}, nil
 }
 
 type VerifyAuthenticationParams struct {
