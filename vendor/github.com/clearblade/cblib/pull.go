@@ -53,6 +53,7 @@ func init() {
 	pullCommand.flags.BoolVar(&AllTimers, "all-timers", false, "pull all timers from system")
 	pullCommand.flags.BoolVar(&AllServiceCaches, "all-shared-caches", false, "pull all shared caches from system")
 	pullCommand.flags.BoolVar(&AllWebhooks, "all-webhooks", false, "pull all webhooks from system")
+	pullCommand.flags.BoolVar(&AllExternalDatabases, "all-external-databases", false, "pull all external databases from system")
 
 	pullCommand.flags.StringVar(&CollectionSchema, "collectionschema", "", "Name of collection schema to pull")
 	pullCommand.flags.StringVar(&ServiceName, "service", "", "Name of service to pull")
@@ -72,6 +73,7 @@ func init() {
 	pullCommand.flags.StringVar(&DeploymentName, "deployment", "", "Name of deployment to pull")
 	pullCommand.flags.StringVar(&ServiceCacheName, "shared-cache", "", "Name of shared cache to pull")
 	pullCommand.flags.StringVar(&WebhookName, "webhook", "", "Name of webhook to pull")
+	pullCommand.flags.StringVar(&ExternalDatabaseName, "external-database", "", "Name of external database to pull")
 
 	pullCommand.flags.IntVar(&MaxRetries, "max-retries", 3, "Number of retries to attempt if a request fails")
 

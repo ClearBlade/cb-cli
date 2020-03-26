@@ -16,7 +16,7 @@ const (
 	msgurlPrompt    = "Messaging URL"
 	systemKeyPrompt = "System Key"
 	emailPrompt     = "Developer Email"
-	passwordPrompt  = "Password: "
+	passwordPrompt  = "Developer password: "
 )
 
 func init() {
@@ -30,7 +30,7 @@ func init() {
 func getOneItem(prompt string, isASecret bool) string {
 	reader := bufio.NewReader(os.Stdin)
 	if isASecret {
-		pw, err := speakeasy.Ask("Developer password: ")
+		pw, err := speakeasy.Ask(prompt)
 		fmt.Printf("\n")
 		if err != nil {
 			fmt.Printf("Error getting password: %s\n", err.Error())

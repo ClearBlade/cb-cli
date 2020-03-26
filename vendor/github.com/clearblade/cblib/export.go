@@ -342,6 +342,35 @@ func pullWebhooks(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interfa
 	return theHooks, nil
 }
 
+func pullExternalDatabases(sysMeta *System_meta, cli *cb.DevClient) ([]map[string]interface{}, error) {
+	theExternalDatabases, err := cli.GetAllExternalDBConnections(sysMeta.Key)
+	if err != nil {
+		return nil, fmt.Errorf("Could not pull external databases out of system %s: %s", sysMeta.Key, err)
+	}
+	rtn := make([]map[string]interface{}, 0)
+	for _, db := range theExternalDatabases {
+		dbName := db.(map[string]interface{})["name"].(string)
+		fmt.Printf(" %s", dbName)
+		fullDBMetadata, err := pullAndWriteExternalDatabase(sysMeta, cli, dbName)
+		if err != nil {
+			return nil, err
+		}
+		rtn = append(rtn, fullDBMetadata)
+	}
+	return rtn, nil
+}
+
+func pullAndWriteExternalDatabase(sysMeta *System_meta, cli *cb.DevClient, name string) (map[string]interface{}, error) {
+	fullDBMetadata, err := cli.GetExternalDBConnection(sysMeta.Key, name)
+	if err != nil {
+		return nil, fmt.Errorf("Could not pull external database metadata for '%s': %s", name, err.Error())
+	}
+	if err := writeExternalDatabase(name, fullDBMetadata); err != nil {
+		return nil, fmt.Errorf("Failed to write external database '%s' to file system: %s", name, err.Error())
+	}
+	return fullDBMetadata, nil
+}
+
 func pullAndWriteWebhook(sysMeta *System_meta, cli *cb.DevClient, name string) (map[string]interface{}, error) {
 	hook, err := cli.GetWebhook(sysMeta.Key, name)
 	if err != nil {

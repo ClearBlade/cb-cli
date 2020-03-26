@@ -268,6 +268,22 @@ func createWebhooks(systemInfo map[string]interface{}, client *cb.DevClient) ([]
 	return hooks, nil
 }
 
+func createExternalDatabases(systemInfo map[string]interface{}, client *cb.DevClient) ([]map[string]interface{}, error) {
+	sysKey := systemInfo["systemKey"].(string)
+	externalDatabases, err := getExternalDatabases()
+	if err != nil {
+		return nil, err
+	}
+	for _, externalDB := range externalDatabases {
+		fmt.Printf(" %s", externalDB["name"].(string))
+		err := createExternalDatabase(sysKey, externalDB, client)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return externalDatabases, nil
+}
+
 func createServices(systemInfo map[string]interface{}, usersInfo []UserInfo, client *cb.DevClient) error {
 	sysKey := systemInfo["systemKey"].(string)
 	services, err := getServices()
@@ -730,6 +746,11 @@ func importAllAssets(systemInfo map[string]interface{}, users []map[string]inter
 	if _, err := createWebhooks(systemInfo, cli); err != nil {
 		//  Don't return an err, just warn -- so we keep back compat with old systems
 		fmt.Printf("Could not create webhooks: %s", err.Error())
+	}
+	logInfo("Importing external databases...")
+	if _, err := createExternalDatabases(systemInfo, cli); err != nil {
+		//  Don't return an err, just warn -- so we keep back compat with old systems
+		fmt.Printf("Could not create external databases: %s", err.Error())
 	}
 
 	fmt.Printf(" Done\n")

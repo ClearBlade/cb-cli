@@ -372,5 +372,23 @@ func pullAssets(systemInfo *System_meta, client *cb.DevClient, assets AffectedAs
 		fmt.Printf("\n")
 	}
 
+	if assets.AllExternalDatabases || assets.AllAssets {
+		didSomething = true
+		logInfo("Pulling all external databases")
+		if _, err := pullExternalDatabases(systemInfo, client); err != nil {
+			logError(fmt.Sprintf("Failed to pull all external databases. %s", err.Error()))
+		}
+		fmt.Printf("\n")
+	}
+
+	if assets.ExternalDatabaseName != "" {
+		didSomething = true
+		logInfo(fmt.Sprintf("Pulling external database %+s\n", ExternalDatabaseName))
+		if _, err := pullAndWriteExternalDatabase(systemInfo, client, ExternalDatabaseName); err != nil {
+			logError(fmt.Sprintf("Failed to pull external database. %s", err.Error()))
+		}
+		fmt.Printf("\n")
+	}
+
 	return didSomething, nil
 }

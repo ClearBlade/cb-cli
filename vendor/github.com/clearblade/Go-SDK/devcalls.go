@@ -473,6 +473,12 @@ func (d *DevClient) UpdateRole(systemKey, roleName string, role map[string]inter
 	if manageusers, ok := permissions["manageusers"]; ok {
 		changes["manageusers"] = manageusers
 	}
+	if allexternaldatabases, ok := permissions["allexternaldatabases"]; ok {
+		changes["allexternaldatabases"] = allexternaldatabases
+	}
+	if externaldatabases, ok := permissions["externaldatabases"]; ok {
+		changes["externaldatabases"] = externaldatabases
+	}
 	// Just to be safe, this is silly
 	data["changes"] = changes
 	creds, err := d.credentials()

@@ -55,6 +55,7 @@ func init() {
 	pushCommand.flags.BoolVar(&AllDeployments, "all-deployments", false, "push all of the local deployments")
 	pushCommand.flags.BoolVar(&AllServiceCaches, "all-shared-caches", false, "push all of the local shared caches")
 	pushCommand.flags.BoolVar(&AllWebhooks, "all-webhooks", false, "push all of the local webhooks")
+	pushCommand.flags.BoolVar(&AllExternalDatabases, "all-external-databases", false, "push all of the local external databases")
 	pushCommand.flags.BoolVar(&AutoApprove, "auto-approve", false, "automatically answer yes to all prompts. Useful for creating new entities when they aren't found in the platform")
 
 	pushCommand.flags.StringVar(&CollectionSchema, "collectionschema", "", "Name of collection schema to push")
@@ -75,6 +76,7 @@ func init() {
 	pushCommand.flags.StringVar(&DeploymentName, "deployment", "", "Name of deployment to push")
 	pushCommand.flags.StringVar(&ServiceCacheName, "shared-cache", "", "Name of shared cache to push")
 	pushCommand.flags.StringVar(&WebhookName, "webhook", "", "Name of webhook to push")
+	pushCommand.flags.StringVar(&ExternalDatabaseName, "external-database", "", "Name of external database to push")
 
 	pushCommand.flags.IntVar(&MaxRetries, "max-retries", 3, "Number of retries to attempt if a request fails")
 	pushCommand.flags.IntVar(&DataPageSize, "data-page-size", DataPageSizeDefault, "Number of rows in a collection to push/import at a time")
@@ -488,6 +490,20 @@ func pushAllWebhooks(systemInfo *System_meta, client *cb.DevClient) error {
 	return nil
 }
 
+func pushAllExternalDatabases(systemInfo *System_meta, client *cb.DevClient) error {
+	extDBs, err := getExternalDatabases()
+	if err != nil {
+		return err
+	}
+	for _, extDB := range extDBs {
+		fmt.Printf("Pushing external database %+s\n", extDB["name"].(string))
+		if err := updateExternalDatabase(systemInfo.Key, extDB, client); err != nil {
+			return fmt.Errorf("Error updating external database '%+v': %s\n", extDB, err.Error())
+		}
+	}
+	return nil
+}
+
 func pushOneWebhook(systemInfo *System_meta, client *cb.DevClient, name string) error {
 	fmt.Printf("Pushing webhook %+s\n", name)
 	hook, err := getWebhook(name)
@@ -495,6 +511,15 @@ func pushOneWebhook(systemInfo *System_meta, client *cb.DevClient, name string) 
 		return err
 	}
 	return updateWebhook(systemInfo.Key, hook, client)
+}
+
+func pushOneExternalDatabase(systemInfo *System_meta, client *cb.DevClient, name string) error {
+	fmt.Printf("Pushing external database %+s\n", name)
+	db, err := getExternalDatabase(name)
+	if err != nil {
+		return err
+	}
+	return updateExternalDatabase(systemInfo.Key, db, client)
 }
 
 func updateServiceCache(systemKey string, cache map[string]interface{}, cli *cb.DevClient) error {
@@ -552,6 +577,37 @@ func updateWebhook(systemKey string, hook map[string]interface{}, cli *cb.DevCli
 		delete(hook, "name")
 		delete(hook, "service_name")
 		return cli.UpdateWebhook(systemKey, hookName, hook)
+	}
+
+	return nil
+}
+
+func updateExternalDatabase(systemKey string, obj map[string]interface{}, cli *cb.DevClient) error {
+	name := obj["name"].(string)
+
+	_, err := cli.GetExternalDBConnection(systemKey, name)
+	if err != nil {
+		// external database DNE
+		fmt.Printf("Could not find external database %s\n", name)
+		c, err := confirmPrompt(fmt.Sprintf("Would you like to create a new external database named %s?", name))
+		if err != nil {
+			return err
+		} else {
+			if c {
+				if err := createExternalDatabase(systemKey, obj, cli); err != nil {
+					return fmt.Errorf("Could not create external database %s: %s", name, err.Error())
+				} else {
+					fmt.Printf("Successfully created new external database %s\n", name)
+				}
+			} else {
+				fmt.Printf("External database will not be created.\n")
+			}
+		}
+	} else {
+		// not allowed to update these fields
+		delete(obj, "name")
+		delete(obj, "dbtype")
+		return cli.UpdateExternalDBConnection(systemKey, name, obj)
 	}
 
 	return nil
@@ -893,6 +949,20 @@ func doPush(cmd *SubCommand, client *cb.DevClient, args ...string) error {
 		}
 	}
 
+	if AllExternalDatabases || AllAssets {
+		didSomething = true
+		if err := pushAllExternalDatabases(systemInfo, client); err != nil {
+			return err
+		}
+	}
+
+	if ExternalDatabaseName != "" {
+		didSomething = true
+		if err := pushOneExternalDatabase(systemInfo, client, ExternalDatabaseName); err != nil {
+			return err
+		}
+	}
+
 	if !didSomething {
 		fmt.Printf("Nothing to push -- you must specify something to push (ie, -service=<svc_name>)\n")
 	}
@@ -1164,6 +1234,22 @@ func convertPermissionsStructure(in map[string]interface{}, collectionsInfo []Co
 				}
 				out["portals"] = removeDuplicatePermissions(ptls, "name")
 			}
+		case "ExternalDatabases":
+			if valIF != nil {
+				externalDatabases, err := getASliceOfMaps(valIF)
+				if err != nil {
+					fmt.Printf("Bad format for externalDatabases permissions, not a slice of maps: %T\n", valIF)
+					os.Exit(1)
+				}
+				extDbs := make([]map[string]interface{}, len(externalDatabases))
+				for idx, mapVal := range externalDatabases {
+					extDbs[idx] = map[string]interface{}{
+						"itemInfo":    map[string]interface{}{"name": mapVal["Name"]},
+						"permissions": mapVal["Level"],
+					}
+				}
+				out["externaldatabases"] = removeDuplicatePermissions(extDbs, "name")
+			}
 		case "Push":
 			if valIF != nil {
 				val := getMap(valIF)
@@ -1230,6 +1316,11 @@ func convertPermissionsStructure(in map[string]interface{}, collectionsInfo []Co
 			if valIF != nil {
 				val := getMap(valIF)
 				out["manageusers"] = map[string]interface{}{"permissions": val["Level"]}
+			}
+		case "AllExternalDatabases":
+			if valIF != nil {
+				val := getMap(valIF)
+				out["allexternaldatabases"] = map[string]interface{}{"permissions": val["Level"]}
 			}
 		default:
 
@@ -1493,6 +1584,19 @@ func createWebhook(systemKey string, hook map[string]interface{}, client *cb.Dev
 	hookName := hook["name"].(string)
 	if err := client.CreateWebhook(systemKey, hookName, hook); err != nil {
 		return fmt.Errorf("Could not create webhook %s: %s", hookName, err.Error())
+	}
+	return nil
+}
+
+func createExternalDatabase(systemKey string, obj map[string]interface{}, client *cb.DevClient) error {
+	name := obj["name"].(string)
+	// add a new line before prompting for password
+	fmt.Println("")
+	password := getOneItem(fmt.Sprintf("Password for external database '%s'", name), true)
+	obj["credentials"].(map[string]interface{})["password"] = password
+
+	if err := client.AddExternalDBConnection(systemKey, obj); err != nil {
+		return fmt.Errorf("Could not create external database %s: %s", name, err.Error())
 	}
 	return nil
 }
