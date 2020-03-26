@@ -1,3 +1,3 @@
 package main
 
-var cbCliVersion = "master"
+var cbCliVersion = "builtFromSource"
