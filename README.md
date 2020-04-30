@@ -361,6 +361,10 @@ cb-cli push
 	[-portal=<PORTAL_NAME>]
 	[-plugin=<PLUGIN_NAME>]
 	[-adapter=<ADAPTER_NAME>]
+	[-deployment=<DEPLOYMENT_NAME>]
+	[-shared-cache=<SHARED_CACHE_NAME>]
+	[-webhook=<WEBHOOK_NAME>]
+	[-external-database=<EXTERNAL_DATABASE_NAME>]
 ```
 
 ### Description
@@ -488,6 +492,10 @@ cb-cli pull
 	[-portal=<PORTAL_NAME>]
 	[-plugin=<PLUGIN_NAME>]
 	[-adapter=<ADAPTER_NAME>]
+	[-deployment=<DEPLOYMENT_NAME>]
+	[-shared-cache=<SHARED_CACHE_NAME>]
+	[-webhook=<WEBHOOK_NAME>]
+	[-external-database=<EXTERNAL_DATABASE_NAME>]
 ```
 
 ### Description
