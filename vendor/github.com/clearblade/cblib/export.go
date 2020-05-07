@@ -455,10 +455,9 @@ func pullEdgesSchema(systemKey string, cli *cb.DevClient, writeThem bool) (map[s
 	sort.Strings(DefaultEdgeColumns)
 	for _, colIF := range resp {
 		col := colIF.(map[string]interface{})
-		switch strings.ToLower(col["ColumnName"].(string)) {
-		case "edge_key", "novi_system_key", "system_key", "system_secret", "token", "name", "description", "location", "mac_address", "public_addr", "public_port", "local_addr", "local_port", "broker_port", "broker_tls_port", "broker_ws_port", "broker_wss_port", "broker_auth_port", "broker_ws_auth_port", "first_talked", "last_talked", "communication_style", "last_seen_version", "policy_name", "resolver_func", "sync_edge_tables", "last_seen_architecture", "last_seen_os":
+		if isDefaultColumn(DefaultEdgeColumns, col["ColumnName"].(string)) {
 			continue
-		default:
+		} else {
 			columns = append(columns, col)
 		}
 	}

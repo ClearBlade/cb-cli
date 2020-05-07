@@ -11,6 +11,25 @@ const (
 	_WEBHOOK_PREAMBLE         = "/admin/v/4/webhook"
 )
 
+func (d *DevClient) GetRunningServices(systemKey string) (map[string]interface{}, error) {
+	creds, err := d.credentials()
+	if err != nil {
+		return nil, err
+	}
+	resp, err := get(d, "/codeadmin/v/3/running/"+systemKey, nil, creds, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting services: %v", err)
+	}
+	if resp.StatusCode != 200 {
+		return nil, fmt.Errorf("Error getting services: %v", resp.Body)
+	}
+	theGoods, isGood := resp.Body.(map[string]interface{})
+	if !isGood {
+		return nil, fmt.Errorf("Error getting running services; expected map got %T", resp.Body)
+	}
+	return theGoods, nil
+}
+
 func GetServiceNames(c cbClient, systemKey string) ([]string, error) {
 	creds, err := c.credentials()
 	if err != nil {

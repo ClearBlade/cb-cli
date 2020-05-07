@@ -2,6 +2,7 @@ package GoSDK
 
 import (
 	"crypto/tls"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -62,6 +63,27 @@ func (u *UserClient) InitializeMQTTWithCallback(clientid string, ignore string, 
 	return nil
 }
 
+func (u *UserClient) AuthenticateMQTT(username, password, systemKey, systemSecret string, timeout int, ssl *tls.Config) error {
+	mqc, err := newMqttAuthClient(username, password, systemKey, systemSecret, timeout, u.MqttAuthAddr, ssl)
+	if err != nil {
+		return err
+	}
+	subChan, err := subscribe(mqc, "authMe", 0)
+	if err != nil {
+		return err
+	}
+	select {
+	case data := <-subChan:
+		authData := data.Payload
+		tokLen := binary.BigEndian.Uint16(authData[:2])
+		tok := string(authData[2 : tokLen+2])
+		u.UserToken = tok
+	case <-time.After(60 * time.Second):
+		return fmt.Errorf("Timed out waiting for MQTT auth response")
+	}
+	return nil
+}
+
 //InitializeMQTT allocates the mqtt client for the developer. the second argument is a
 //the systemkey you wish to use for authenticating with the message broker
 //topics are isolated across systems, so in order to communicate with a specific
@@ -84,6 +106,27 @@ func (d *DevClient) InitializeMQTTWithCallback(clientid, systemkey string, timeo
 	return nil
 }
 
+func (d *DevClient) AuthenticateMQTT(username, password, systemKey, systemSecret string, timeout int, ssl *tls.Config) error {
+	mqc, err := newMqttAuthClient(username, password, systemKey, systemSecret, timeout, d.MqttAuthAddr, ssl)
+	if err != nil {
+		return err
+	}
+	subChan, err := subscribe(mqc, "authMe", 0)
+	if err != nil {
+		return err
+	}
+	select {
+	case data := <-subChan:
+		authData := data.Payload
+		tokLen := binary.BigEndian.Uint16(authData[:2])
+		tok := string(authData[2 : tokLen+2])
+		d.DevToken = tok
+	case <-time.After(60 * time.Second):
+		return fmt.Errorf("Timed out waiting for MQTT auth response")
+	}
+	return nil
+}
+
 //InitializeMQTT allocates the mqtt client for the user. an empty string can be passed as the second argument for the user client
 func (d *DeviceClient) InitializeMQTT(clientid string, ignore string, timeout int, ssl *tls.Config, lastWill *LastWillPacket) error {
 	mqc, err := newMqttClient(d.DeviceToken, d.SystemKey, d.SystemSecret, clientid, timeout, d.MqttAddr, ssl, lastWill)
@@ -100,6 +143,28 @@ func (d *DeviceClient) InitializeMQTTWithCallback(clientid string, ignore string
 		return err
 	}
 	d.MQTTClient = mqc
+	return nil
+}
+
+func (d *DeviceClient) AuthenticateMQTT(username, password, systemKey, systemSecret string, timeout int, ssl *tls.Config) error {
+	mqc, err := newMqttAuthClient(username, password, systemKey, systemSecret, timeout, d.MqttAuthAddr, ssl)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Here 1\n")
+	subChan, err := subscribe(mqc, "authMe", 2)
+	if err != nil {
+		return err
+	}
+	select {
+	case data := <-subChan:
+		authData := data.Payload
+		tokLen := binary.BigEndian.Uint16(authData[:2])
+		tok := string(authData[2 : tokLen+2])
+		d.DeviceToken = tok
+	case <-time.After(60 * time.Second):
+		return fmt.Errorf("Timed out waiting for MQTT auth response")
+	}
 	return nil
 }
 
@@ -264,6 +329,28 @@ func newMqttClientWithCallbacks(token, systemkey, systemsecret, clientid string,
 	}
 	cli := mqtt.NewClient(o)
 	mqc := &mqttBaseClient{cli, address, token, systemkey, systemsecret, clientid, timeout}
+	ret := mqc.Connect()
+	ret.Wait()
+	return mqc, ret.Error()
+}
+
+func newMqttAuthClient(username, password, systemkey, systemsecret string, timeout int, address string, ssl *tls.Config) (MqttClient, error) {
+	o := mqtt.NewClientOptions()
+	o.SetAutoReconnect(false)
+	o.SetConnectionLostHandler(nil)
+	if ssl != nil {
+		o.AddBroker("tls://" + address)
+		o.SetTLSConfig(ssl)
+	} else {
+		o.AddBroker("tcp://" + address)
+	}
+	clientid := username + ":" + password
+	o.SetClientID(clientid)
+	o.SetUsername(systemkey)
+	o.SetPassword(systemsecret)
+	o.SetConnectTimeout(time.Duration(timeout) * time.Second)
+	cli := mqtt.NewClient(o)
+	mqc := &mqttBaseClient{cli, address, "", systemkey, systemsecret, clientid, timeout}
 	ret := mqc.Connect()
 	ret.Wait()
 	return mqc, ret.Error()

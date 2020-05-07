@@ -4,6 +4,6 @@ cblib is a centralized library for structuring and processing ClearBlade resourc
 
 # Development Flow
 
-Branch from develop
-Run tests
-Pull Request into develop
+- Branch from develop
+- Run tests with `go test ./...`
+- Pull Request into develop
