@@ -398,9 +398,10 @@ func pushAllEdges(systemInfo *System_meta, client *cb.DevClient) error {
 		return err
 	}
 	for _, edge := range edges {
-		fmt.Printf("Pushing edge %+s\n", edge["name"].(string))
+		edgeName := edge["name"].(string) // storing this here since updateEdge deletes "name" from the map
+		fmt.Printf("Pushing edge %+s\n", edgeName)
 		if err := updateEdge(systemInfo.Key, edge, client); err != nil {
-			return fmt.Errorf("Error updating edge '%s': %s\n", edge["name"].(string), err.Error())
+			return fmt.Errorf("Error updating edge '%s': %s\n", edgeName, err.Error())
 		}
 	}
 	return nil
@@ -1362,7 +1363,7 @@ func getMap(val interface{}) map[string]interface{} {
 }
 
 func updateUser(meta *System_meta, user map[string]interface{}, client *cb.DevClient) error {
-
+	delete(user, "cb_token")
 	if email, ok := user["email"].(string); !ok {
 		return fmt.Errorf("Missing user email %+v", user)
 	} else {

@@ -48,6 +48,7 @@ func init() {
 	pullCommand.flags.BoolVar(&AllUsers, "all-users", false, "pull all users from system")
 	pullCommand.flags.BoolVar(&UserSchema, "userschema", false, "pull user table schema")
 	pullCommand.flags.BoolVar(&DeviceSchema, "deviceschema", false, "pull device table schema")
+	pullCommand.flags.BoolVar(&EdgeSchema, "edgeschema", false, "pull edges table schema")
 	pullCommand.flags.BoolVar(&AllAssets, "all", false, "pull all assets from system")
 	pullCommand.flags.BoolVar(&AllTriggers, "all-triggers", false, "pull all triggers from system")
 	pullCommand.flags.BoolVar(&AllTimers, "all-timers", false, "pull all timers from system")

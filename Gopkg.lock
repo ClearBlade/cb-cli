@@ -26,15 +26,15 @@
   version = "v1.0"
 
 [[projects]]
-  digest = "1:8b6ca1a3f54f67035e3306bb6008d4657aabe26fe19bbd7c23ed4ed128d9c2d1"
+  branch = "6-3-2020-Jim-found-bugs"
+  digest = "1:9dd14c99ddb223eba83d4eb6b0cb5fe2f069302319f887e0c1a6eaece62f91c2"
   name = "github.com/clearblade/cblib"
   packages = [
     ".",
     "models",
   ]
   pruneopts = "UT"
-  revision = "41bc557d67e8993af805c33daaa04ca49e22ba6c"
-  version = "6.4.0"
+  revision = "d0b4de139191d4a4797bd1a9b0e1b78e59e9c82b"
 
 [[projects]]
   digest = "1:a39cd1a36849f0eab14d9351a72667f604a422c44c89f30f2dd25a2328415d26"
