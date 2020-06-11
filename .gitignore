@@ -349,5 +349,7 @@ $RECYCLE.BIN/
 
 ### CUSTOM ###
 
-release_binaries/
+/main
+/cb-cli
+/release_binaries/
 
