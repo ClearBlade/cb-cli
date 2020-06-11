@@ -343,3 +343,11 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/go,vim,macos,linux,windows,notepadpp,sublimetext,visualstudiocode,executable,archive,compressedarchive
+
+
+
+
+### CUSTOM ###
+
+release_binaries/
+
