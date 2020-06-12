@@ -7,5 +7,3 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
 )
-
-replace github.com/clearblade/cblib => ../cblib
