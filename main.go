@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	cblib.initFlags()
+	cblib.InitFlags()
 
 	theArgs := os.Args
 	if len(theArgs) < 2 {
