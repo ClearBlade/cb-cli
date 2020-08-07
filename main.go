@@ -7,6 +7,8 @@ import (
 )
 
 func main() {
+	cblib.InitFlags()
+
 	theArgs := os.Args
 	if len(theArgs) < 2 {
 		fmt.Printf("No command provided\n")
@@ -30,7 +32,6 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-
 
 	if len(theArgs) >= 3 {
 		if theArgs[2] == "help" || theArgs[2] == "--help" {
