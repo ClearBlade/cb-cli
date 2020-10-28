@@ -2,10 +2,14 @@ github.com/bgentry/speakeasy v0.1.0 h1:ByYyxL9InA1OWqxJqqp2A5pYHUrCiAL6K3J+LKSsQ
 github.com/bgentry/speakeasy v0.1.0/go.mod h1:+zsyZBPWlz7T6j88CTgSN5bM796AkVf0kBD4zp0CCIs=
 github.com/clearblade/Go-SDK v0.0.0-20200721221241-d0b957008a27 h1:XZ4DikfgdZF23uecFldnp2CeBoJFlvw7w04+cVYFrzc=
 github.com/clearblade/Go-SDK v0.0.0-20200721221241-d0b957008a27/go.mod h1:KByFsQUrafel53AhheIy5KflUpcqPeyPFqMQNwuwuS0=
+github.com/clearblade/Go-SDK v0.0.0-20201017144104-06254e31ee03 h1:p0waG/hXqpL3NNMubXUxfrGeoHlNrLGun3l3AlGoXt8=
+github.com/clearblade/Go-SDK v0.0.0-20201017144104-06254e31ee03/go.mod h1:KByFsQUrafel53AhheIy5KflUpcqPeyPFqMQNwuwuS0=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c h1:KnJkP9fLFNyoV+pU3mXiRW5oLJdgDzVM/hWQhc0Scas=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c/go.mod h1:Pbu2bhtMVaWboL3mRaFQmGs8USG8uG4EAW2LB3SfCME=
 github.com/clearblade/cblib v0.0.0-20200807162429-e34ad00f38bc h1:Rr1dWBJgGSvKKIlZ4R/hjaVK/dVmjWUg0qYT00fT/Ps=
 github.com/clearblade/cblib v0.0.0-20200807162429-e34ad00f38bc/go.mod h1:43wJodefiS8N9gMqMmalfsGvzAaie1wbldeBkdE4meE=
+github.com/clearblade/cblib v0.0.0-20201028184100-0c0b90e1cbf3 h1:Li2RJOU2C7sSevRphbZJWpPpRAS8mP8CvUg9qNBEpqY=
+github.com/clearblade/cblib v0.0.0-20201028184100-0c0b90e1cbf3/go.mod h1:aOBc0u6y2ZIpoj/hPkL6b8a3aISC1kNzEx3f6NIUW5I=
 github.com/clearblade/go-utils v1.1.4 h1:/pcYKVTAJ5RcXRZnVENNdUZUKCoZRa3OVhbyer/aHiY=
 github.com/clearblade/go-utils v1.1.4/go.mod h1:neQH1vakc/9y8BORrnWgSnBAQFBCS2U8OT3f47oM/YU=
 github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 h1:/T6Cq3XSwmuFoN6GDoPWgGpNW5X0Idx49DbfQazRUOQ=
@@ -32,6 +36,8 @@ github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMyw
 github.com/google/go-cmp v0.4.0 h1:xsAVV57WRhGj6kEIi8ReJzQlHHqcBYCElAvkovg3B/4=
 github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
+github.com/mitchellh/mapstructure v1.3.3 h1:SzB1nHZ2Xi+17FP0zVQBHIZqvwRN9408fJO8h+eeNA8=
+github.com/mitchellh/mapstructure v1.3.3/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/nxadm/tail v1.4.4 h1:DQuhQpB1tVlglWS2hLQ5OV6B5r8aGxSrPc5Qo6uTN78=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
 github.com/onsi/ginkgo v1.6.0/go.mod h1:lLunBs/Ym6LB5Z9jYTR76FiuTmxDTDusOGeTQH+WWjE=
