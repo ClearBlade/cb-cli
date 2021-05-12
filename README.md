@@ -156,6 +156,7 @@ After exporting the system, .cbmeta is created in the exported folder as shown a
 - [update](#update)
 - [create](#create)
 - [delete](#delete)
+- [remote](#remote)
 
 ## Export
 
@@ -178,34 +179,34 @@ This command is used to download all of your system assets to your current direc
 
 ### Options
 
-- **url**  
+- **url**
    The full url of the ClearBlade platform eg: https://platform.clearblade.com
 
-- **system-key**  
+- **system-key**
    The system key for the system being brought local
 
-- **messaging-url**  
+- **messaging-url**
    The messaging url for the system being brought local
 
-- **email**  
+- **email**
    The email address of the developer working on the system (you)
 
-- **cleanup**  
+- **cleanup**
    Clears all directories prior to performing the export.
 
-- **exportrows**  
+- **exportrows**
    This not only exports the collection objects, but also export all “rows” (or items) in each collection. Be very careful when using this option as it may be unfeasable to export very large collections.
 
-- **exportusers**  
+- **exportusers**
    This exports the data (minus passwords) from the system’s users table. If not present on the command line, only the users table schema is exported.
 
-- **exportitemid**  
+- **exportitemid**
    When exporting data collections, this option indicates that the item_id column should also be exported with each row.
 
-- **sort-collections**  
+- **sort-collections**
    This option, when specified, will sort the rows of an exported data collection by item_id. This is useful when using a version control system and you wish to view the differences between two versions of a data collection.
 
-- **data-page-size**  
+- **data-page-size**
    When exporting the rows of a data collection and there are a large number of rows (> 100k), it is adviseable to increase the number of rows constituting a page. This will improve the performance of the export by decreasing the number of queries against the database.
 
 Once completed, all of the services, collections, timers, triggers, etc will reside in current repo. Meta data for all objects is in pretty-printed json format. In addition, the actual code for services and libraries is in javascript (.js) format.
@@ -263,19 +264,19 @@ Once you’ve successfully executed the init command, you should cd into and liv
 
 ### Options
 
-- **url**  
+- **url**
    The full url of the ClearBlade platform eg: https://platform.clearblade.com
 
-- **system-key**  
+- **system-key**
    The system key for the system being brought local
 
-- **messaging-url**  
+- **messaging-url**
    The messaging url for the system being brought local
 
-- **email**  
+- **email**
    The email address of the developer working on the system (you)
 
-- **password**  
+- **password**
    Your password for the ClearBlade platform system
 
 - **skip-update-map-name-to-id**
@@ -306,19 +307,19 @@ _Note: Only assets that a currently local are imported into the new system._
 
 ### Options
 
-- **url**  
+- **url**
    The URL of the destination system (ie, where the new system should be). If you don’t specify this option on the command line, you will be prompted for it.
 
-- **email**  
+- **email**
    The developer’s email on the destination system. If you don’t specify this option on the command line, you will be prompted for it.
 
-- **password**  
+- **password**
    The developer’s password. If you don’t specify this option (we recommend you don’t), you will be prompted for it.
 
-- **importrows**  
+- **importrows**
    By default, collection rows (items) are not imported. Pass this option to import all items.
 
-- **importusers**  
+- **importusers**
    By default, the users are not imported into the new system. If you set this option, the users will imported, but their passwords will all be set to “password”, since we don’t transfer passwords back and forth between systems.
 
 Once this command is completed, the newly imported system is fully-functional except for the importusers caveat mentioned above.
@@ -384,70 +385,70 @@ You can combine these options on a single command line just like with pull
 
 ### Options
 
-- **all-services**  
+- **all-services**
    Pushes all the services stored in a local repo
 
-- **all-libraries**  
+- **all-libraries**
    Pushes all of the libraries stored in a local repo
 
-- **all-edges**  
+- **all-edges**
    Pushes all of the edges stored in a local repo
 
-- **all-devices**  
+- **all-devices**
    Pushes all of the devices stored in a local repo
 
-- **all-portals**  
+- **all-portals**
    Pushes all of the portals stored in a local repo
 
-- **all-plugins**  
+- **all-plugins**
    Pushes all of the plugins stored in a local repo
 
-- **all-adapters**  
+- **all-adapters**
    Pushes all of the adapters stored in a local repo. Includes adapter metadata as well as all files associated with each adapter.
 
-- **userschema**  
+- **userschema**
    Pushes the local version of the users table schema to a remote ClearBlade system.
 
-- **edgeschema**  
+- **edgeschema**
    Pushes the local version of the edge table schema to a remote ClearBlade system.
 
-- **deviceschema**  
+- **deviceschema**
    Pushes the local version of the device table schema to a remote ClearBlade system.
 
-- **service=< service_name >**  
+- **service=< service_name >**
    Pushes the local version of a specific service to a remote ClearBlade system.
 
-- **library=< library_name >**  
+- **library=< library_name >**
    Pushes the local version of a specific library to a remote ClearBlade system.
 
-- **collection=< collection_name >**  
+- **collection=< collection_name >**
    Pushes the local version of a specific collections' meta-data to a remote ClearBlade system.
 
-- **user=< email >**  
+- **user=< email >**
    Pushes the local version of the user record to a remote ClearBlade system. Also Pushes the roles assigned to a user.
 
-- **role=< role_name >**  
+- **role=< role_name >**
    Pushes all the capability details of the specific role to a remote ClearBlade system.
 
-- **trigger=< trigger_name >**  
+- **trigger=< trigger_name >**
    Pushes the local version of a specific trigger to a remote ClearBlade system.
 
-- **timer=< timer_name >**  
+- **timer=< timer_name >**
    Pushes the local version of a specific timer to a remote ClearBlade system.
 
-- **edge=< edge_name >**  
+- **edge=< edge_name >**
    Pushes the local version of a specific edge to a remote ClearBlade system.
 
-- **device=< device_name >**  
+- **device=< device_name >**
    Pushes the local version of a specific device to a remote ClearBlade system.
 
-- **portal=< portal_name >**  
+- **portal=< portal_name >**
    Pushes the local version of a specific portal to a remote ClearBlade system.
 
-- **plugin=< plugin-name >**  
+- **plugin=< plugin-name >**
    Pushes the local version of a specific plugin to a remote ClearBlade system.
 
-- **adapter=< adapter-name >**  
+- **adapter=< adapter-name >**
    Pushes the local version of a specific adapter to a remote ClearBlade system. Includes the adapter metadata as well as the files associated with the adapter.
 
 #### Examples
@@ -522,64 +523,64 @@ The pull command allows you to selectively grab a specific object (eg a specific
 
 ### Options
 
-- **all-services**  
+- **all-services**
    Pulls all of the services stored in the repo
 
-- **all-libraries**  
+- **all-libraries**
    Pulls all of the libraries stored in the repo
 
-- **all-edges**  
+- **all-edges**
    Pulls all of the edges stored in the repo
 
-- **all-devices**  
+- **all-devices**
    Pulls all of the devices stored in the repo
 
-- **all-portals**  
+- **all-portals**
    Pulls all of the portals stored in the repo
 
-- **all-plugins**  
+- **all-plugins**
    Pulls all of the plugins stored in the repo
 
-- **all-adapters**  
+- **all-adapters**
    Pulls all of the adapters stored in the repo. Includes adapter metadata as well as all files associated with each adapter.
 
-- **userschema**  
+- **userschema**
    Pulls the remote version of the users table schema to a local repository.
 
-- **service=< service_name >**  
+- **service=< service_name >**
    Pulls the remote version of a specific service to a local repository.
 
-- **library=< library_name >**  
+- **library=< library_name >**
    Pulls the remote version of a specific library to a local repository.
 
-- **collection=< collection_name >**  
+- **collection=< collection_name >**
    Pulls the remote version of a specific collections' meta-data to a local repository.
 
-- **user=< email >**  
+- **user=< email >**
    Pulls the remote version of a specific user record to a local repository. Also Pulls the roles assigned to a user.
 
-- **role=< role_name >**  
+- **role=< role_name >**
    Pulls all the capability details of the specific role to a local repository.
 
-- **trigger=< trigger_name >**  
+- **trigger=< trigger_name >**
    Pulls the remote version of a specific trigger to a local repository.
 
-- **timer=< timer_name >**  
+- **timer=< timer_name >**
    Pulls the remote version of a specific timer to a local repository.
 
-- **edge=< edge_name >**  
+- **edge=< edge_name >**
    Pulls the remote version of a specific edge to a local repository.
 
-- **device=< device_name >**  
+- **device=< device_name >**
    Pulls the remote version of a specific device to a local repository.
 
-- **portal=< portal_name >**  
+- **portal=< portal_name >**
    Pulls the remote version of a specific portal to a local repository.
 
-- **plugin=< plugin-name >**  
+- **plugin=< plugin-name >**
    Pulls the remote version of a specific plugin to a local repository.
 
-- **adapter=< adapter-name >**  
+- **adapter=< adapter-name >**
    Pulls the remote version of a specific adapter to a local repository. Includes the adapter metadata as well as the files associated with the adapter.
 
 #### Example
@@ -591,6 +592,85 @@ The pull command allows you to selectively grab a specific object (eg a specific
 `cb-cli pull -all-services`
 
 `cb-cli pull -collection=MyCollection`
+
+## Remote
+
+**cb-cli remote** - Manage multiple remote endpoints
+
+### Synopsis
+
+```
+Usage:
+NAME:
+   cb-cli remote - manage remotes
+
+USAGE:
+   cb-cli remote command [command options] [arguments...]
+
+COMMANDS:
+   list, ls     List remotes
+   put          Create or update remotes
+   remove, rm   Remove remotes
+   set-current  Set current remote
+   help, h      Shows a list of commands or help for one command
+
+OPTIONS:
+   --help, -h  show help (default: false)
+```
+
+### Description
+
+This command is used for managing multiple remote endpoints. For example, you can
+have a real remote (production), and a local remote (testing).
+
+### Options
+
+- **name**
+  The name of the remote, as given by `cb-cli remote list`
+
+- **platform-url**
+  Platform URL to use the remote
+
+- **messaging-url**
+  Messaging URL to use for the remote
+
+- **dev-email**
+  Developer email with access to the platform
+
+- **dev-password**
+  Developer password
+
+- **dev-token**
+  Developer token
+
+- **system-key**
+  System to use for the remote
+
+#### EXAMPLES
+
+Init a new project with a custom remote name:
+
+```
+cb-cli init --name my-remote-name ...
+```
+
+List all remotes:
+
+```
+cb-cli remote list
+```
+
+Add a new remote:
+
+```
+cb-cli remote put --name other-remote --platform-url URL --messaging-url MESSAGING_URL --dev-email DEV_EMAIL --dev-password DEV_PASSWORD --system-key SYS_KEY
+```
+
+Change the remote:
+
+```
+cb-cli remote set-current --name other-remote
+```
 
 ## Test
 
@@ -615,7 +695,7 @@ You can combine these options on a single command line just like with pull
 
 ### Options
 
-- **service = < service_name >**  
+- **service = < service_name >**
    Executes the selected service. If your local version has newer changes than the cloud platform, we recommend using `-push` flag to push new changes.
 
 - **params = < params >**
