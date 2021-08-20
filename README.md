@@ -37,6 +37,10 @@ After go is installed, run:
 ```
 go get github.com/clearblade/cb-cli
 ```
+Note, you may need to specify the version you want. e.g.,
+```
+go get github.com/clearblade/cb-cli@9.10.2
+```
 
 Either add path to cb-cli executable to \$PATH in bashrc or execute using full path
 Add path.These commands work if your are using bash:
