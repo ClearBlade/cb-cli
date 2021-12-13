@@ -21,6 +21,8 @@ github.com/clearblade/cblib v0.0.0-20210909183732-2667c88d581c h1:8zHTaNK+a8iWhO
 github.com/clearblade/cblib v0.0.0-20210909183732-2667c88d581c/go.mod h1:gOLS1IogwZrki+8vTRZ19LCbyDRR0K9bhU+laL+/6VM=
 github.com/clearblade/cblib v0.0.0-20210923221004-c845677fa2da h1:sNdTGA349NEpbkFOOYLip2NSMIEyyN8kGEOMbKPHxnQ=
 github.com/clearblade/cblib v0.0.0-20210923221004-c845677fa2da/go.mod h1:gOLS1IogwZrki+8vTRZ19LCbyDRR0K9bhU+laL+/6VM=
+github.com/clearblade/cblib v0.0.0-20211213161558-ca0712caf133 h1:QBVDstNzRGGM/RFYBsicn7m2E4/C69fgnmhZDgJ0JoM=
+github.com/clearblade/cblib v0.0.0-20211213161558-ca0712caf133/go.mod h1:gOLS1IogwZrki+8vTRZ19LCbyDRR0K9bhU+laL+/6VM=
 github.com/clearblade/go-utils v1.1.4 h1:/pcYKVTAJ5RcXRZnVENNdUZUKCoZRa3OVhbyer/aHiY=
 github.com/clearblade/go-utils v1.1.4/go.mod h1:neQH1vakc/9y8BORrnWgSnBAQFBCS2U8OT3f47oM/YU=
 github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 h1:/T6Cq3XSwmuFoN6GDoPWgGpNW5X0Idx49DbfQazRUOQ=
