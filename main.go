@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/clearblade/cblib"
 	"os"
+
+	"github.com/clearblade/cblib"
 )
 
 func main() {
@@ -43,5 +44,6 @@ func main() {
 	err = subCommand.Execute( /*client,*/ theArgs[2:])
 	if err != nil {
 		fmt.Printf("Aborting: %s\n", err.Error())
+		os.Exit(1)
 	}
 }
