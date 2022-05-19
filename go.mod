@@ -3,7 +3,7 @@ module github.com/clearblade/cb-cli
 go 1.14
 
 require (
-	github.com/clearblade/cblib v0.0.0-20220429152404-58bd0d27579c
+	github.com/clearblade/cblib v0.0.0-20220519210730-10304e10cc5d
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
