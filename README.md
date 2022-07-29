@@ -362,8 +362,8 @@ cb-cli push
 	[-all-shared-caches]
 	[-all-webhooks]
 	[-all-external-databases]
-    [-all-bucket-sets]
-    [-all-bucket-set-files]
+        [-all-bucket-sets]
+        [-all-bucket-set-files]
 	[-userschema]
 	[-edgeschema]
 	[-deviceschema]
@@ -383,9 +383,9 @@ cb-cli push
 	[-shared-cache=<SHARED_CACHE_NAME>]
 	[-webhook=<WEBHOOK_NAME>]
 	[-external-database=<EXTERNAL_DATABASE_NAME>]
-    [-bucket-set-files=<BUCKET_SET_NAME>]
-    [-box=<inbox | outbox | sandbox>]
-    [-file=<FILE_NAME>]
+    	[-bucket-set-files=<BUCKET_SET_NAME>]
+    	[-box=<inbox | outbox | sandbox>]
+    	[-file=<FILE_NAME>]
 ```
 
 ### Description
@@ -533,8 +533,8 @@ cb-cli pull
 	[-all-shared-caches]
 	[-all-webhooks]
 	[-all-external-databases]
-    [-all-bucket-sets]
-    [-all-bucket-set-files]
+    	[-all-bucket-sets]
+    	[-all-bucket-set-files]
 	[-userschema]
 	[-service=<SERVICE_NAME>]
 	[-library=<LIBRARY_NAME>]
@@ -552,9 +552,9 @@ cb-cli pull
 	[-shared-cache=<SHARED_CACHE_NAME>]
 	[-webhook=<WEBHOOK_NAME>]
 	[-external-database=<EXTERNAL_DATABASE_NAME>]
-    [-bucket-set-files=<BUCKET_SET_NAME>]
-    [-box=<inbox | outbox | sandbox>]
-    [-file=<FILE_NAME>]
+        [-bucket-set-files=<BUCKET_SET_NAME>]
+    	[-box=<inbox | outbox | sandbox>]
+    	[-file=<FILE_NAME>]
 ```
 
 ### Description
