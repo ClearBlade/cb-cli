@@ -367,6 +367,7 @@ cb-cli push
 	[-userschema]
 	[-edgeschema]
 	[-deviceschema]
+  [-message-history-storage]
 	[-service=<SERVICE_NAME>]
 	[-library=<LIBRARY_NAME>]
 	[-collection=<COLLECTION_NAME>]
@@ -426,6 +427,9 @@ You can combine these options on a single command line just like with pull
 
 - **userschema**
   Pushes the local version of the users table schema to a remote ClearBlade system.
+
+- **message-history-storage**
+  Pushes the local version of the message history storage to a remote ClearBlade system.
 
 - **edgeschema**
   Pushes the local version of the edge table schema to a remote ClearBlade system.
@@ -537,6 +541,7 @@ cb-cli pull
     	[-all-bucket-sets]
     	[-all-bucket-set-files]
 	[-userschema]
+  [-message-history-storage]
 	[-service=<SERVICE_NAME>]
 	[-library=<LIBRARY_NAME>]
 	[-collection=<COLLECTION_NAME>]
@@ -594,6 +599,9 @@ The pull command allows you to selectively grab a specific object (eg a specific
 
 - **userschema**
   Pulls the remote version of the users table schema to a local repository.
+
+- **message-history-storage**
+  Pulls the remote version of the message history storage to a local repository.
 
 - **service=< service_name >**
   Pulls the remote version of a specific service to a local repository.
