@@ -13,6 +13,8 @@ github.com/clearblade/Go-SDK v0.0.0-20220914220004-e524426bc226 h1:fz46CcYQzciA5
 github.com/clearblade/Go-SDK v0.0.0-20220914220004-e524426bc226/go.mod h1:KByFsQUrafel53AhheIy5KflUpcqPeyPFqMQNwuwuS0=
 github.com/clearblade/Go-SDK v0.0.0-20220930214825-fe624346c6cd h1:xOl7rmQXyaHUJv3qinha2rsibQ7hWG1EuAtq2hANDMo=
 github.com/clearblade/Go-SDK v0.0.0-20220930214825-fe624346c6cd/go.mod h1:KByFsQUrafel53AhheIy5KflUpcqPeyPFqMQNwuwuS0=
+github.com/clearblade/Go-SDK v0.0.0-20221107230829-978006772314 h1:jtJDIViTgqqdj21pO3ZMZUS96IbOmF/nNs8XGTODEgQ=
+github.com/clearblade/Go-SDK v0.0.0-20221107230829-978006772314/go.mod h1:zHjGnfWvneo/sW1PBnAUBUcsMVaFoQfKxW43rXUp3RY=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c h1:KnJkP9fLFNyoV+pU3mXiRW5oLJdgDzVM/hWQhc0Scas=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c/go.mod h1:Pbu2bhtMVaWboL3mRaFQmGs8USG8uG4EAW2LB3SfCME=
 github.com/clearblade/cblib v0.0.0-20201104220901-c787d217ff14 h1:TmWCOBXdz36OKKyHVCVilEqM/pN9PuGNgJ3TC8j7I/I=
@@ -77,10 +79,13 @@ github.com/clearblade/cblib v0.0.0-20221010171817-42557ecea55a h1:xkS+91k7L6tMmq
 github.com/clearblade/cblib v0.0.0-20221010171817-42557ecea55a/go.mod h1:BLoJ9Rx8rYXa0V0tRBGZVVSkWRCE8qyYrqSw17uZ7Tg=
 github.com/clearblade/cblib v0.0.0-20221021220503-f36620ebac11 h1:az9UOsFymV3JA3C8dubsGF9dmLNcAMc/kQDkHQRS2zo=
 github.com/clearblade/cblib v0.0.0-20221021220503-f36620ebac11/go.mod h1:BLoJ9Rx8rYXa0V0tRBGZVVSkWRCE8qyYrqSw17uZ7Tg=
+github.com/clearblade/cblib v0.0.0-20221214212131-baec19846766 h1:b2T7NYKYftzwyT2TVd8yBPC3D16J2rrKh0zBIwDER1E=
+github.com/clearblade/cblib v0.0.0-20221214212131-baec19846766/go.mod h1:kcYy8/rmuyDDDuTmoCOcI589+vt0NdiszI/aij83pP8=
 github.com/clearblade/go-utils v1.1.4 h1:/pcYKVTAJ5RcXRZnVENNdUZUKCoZRa3OVhbyer/aHiY=
 github.com/clearblade/go-utils v1.1.4/go.mod h1:neQH1vakc/9y8BORrnWgSnBAQFBCS2U8OT3f47oM/YU=
 github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 h1:/T6Cq3XSwmuFoN6GDoPWgGpNW5X0Idx49DbfQazRUOQ=
 github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961/go.mod h1:xDP8quKbKO12G1Z5hbQFhAb9DekEe/sSKVOJdl9eRgA=
+github.com/clearblade/paho.mqtt.golang v1.1.1-0.20221107221803-558038c7f9ad/go.mod h1:gHNJiEGMpSWw++6e/xxUDoqsPqad+El3B/LIxk551RU=
 github.com/clearblade/paho.mqtt.golang v1.1.1 h1:S+F3zt3EuskNZvrP4NTgtH1gbY/gvz8VlP+a7UX2LWQ=
 github.com/clearblade/paho.mqtt.golang v1.1.1/go.mod h1:rpDRqEw2Q7epfQYfcHwkHDHSzNzPB+BYO8zn7cGHsWo=
 github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d h1:U+s90UTSYgptZMwQh2aRr3LuazLJIa+Pg3Kc1ylSYVY=
@@ -89,6 +94,7 @@ github.com/cpuguy83/go-md2man/v2 v2.0.1 h1:r/myEWzV9lfsM1tFLgDyu0atFtJ1fXn261LKY
 github.com/cpuguy83/go-md2man/v2 v2.0.1/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/eclipse/paho.mqtt.golang v1.4.2/go.mod h1:JGt0RsEwEX+Xa/agj90YJ9d9DH2b7upDZMK9HRbFvCA=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9 h1:hsms1Qyu0jgnwNXIxa+/V/PDsU6CfLf6CNO8H7IWoS4=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
@@ -106,6 +112,7 @@ github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMyw
 github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/go-cmp v0.4.0 h1:xsAVV57WRhGj6kEIi8ReJzQlHHqcBYCElAvkovg3B/4=
 github.com/google/go-cmp v0.4.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
+github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/hpcloud/tail v1.0.0/go.mod h1:ab1qPbhIpdTxEkNHXyeSf5vhxWSCs/tWer42PpOxQnU=
 github.com/mitchellh/mapstructure v1.3.3 h1:SzB1nHZ2Xi+17FP0zVQBHIZqvwRN9408fJO8h+eeNA8=
 github.com/mitchellh/mapstructure v1.3.3/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
@@ -148,6 +155,7 @@ golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPh
 golang.org/x/net v0.0.0-20180906233101-161cd47e91fd/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=
 golang.org/x/net v0.0.0-20190404232315-eb5bcb51f2a3/go.mod h1:t9HGtf8HONx5eT2rtn7q6eTqICYqUVnKs3thJo3Qplg=
 golang.org/x/net v0.0.0-20191209160850-c0dbc17a3553/go.mod h1:z5CRVTTTmAJ677TzLLGU+0bjPO0LkuOLi4/5GtJWs/s=
+golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
 golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7 h1:AeiKBIuRw3UomYXSbLy0Mc2dDLfdtbT/IVn4keq83P0=
 golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7/go.mod h1:qpuaurCH72eLCgpAm/N6yyVIVM9cpaDIP3A8BGJEC5A=
 golang.org/x/net v0.0.0-20200707034311-ab3426394381 h1:VXak5I6aEWmAXeQjA+QSZzlgNrpq9mjcfDemuexIKsU=
@@ -155,6 +163,7 @@ golang.org/x/net v0.0.0-20200707034311-ab3426394381/go.mod h1:/O7V0waA8r7cgGh81R
 golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d h1:LO7XpTYMwTqxjLcGWPijK3vRXg1aWdlNOVOHRq45d7c=
 golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sync v0.0.0-20210220032951-036812b2e83c/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190412213103-97732733099d/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
