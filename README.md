@@ -110,6 +110,19 @@ The directory structure after export will look as:
     | | |_collections.json
     | | |_roles.json
     | | |_users.json
+    |_adapters
+    | |_myAdapter
+    | | |_files
+    | | | |_myAdapterFile1
+    | | | | |_myAdapterFile1 
+    | | | | |_myAdapterFile1.json
+    | | | |_myAdapterFile2
+    | | | | |_myAdapterFile2
+    | | | | |_myAdapterFile2.json
+    | | |_myAdapter.json
+    |_bucket-set-files
+    |_bucket-sets
+    | |_myBucketSet.json
     |_code
     | |_libraries
     | |_services
@@ -118,13 +131,35 @@ The directory structure after export will look as:
     | | | |_TestPull.json
     |_data
     | |_myCollection.json
+    |_deployments
+    | |_myDeployment.json
+    |_devices
+    | |_roles
+    | | |_myDevice.json
+    | |_myDevice.json
+    | |_schema.json
+    |_edges
+    | |_schema.json
+    | |_myEdge.json
+    |_external-databases
+    | |_myDB.json
+    |_plugins
+    | |_myPlugin.json
+    |_portals
+    | |_myPortal
+    | | |_myPortal.json
+    | | |_config
+    | | | |_widgets
+    | | | |_datasources
+    | | | |_internalResources
     |_roles
     | |_Administrator.json
     | |_Anonymous.json
     | |_Authenticated.json
+    |_secrets
+    | |_mysecret.json
     |_shared-caches
     | |_mySharedCache.json
-    |_system.json
     |_timers
     | |_myTimer.json
     |_triggers
@@ -134,18 +169,10 @@ The directory structure after export will look as:
     | | |_admin@clearblade.com.json
     | |_admin@clearblade.com.json
     | |_schema.json
-    |_devices
-    | |_roles
-    | | |_myDevice.json
-    | |_myDevice.json
-    | |_schema.json
-    |_portals
-    | |_myPortal
-    | | |_myPortal.json
-    | | |_config
-    | | | |_widgets
-    | | | |_datasources
-    | | | |_internalResources
+    |_webhooks
+    | |_myWebhook.json
+    |_system.json
+
 
 ## MetaData
 
@@ -256,14 +283,28 @@ The directory structure for a system looks like this (for a system named “Outs
 Outstanding_System/
 	|- .cbmeta
 	|- system.json
+  |- adapters/
+  |- bucket-set-files/
+  |- bucket-sets/
 	|- code/
-	|- libraries/
-	|- services/
+	| |- libraries/
+	| |- services/
 	|- data/
+  |- deployments/
+  |- devices/
+  | |-roles/
+  |- edges/
+  |- external-databases/
+  |- plugins/
+  |- portals/
 	|- roles/
+  |- secrets/
+  |- shared-caches/
 	|- timers/
 	|- triggers/
 	|- users/
+  | |- roles/
+  |- webhooks/
 ```
 
 Once you’ve successfully executed the init command, you should cd into and live in the root of the repo when running all future commands.
@@ -353,17 +394,18 @@ cb-cli push
 	[-all-portals]
 	[-all-plugins]
 	[-all-adapters]
+  [-all-deployments]
 	[-all-collections]
 	[-all-roles]
 	[-all-users]
 	[-all-triggers]
 	[-all-timers]
-	[-all-deployments]
 	[-all-shared-caches]
 	[-all-webhooks]
 	[-all-external-databases]
         [-all-bucket-sets]
         [-all-bucket-set-files]
+  [-all-user-secrets]
 	[-userschema]
 	[-edgeschema]
 	[-deviceschema]
@@ -371,6 +413,7 @@ cb-cli push
 	[-service=<SERVICE_NAME>]
 	[-library=<LIBRARY_NAME>]
 	[-collection=<COLLECTION_NAME>]
+  [-collectionschema=<COLLECTION_NAME>]
 	[-user=<EMAIL>]
 	[-role=<ROLE_NAME>]
 	[-trigger=<TRIGGER_NAME>]
@@ -388,6 +431,7 @@ cb-cli push
     	[-bucket-set-files=<BUCKET_SET_NAME>]
     	[-box=<inbox | outbox | sandbox>]
     	[-file=<FILE_NAME>]
+  [-user-secret=<SECRET_NAME>]
 ```
 
 ### Description
@@ -538,13 +582,17 @@ cb-cli pull
 	[-all-shared-caches]
 	[-all-webhooks]
 	[-all-external-databases]
-    	[-all-bucket-sets]
-    	[-all-bucket-set-files]
+  [-all-bucket-sets]
+  [-all-bucket-set-files]
+  [-all-user-secrets]
 	[-userschema]
+  [-deviceschema]
+  [-edgeschema]
   [-message-history-storage]
 	[-service=<SERVICE_NAME>]
 	[-library=<LIBRARY_NAME>]
-	[-collection=<COLLECTION_NAME>]
+  [-collection=<COLLECTION_NAME>]
+  [-collectionschema=<COLLECTION_NAME>]
 	[-user=<EMAIL>]
 	[-role=<ROLE_NAME>]
 	[-trigger=<TRIGGER_NAME>]
@@ -559,9 +607,10 @@ cb-cli pull
 	[-webhook=<WEBHOOK_NAME>]
 	[-external-database=<EXTERNAL_DATABASE_NAME>]
 	[-bucket-set=<BUCKET_SET_NAME>]
-        [-bucket-set-files=<BUCKET_SET_NAME>]
-    	[-box=<inbox | outbox | sandbox>]
-    	[-file=<FILE_NAME>]
+  [-bucket-set-files=<BUCKET_SET_NAME>]
+    [-box=<inbox | outbox | sandbox>]
+    [-file=<FILE_NAME>]
+  [-user-secret=<SECRET_NAME>]
 ```
 
 ### Description
@@ -569,36 +618,74 @@ cb-cli pull
 The pull command allows you to selectively grab a specific object (eg a specific code service or library) from the associated ClearBlade system and pull it down to your local repo. This is useful when (for example) multiple developers are working on the same code service. When one developer modifies the code service, you can pull it down and make modifications to the latest version.
 
 ### Options
+- **all**
+  Pulls all assets stored in the system to a local repo
 
 - **all-services**
-  Pulls all of the services stored in the repo
+  Pulls all of the services stored in the system to a local repo
 
 - **all-libraries**
-  Pulls all of the libraries stored in the repo
+  Pulls all of the libraries stored in the system to a local repo
 
 - **all-edges**
-  Pulls all of the edges stored in the repo
+  Pulls all of the edges stored in the system to a local repo
 
 - **all-devices**
-  Pulls all of the devices stored in the repo
+  Pulls all of the devices stored in the system to a local repo
 
 - **all-portals**
-  Pulls all of the portals stored in the repo
+  Pulls all of the portals stored in the system to a local repo
 
 - **all-plugins**
-  Pulls all of the plugins stored in the repo
+  Pulls all of the plugins stored in the system to a local repo
 
 - **all-adapters**
-  Pulls all of the adapters stored in the repo. Includes adapter metadata as well as all files associated with each adapter.
+  Pulls all of the adapters stored in the system to a local repo. Includes adapter metadata as well as all files associated with each adapter.
+
+- **all-deployments**
+  Pulls all of the deployments stored in the system to a local repo.
+
+- **all-collections**
+  Pulls all of the collections stored in the system to a local repo.
+
+- **all-roles**
+  Pulls all of the roles stored in the system to a local repo.
+
+- **all-users**
+  Pulls all of the users stored in the system to a local repo.
+
+- **all-triggers**
+  Pulls all of the triggers stored in the system to a local repo.
+
+- **all-timers**
+  Pulls all of the timers stored in the system to a local repo.
+
+- **all-shared-caches**
+  Pulls all of the shared-caches stored in the system to a local repo.
+
+- **all-webhooks**
+  Pulls all of the webhooks stored in the system to a local repo.
+
+- **all-external-databases**
+  Pulls all of the external-databases stored in the system to a local repo.
 
 - **all-bucket-sets**
-  Pulls all of the remote bucket sets stored to a local repo. Note: Does not include bucket set files, use -all-bucket-set-files for that.
+  Pulls all of the remote bucket sets stored in a system to a local repo. Note: Does not include bucket set files, use -all-bucket-set-files for that.
 
 - **all-bucket-set-files**
-  Pulls all of the files of all remote bucket sets to a local repo.
+  Pulls all of the files of all remote bucket sets stored in a system to a local repo.
+
+- **all-user-secrets**
+  Pulls all of the secrets stored in the system to a local repo.
 
 - **userschema**
   Pulls the remote version of the users table schema to a local repository.
+
+- **devicechema**
+  Pulls the remote version of the device table schema to a local repository.
+
+- **edgeschema**
+  Pulls the remote version of the edge table schema to a local repository.
 
 - **message-history-storage**
   Pulls the remote version of the message history storage to a local repository.
@@ -611,6 +698,9 @@ The pull command allows you to selectively grab a specific object (eg a specific
 
 - **collection=< collection_name >**
   Pulls the remote version of a specific collections' meta-data to a local repository.
+
+- **collectionschema=< collection_name >**
+  Pulls the remote version of a specific collections' schema to a local repository.
 
 - **user=< email >**
   Pulls the remote version of a specific user record to a local repository. Also Pulls the roles assigned to a user.
@@ -639,6 +729,18 @@ The pull command allows you to selectively grab a specific object (eg a specific
 - **adapter=< adapter-name >**
   Pulls the remote version of a specific adapter to a local repository. Includes the adapter metadata as well as the files associated with the adapter.
 
+- **deployment=< deployment-name >**
+  Pulls the remote version of a specific deployment to a local repository.
+
+- **shared-cache=< shared-cache-name >**
+  Pulls the remote version of a specific deployment to a local repository.
+
+- **webhook=< webhook-name >**
+  Pulls the remote version of a specific webhook to a local repository.
+
+- **external-database=< external-database-name >**
+  Pulls the remote version of a specific external-database to a local repository.
+
 - **bucket-set=< bucket-set-name >**
   Pulls the remote version of a specific bucket set to a local repository. Note: does not include the bucket set's files, use -bucket-set-files for that.
 
@@ -650,6 +752,9 @@ The pull command allows you to selectively grab a specific object (eg a specific
 
 - **file=< file-path-relative-to-box >**
   Pulls a specific file within a specific box for a specific bucket set. Note: must be used with -bucket-set-files and -box
+
+- **user-secret=< secret-name >**
+  Pulls the remote version of a specific secret to a local repository.
 
 #### Example
 
