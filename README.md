@@ -10,61 +10,63 @@
 
 # Overview
 
-The ClearBlade CLI tool provides easy to use commands for interacting with ClearBlade platform
+ClearBlade's CLI tool provides easy-to-use commands for interacting with the ClearBlade Platform. 
 
-1. allows for easy promotion of system changes through dev, staging, QA, production systems
-2. allows for source control
-3. allows for integration with CI
-4. allows for code transpilation (TypeScript, ES6+, etc. for the backend and TypeScript, React, Vue, etc. for the frontend)
-5. developers can use their favorite IDE/text editor
-6. write unit tests with your favorite test runner
+ClearBlade's CLI tool:
+
+1. Allows easy promotion of system changes through dev, staging, QA, and production systems.
+2. Allows source control and integration with CI.
+3. Allows code transpilation (TypeScript, ES6+, etc. for the backend, and TypeScript, React, Vue, etc., for the frontend).
+4. Allows developers to use their favorite IDE/text editor.
+5. Allows you to write unit tests with your favorite test runner.
 
 # Installation
 
-#### Binary Installation
+#### Binary installation
 
-Go to [cb-cli releases](https://github.com/ClearBlade/cb-cli/releases) and download latest release for your platform (OSX/Linux)
+Go to [cb-cli releases](https://github.com/ClearBlade/cb-cli/releases) and download the latest release for your platform (OSX/Linux)
 
-- Unpack the archive to a location of your choise
-- Add path of your unpacked archive to \$PATH
+- Unpack the archive to a location of your choice.
+- Add the path of your unpacked archive to \$PATH.
 
-#### Source Installation
+#### Source installation
 
-For source installation, GO should be installed. If its not, install go from: [goLang](https://golang.org/doc/install)
+Go should be installed. If it's not, install it from: [goLang](https://golang.org/doc/install)
 
-After go is installed, run:
+After Go is installed, run:
 
 ```
 go get github.com/clearblade/cb-cli
 ```
 
-Note, you may need to specify the version you want. e.g.,
+You may need to specify the version you want. e.g.:
 
 ```
 go get github.com/clearblade/cb-cli@9.10.2
 ```
 
-Either add path to cb-cli executable to \$PATH in bashrc or execute using full path
-Add path.These commands work if your are using bash:
+Add path to cb-cli, executable to \$PATH in bashrc, or execute using full path.
+
+These commands work if you are using bash:
 
 ```
 $ echo 'export PATH="$PATH:$GOPATH/bin"' >> ~/.bashrc
 $ source ~/.bashrc
 ```
 
-or - execute using full path:
+Or execute using full path:
 \$GOPATH/bin/cb-cli
 
 # Developer workflow:
 
-ClearBlade recommends developers to work in isolated systems when working on a team. The steps below outline how to achieve this.
+ClearBlade recommends developers work in isolated systems when working on a team. The steps below outline how to achieve this.
 
 ## Initialize repo
 
-When a project is first started, a ClearBlade system and a source control repo should be created.
+A ClearBlade system and a source control repo should be created when a project starts.
 
-1. create master system in platform via console UI
-2. create git repo
+1. Create the master system in the Platform via the console UI.
+2. Create the Git repo.
 
 ```
 git clone
@@ -75,19 +77,19 @@ git commit -am "init commit"
 git push origin master
 ```
 
-## how to work in isolated development system
+## How to work in an isolated development system
 
-Once the root system has been created, developers can clone the system with the `import` command. After importing, the `init` command must be run to point to the newly created system. Once targeted, developers will make changes against the isolated system.
+Once the root system has been created, developers can clone the system with the import command. After importing, the init command must be run to point to the newly created system. Once targeted, developers will make changes against the isolated system.
 
 ```
 git checkout -b feature-branch
 cb-cli import -importrows -importusers
-cb-cli init // point to the newly imported system; this will update system.json with new system info. NOTE: the changes to system.json shouldn't be merged into the master branch
+cb-cli init // point to the newly imported system; this will update system.json with new system info. The changes to system.json shouldn't be merged into the master branch.
 ```
 
-## how to update local system with changes from git repo
+## How to update the local system with changes from the Git repo
 
-The steps below outline how to pull in changes from other developers
+The steps below outline how to pull in changes from other developers.
 
 ```
 git checkout master
@@ -100,7 +102,7 @@ cb-cli push -all // push all changes from master into feature-branch system
 
 # File Structure
 
-Before we start making changes and pushing to platform, we need to export the system
+We must export the system before making changes and pushing it to the platform.
 
 The directory structure after export will look as:
 
@@ -174,9 +176,9 @@ The directory structure after export will look as:
     |_system.json
 
 
-## MetaData
+## Metadata
 
-After exporting the system, .cbmeta is created in the exported folder as shown above. This file contains devEmail, platformURL, assetRefreshDates and an auth token for developer access to the system
+After exporting the system, .cbmeta is created in the exported folder, as shown above. This file contains devEmail, platformURL, assetRefreshDates, and an auth token for developer access to the system.
 
 # Commands
 
@@ -193,7 +195,7 @@ After exporting the system, .cbmeta is created in the exported folder as shown a
 
 ## Export
 
-**cb-cli export** - Brings a ClearBlade platform System to the local development environment
+**cb-cli export**: Brings a ClearBlade system to the local development environment
 
 ### Synopsis
 
@@ -205,46 +207,46 @@ cb-cli export
 
 ### Description
 
-This command is used to download all of your system assets to your current directory. It can be used in two ways:
+This command downloads all your system assets to your current directory. It can be used in two ways:
 
-1. Initialize and download the system in your current working directory (as opposed to running `cb-cli init` then `cb-cli export`)
-2. Download the system in a previously initialized directory
+1. Initialize and download the system in your current working directory (as opposed to running cb-cli init and cb-cli export).
+2. Download the system in a previously initialized directory.
 
 ### Options
 
 - **url**
-  The full url of the ClearBlade platform eg: https://platform.clearblade.com
+  The ClearBlade Platform's full URL, e.g., https://platform.clearblade.com
 
 - **system-key**
-  The system key for the system being brought local
+  The system key for the system being brought locally
 
 - **messaging-url**
-  The messaging url for the system being brought local
+  The messaging URL for the system being brought locally
 
 - **email**
-  The email address of the developer working on the system (you)
+  The email of the developer working on the system
 
 - **cleanup**
-  Clears all directories prior to performing the export.
+  Clears all directories before performing the export
 
 - **exportrows**
-  This not only exports the collection objects, but also export all “rows” (or items) in each collection. Be very careful when using this option as it may be unfeasable to export very large collections.
+  This exports the collection's objects, rows, and items. Be careful when using this option, as it may be unfeasible to export vast collections.
 
 - **exportusers**
-  This exports the data (minus passwords) from the system’s users table. If not present on the command line, only the users table schema is exported.
+  This exports the data (minus passwords) from the system’s users table. Only the user's table schema is exported if it is not on the command line.
 
 - **exportitemid**
-  When exporting data collections, this option indicates that the item_id column should also be exported with each row.
+  This option indicates that the item_id column should be exported with each row when exporting data collections.
 
 - **sort-collections**
-  This option, when specified, will sort the rows of an exported data collection by item_id. This is useful when using a version control system and you wish to view the differences between two versions of a data collection.
+  This option, when specified, will sort the rows of an exported data collection by item_id. This is useful when using a version control system, and you wish to view the differences between a data collection's versions.
 
 - **data-page-size**
-  When exporting the rows of a data collection and there are a large number of rows (> 100k), it is adviseable to increase the number of rows constituting a page. This will improve the performance of the export by decreasing the number of queries against the database.
+  When exporting a data collection's rows and there are a large number of rows (> 100k), it is advisable to increase the number of rows constituting a page. This will improve the export performance by decreasing the number of queries against the database.
 
-Once completed, all of the services, collections, timers, triggers, etc will reside in current repo. Meta data for all objects is in pretty-printed json format. In addition, the actual code for services and libraries is in javascript (.js) format.
+Once completed, all the services, collections, timers, triggers, etc., will reside in the current repo. Metadata for all objects is in pretty-printed JSON format. In addition, the actual code for services and libraries is in JavaScript (.js) format.
 
-You can shortcut the cb-cli init/cb-cli export steps by just calling cb-cli export outside of a repo. This will do a combination of init and export. You can either provide the init options on the command line or you will be prompted for them. This is a common way to begin working on a system locally.
+You can shortcut the cb-cli init/cb-cli export steps by calling cb-cli export outside a repo. This will do a combination of init and export. You can provide the init options on the command line, or you will be prompted for them. This is a common way to begin working on a system locally.
 
 #### EXAMPLES
 
@@ -254,7 +256,7 @@ You can shortcut the cb-cli init/cb-cli export steps by just calling cb-cli expo
 
 ## init
 
-**cb-cli init** - Initializes a ClearBlade system locally
+**cb-cli init**: Initializes a ClearBlade system locally
 
 ### Synopsis
 
@@ -269,15 +271,15 @@ cb-cli init
 
 ### Description
 
-The init command is the first command to be run when wanting to work on a ClearBlade system locally.
+The init command is the first command to run when working on a ClearBlade system locally.
 
-On successful completion of this command a skeleton tree structure is created under your current working directory, with the root of the tree named after the ClearBlade system you just init-ed. Note that if the system name had spaces, they are converted to underscores. Inside the root directory of the system, two special files are created:
+Upon completing this command, a skeleton tree structure is created under your current working directory with the tree's root named after the ClearBlade system you init-ed. If the system name had spaces, they were converted to underscores. Inside the system's root directory, two special files are created:
 
-- **.cbmeta** This holds information specific to the developer. It is used to streamline authentication so that you don’t have to enter emails, passwords, and tokens for all future commands.
+- **.cbmeta** This holds information specific to the developer. It is used to streamline authentication so you don’t have to enter emails, passwords, and tokens for all future commands.
 
 - **system.json** This contains information specific to the system you’re working on (system name, system key, etc.)
 
-The directory structure for a system looks like this (for a system named “Outstanding System”):
+The directory structure for a system looks like this (for a system named Outstanding System):
 
 ```
 Outstanding_System/
@@ -307,33 +309,33 @@ Outstanding_System/
   |- webhooks/
 ```
 
-Once you’ve successfully executed the init command, you should cd into and live in the root of the repo when running all future commands.
+Once successfully executing the init command, you should cd into and live in the repo's root when running all future commands.
 
 ### Options
 
 - **url**
-  The full url of the ClearBlade platform eg: https://platform.clearblade.com
+  The ClearBlade Platform's full URL, e.g., https://platform.clearblade.com
 
 - **system-key**
   The system key for the system being brought local
 
 - **messaging-url**
-  The messaging url for the system being brought local
+  The messaging URL for the system being brought local
 
 - **email**
-  The email address of the developer working on the system (you)
+  The email of the developer working on the system
 
 - **password**
-  Your password for the ClearBlade platform system
+  Your ClearBlade system's password
 
 - **skip-update-map-name-to-id**
-  Set this to true to skip pulling the IDs for roles, collections, and users. This is useful if the system has lots of these types of assets and the goal is to retrieve the schema for the tables after initialization.
+  Set this to true: skip pulling the IDs for roles, collections, and users. This is useful if the system has many of these assets and the goal is to retrieve the table schemas after initialization.
 
-You can specify all, some, or none of these options on the command line itself. For those that you didn’t specify, The system will prompt you for the values.
+You can specify all, some, or none of these options on the command line. The system will prompt you for the values for those you didn't select.
 
 ## Import
 
-**cb-cli import** - Takes the assets stored locally and creates a new ClearBlade platform System with the same structure and assets
+**cb-cli import**: Takes the assets stored locally and creates a new ClearBlade system with the same structure and assets.
 
 ### Synopsis
 
@@ -348,14 +350,14 @@ cb-cli import
 
 ### Description
 
-The import command is run from inside an existing repo for a system. It creates an entirely new system, perhaps on a different clearblade platform instance. Think of it as cloning the system somewhere else. A common use would be as follows. Suppose you’re developing and testing a ClearBlade system inside your private development sandbox. When the system is ready to be deployed to production, you would use the import command to effectively push it into production.
+The import command is run from inside an existing repo for a system. It creates a new system, such as a different ClearBlade Platform instance. It is like cloning the system somewhere else. A common use would be as follows: suppose you’re developing and testing a ClearBlade system inside your private development sandbox. When the system is ready to be deployed to production, you will use the import command to push it into production.
 
-_Note: Only assets that a currently local are imported into the new system._
+Note: Only local assets are imported into the new system.
 
 ### Options
 
 - **url**
-  The URL of the destination system (ie, where the new system should be). If you don’t specify this option on the command line, you will be prompted for it.
+  The destination system's URL (i.e., where the new system should be). If you don’t specify this option on the command line, you will be prompted for it.
 
 - **email**
   The developer’s email on the destination system. If you don’t specify this option on the command line, you will be prompted for it.
@@ -367,9 +369,9 @@ _Note: Only assets that a currently local are imported into the new system._
   By default, collection rows (items) are not imported. Pass this option to import all items.
 
 - **importusers**
-  By default, the users are not imported into the new system. If you set this option, the users will imported, but their passwords will all be set to “password”, since we don’t transfer passwords back and forth between systems.
+  By default, the users are not imported into the new system. If you set this option, the users will be imported, but their passwords will all be set to “password” since we don’t transfer passwords back and forth between systems.
 
-Once this command is completed, the newly imported system is fully-functional except for the importusers caveat mentioned above.
+Once this command is completed, the newly imported system is fully-functional except for the above importusers caveat.
 
 #### Examples
 
@@ -380,7 +382,7 @@ Once this command is completed, the newly imported system is fully-functional ex
 
 ## Push
 
-**cb-cli push** - Send the local development versions of assets back to the ClearBlade platform system
+**cb-cli push**: Send the asset local development versions back to the ClearBlade system
 
 ### Synopsis
 
@@ -436,9 +438,9 @@ cb-cli push
 
 ### Description
 
-The push command allows you upload changes to local copies of ClearBlade objects back out the the remote ClearBlade system. Obviously, it is the opposite of the pull command. Again, it has the same options as the pull command.
+The push command allows you to upload changes to local copies of ClearBlade objects to the remote ClearBlade system. It is the opposite of the pull command and has the same options.
 
-You can combine these options on a single command line just like with pull
+You can combine these options on a single command line, like with pull.
 
 ### Options
 
@@ -446,88 +448,88 @@ You can combine these options on a single command line just like with pull
   Pushes all the services stored in a local repo
 
 - **all-libraries**
-  Pushes all of the libraries stored in a local repo
+  Pushes all the libraries stored in a local repo
 
 - **all-edges**
-  Pushes all of the edges stored in a local repo
+  Pushes all the edges stored in a local repo
 
 - **all-devices**
-  Pushes all of the devices stored in a local repo
+  Pushes all the devices stored in a local repo
 
 - **all-portals**
-  Pushes all of the portals stored in a local repo
+  Pushes all the portals stored in a local repo
 
 - **all-plugins**
-  Pushes all of the plugins stored in a local repo
+  Pushes all the plugins stored in a local repo
 
 - **all-adapters**
-  Pushes all of the adapters stored in a local repo. Includes adapter metadata as well as all files associated with each adapter.
+  Pushes all the adapters stored in a local repo. Includes adapter metadata and all files associated with each adapter
 
 - **all-bucket-sets**
-  Pushes all of the bucket sets stored in a local repo. Note: Does not include bucket set files, use -all-bucket-set-files for that.
+  Pushes all the bucket sets stored in a local repo. Does not include bucket set files (use -all-bucket-set-files for that)
 
 - **all-bucket-set-files**
-  Pushes all of the files of all bucket sets stored in a local repo.
+  Pushes all the bucket set files stored in a local repo
 
 - **userschema**
-  Pushes the local version of the users table schema to a remote ClearBlade system.
+  Pushes the local version of the users' table schema to a remote ClearBlade system
 
 - **message-history-storage**
-  Pushes the local version of the message history storage to a remote ClearBlade system.
+  Pushes the local version of the message history storage to a remote ClearBlade system
 
 - **edgeschema**
-  Pushes the local version of the edge table schema to a remote ClearBlade system.
+  Pushes the local version of the edge table schema to a remote ClearBlade system
 
 - **deviceschema**
-  Pushes the local version of the device table schema to a remote ClearBlade system.
+  Pushes the local version of the device table schema to a remote ClearBlade system
 
 - **service=< service_name >**
-  Pushes the local version of a specific service to a remote ClearBlade system.
+  Pushes the local version of a specific service to a remote ClearBlade system
 
 - **library=< library_name >**
-  Pushes the local version of a specific library to a remote ClearBlade system.
+  Pushes the local version of a specific library to a remote ClearBlade system
 
 - **collection=< collection_name >**
-  Pushes the local version of a specific collections' meta-data to a remote ClearBlade system.
+  Pushes the local version of a specific collection's metadata to a remote ClearBlade system
 
 - **user=< email >**
-  Pushes the local version of the user record to a remote ClearBlade system. Also Pushes the roles assigned to a user.
+  Pushes the local version of the user record to a remote ClearBlade system. Also, pushes the roles assigned to a user
 
 - **role=< role_name >**
-  Pushes all the capability details of the specific role to a remote ClearBlade system.
+  Pushes all the capability details of the specific role to a remote ClearBlade system
 
 - **trigger=< trigger_name >**
-  Pushes the local version of a specific trigger to a remote ClearBlade system.
+  Pushes the local version of a specific trigger to a remote ClearBlade system
 
 - **timer=< timer_name >**
-  Pushes the local version of a specific timer to a remote ClearBlade system.
+  Pushes the local version of a specific timer to a remote ClearBlade system
 
 - **edge=< edge_name >**
-  Pushes the local version of a specific edge to a remote ClearBlade system.
+  Pushes the local version of a specific edge to a remote ClearBlade system
 
 - **device=< device_name >**
-  Pushes the local version of a specific device to a remote ClearBlade system.
+  Pushes the local version of a specific device to a remote ClearBlade system
 
 - **portal=< portal_name >**
-  Pushes the local version of a specific portal to a remote ClearBlade system.
+  Pushes the local version of a specific portal to a remote ClearBlade system
 
 - **plugin=< plugin-name >**
-  Pushes the local version of a specific plugin to a remote ClearBlade system.
+  Pushes the local version of a specific plugin to a remote ClearBlade system
 
 - **adapter=< adapter-name >**
-  Pushes the local version of a specific adapter to a remote ClearBlade system. Includes the adapter metadata as well as the files associated with the adapter.
+  Pushes the local version of a specific adapter to a remote ClearBlade system. Includes the adapter metadata and the files associated with the adapter
 
 - **bucket-set=< bucket-set-name >**
-  Pushes the local version of a specific bucket set to a remote ClearBlade system. Note: does not include the bucket set's files, use -bucket-set-files for that.
+  Pushes the local version of a specific bucket set to a remote ClearBlade system. Does not include the bucket set's files (use -bucket-set-files for that)
 
 - **bucket-set-files=< bucket-set-name >**
-  Pushes all of the files for a specific bucket set.
+  Pushes all the specific bucket set files
 
 - **box=< inbox | outbox | sandbox >**
-  Pushes all of the files inside a specific box for a specific bucket set. Note: must be used with -bucket-set-files
+  Pushes all the files inside a specific box for a specific bucket set. Must be used with -bucket-set-files
 
 - **file=< file-path-relative-to-box >**
-  Pushes a specific file within a specific box for a specific bucket set. Note: must be used with -bucket-set-files and -box
+  Pushes a specific file within a specific box for a specific bucket set. Must be used with -bucket-set-files and -box
 
 #### Examples
 
@@ -559,7 +561,7 @@ TODO
 
 ## Pull
 
-**cb-cli pull** - Brings the latest versions of assets from the ClearBlade platform System to the local development environment
+**cb-cli pull**: Brings the latest asset versions from the ClearBlade system to the local development environment
 
 ### Synopsis
 
@@ -615,143 +617,143 @@ cb-cli pull
 
 ### Description
 
-The pull command allows you to selectively grab a specific object (eg a specific code service or library) from the associated ClearBlade system and pull it down to your local repo. This is useful when (for example) multiple developers are working on the same code service. When one developer modifies the code service, you can pull it down and make modifications to the latest version.
+The pull command allows you to selectively grab a specific object (e.g., a particular code service or library) from the associated ClearBlade system and pull it down to your local repo. This is useful when multiple developers are working on the same code service. When one developer modifies the code service, you can pull it down and modify the latest version.
 
 ### Options
 - **all**
   Pulls all assets stored in the system to a local repo
 
 - **all-services**
-  Pulls all of the services stored in the system to a local repo
+  Pulls all the services stored in the system to a local repo
 
 - **all-libraries**
-  Pulls all of the libraries stored in the system to a local repo
+  Pulls all the libraries stored in the system to a local repo
 
 - **all-edges**
-  Pulls all of the edges stored in the system to a local repo
+  Pulls all the edges stored in the system to a local repo
 
 - **all-devices**
-  Pulls all of the devices stored in the system to a local repo
+  Pulls all the devices stored in the system to a local repo
 
 - **all-portals**
-  Pulls all of the portals stored in the system to a local repo
+  Pulls all the portals stored in the system to a local repo
 
 - **all-plugins**
-  Pulls all of the plugins stored in the system to a local repo
+  Pulls all the plugins stored in the system to a local repo
 
 - **all-adapters**
-  Pulls all of the adapters stored in the system to a local repo. Includes adapter metadata as well as all files associated with each adapter.
+  Pulls all the adapters stored in the system to a local repo. Includes adapter metadata and all files associated with each adapter
 
 - **all-deployments**
-  Pulls all of the deployments stored in the system to a local repo.
+  Pulls all the deployments stored in the system to a local repo
 
 - **all-collections**
-  Pulls all of the collections stored in the system to a local repo.
+  Pulls all the collections stored in the system to a local repo
 
 - **all-roles**
-  Pulls all of the roles stored in the system to a local repo.
+  Pulls all the roles stored in the system to a local repo
 
 - **all-users**
-  Pulls all of the users stored in the system to a local repo.
+  Pulls all the users stored in the system to a local repo
 
 - **all-triggers**
-  Pulls all of the triggers stored in the system to a local repo.
+  Pulls all the triggers stored in the system to a local repo
 
 - **all-timers**
-  Pulls all of the timers stored in the system to a local repo.
+  Pulls all the timers stored in the system to a local repo
 
 - **all-shared-caches**
-  Pulls all of the shared-caches stored in the system to a local repo.
+  Pulls all the shared-caches stored in the system to a local repo
 
 - **all-webhooks**
-  Pulls all of the webhooks stored in the system to a local repo.
+  Pulls all the webhooks stored in the system to a local repo
 
 - **all-external-databases**
-  Pulls all of the external-databases stored in the system to a local repo.
+  Pulls all the external-databases stored in the system to a local repo
 
 - **all-bucket-sets**
-  Pulls all of the remote bucket sets stored in a system to a local repo. Note: Does not include bucket set files, use -all-bucket-set-files for that.
+  Pulls all the remote bucket sets stored in a system to a local repo. Does not include bucket set files (use -all-bucket-set-files for that)
 
 - **all-bucket-set-files**
-  Pulls all of the files of all remote bucket sets stored in a system to a local repo.
+  Pulls all the files of all remote bucket sets stored in a system to a local repo
 
 - **all-user-secrets**
-  Pulls all of the secrets stored in the system to a local repo.
+  Pulls all the secrets stored in the system to a local repo
 
 - **userschema**
-  Pulls the remote version of the users table schema to a local repository.
+  Pulls the remote version of the users' table schema to a local repository
 
 - **devicechema**
-  Pulls the remote version of the device table schema to a local repository.
+  Pulls the remote version of the device table schema to a local repository
 
 - **edgeschema**
-  Pulls the remote version of the edge table schema to a local repository.
+  Pulls the remote version of the edge table schema to a local repository
 
 - **message-history-storage**
-  Pulls the remote version of the message history storage to a local repository.
+  Pulls the remote version of the message history storage to a local repository
 
 - **service=< service_name >**
-  Pulls the remote version of a specific service to a local repository.
+  Pulls the remote version of a specific service to a local repository
 
 - **library=< library_name >**
-  Pulls the remote version of a specific library to a local repository.
+  Pulls the remote version of a specific library to a local repository
 
 - **collection=< collection_name >**
-  Pulls the remote version of a specific collections' meta-data to a local repository.
+  Pulls the remote version of a specific collection's metadata to a local repository
 
 - **collectionschema=< collection_name >**
-  Pulls the remote version of a specific collections' schema to a local repository.
+  Pulls the remote version of a specific collections' schema to a local repository
 
 - **user=< email >**
-  Pulls the remote version of a specific user record to a local repository. Also Pulls the roles assigned to a user.
+  Pulls the remote version of a specific user record to a local repository. Also, pulls the roles assigned to a user
 
 - **role=< role_name >**
-  Pulls all the capability details of the specific role to a local repository.
+  Pulls all the capability details of the specific role to a local repository
 
 - **trigger=< trigger_name >**
-  Pulls the remote version of a specific trigger to a local repository.
+  Pulls the remote version of a specific trigger to a local repository
 
 - **timer=< timer_name >**
-  Pulls the remote version of a specific timer to a local repository.
+  Pulls the remote version of a specific timer to a local repository
 
 - **edge=< edge_name >**
-  Pulls the remote version of a specific edge to a local repository.
+  Pulls the remote version of a specific edge to a local repository
 
 - **device=< device_name >**
-  Pulls the remote version of a specific device to a local repository.
+  Pulls the remote version of a specific device to a local repository
 
 - **portal=< portal_name >**
-  Pulls the remote version of a specific portal to a local repository.
+  Pulls the remote version of a specific portal to a local repository
 
 - **plugin=< plugin-name >**
-  Pulls the remote version of a specific plugin to a local repository.
+  Pulls the remote version of a specific plugin to a local repository
 
 - **adapter=< adapter-name >**
-  Pulls the remote version of a specific adapter to a local repository. Includes the adapter metadata as well as the files associated with the adapter.
+  Pulls the remote version of a specific adapter to a local repository. Includes the adapter metadata and the files associated with the adapter
 
 - **deployment=< deployment-name >**
-  Pulls the remote version of a specific deployment to a local repository.
+  Pulls the remote version of a specific deployment to a local repository
 
 - **shared-cache=< shared-cache-name >**
-  Pulls the remote version of a specific deployment to a local repository.
+  Pulls the remote version of a specific deployment to a local repository
 
 - **webhook=< webhook-name >**
-  Pulls the remote version of a specific webhook to a local repository.
+  Pulls the remote version of a specific webhook to a local repository
 
 - **external-database=< external-database-name >**
-  Pulls the remote version of a specific external-database to a local repository.
+  Pulls the remote version of a specific external-database to a local repository
 
 - **bucket-set=< bucket-set-name >**
-  Pulls the remote version of a specific bucket set to a local repository. Note: does not include the bucket set's files, use -bucket-set-files for that.
+  Pulls the remote version of a specific bucket set to a local repository. Does not include the bucket set's files (use -bucket-set-files for that)
 
 - **bucket-set-files=< bucket-set-name >**
-  Pulls all of the files for a specific remote bucket set.
+  Pulls all the files for a specific remote bucket set
 
 - **box=< inbox | outbox | sandbox >**
-  Pulls all of the files inside a specific box for a specific bucket set. Note: must be used with -bucket-set-files
+  Pulls all the files inside a specific box for a specific bucket set. Must be used with -bucket-set-files
 
 - **file=< file-path-relative-to-box >**
-  Pulls a specific file within a specific box for a specific bucket set. Note: must be used with -bucket-set-files and -box
+  Pulls a specific file within a specific box for a specific bucket set. Must be used with -bucket-set-files and -box
 
 - **user-secret=< secret-name >**
   Pulls the remote version of a specific secret to a local repository.
@@ -774,7 +776,7 @@ The pull command allows you to selectively grab a specific object (eg a specific
 
 ## Remote
 
-**cb-cli remote** - Manage multiple remote endpoints
+**cb-cli remote**: Manage multiple remote endpoints
 
 ### Synopsis
 
@@ -799,31 +801,30 @@ OPTIONS:
 
 ### Description
 
-This command is used for managing multiple remote endpoints. For example, you can
-have a real remote (production), and a local remote (testing).
+This command is used for managing multiple remote endpoints. For example, you can have a real remote (production) and a local remote (testing).
 
 ### Options
 
 - **name**
-  The name of the remote, as given by `cb-cli remote list`
+  The remote's name, as given by cb-cli remote list
 
 - **platform-url**
-  Platform URL to use the remote
+  The Platform URL to use for the remote
 
 - **messaging-url**
-  Messaging URL to use for the remote
+  The messaging URL to use for the remote
 
 - **dev-email**
-  Developer email with access to the platform
+  The developer's email with access to the Platform
 
 - **dev-password**
-  Developer password
+  The developer's password
 
 - **dev-token**
-  Developer token
+  The developer's token
 
 - **system-key**
-  System to use for the remote
+  The system to use for the remote
 
 #### EXAMPLES
 
@@ -853,7 +854,7 @@ cb-cli remote set-current --name other-remote
 
 ## Test
 
-**cb-cli test** - Execute a code service, update code service from your local file system, and send MQTT message
+**cb-cli test**: Execute a code service, update the code service from your local file system, and send an MQTT message
 
 ### Synopsis
 
@@ -868,26 +869,26 @@ cb-cli test
 
 ### Description
 
-The test command allows you execute your code services from your local machine, along with update the code itself, and send MQTT Messages
+The test command allows you to execute your code services from your local machine, update the code, and send MQTT messages.
 
-You can combine these options on a single command line just like with pull
+You can combine these options on a single command line, like with pull.
 
 ### Options
 
 - **service = < service_name >**
-  Executes the selected service. If your local version has newer changes than the cloud platform, we recommend using `-push` flag to push new changes.
+  Executes the selected service. If your local version has newer changes than the cloud platform, we recommend using -push flag to push new changes.
 
 - **params = < params >**
-  The payload is the parameters for the code service request. This must be valid JSON.
+  The payload is the code service request's parameter. This must be valid JSON.
 
 - **topic = < topic >**
-  Sends an MQTT Message with the provided topic. The payload contains the MQTT message payload
+  Sends an MQTT message with the provided topic. The payload contains the MQTT message payload.
 
 - **payload = < payload >**
-  Payload for the respective service or MQTT message. If `-service` flag is used, then . If -topic is used, then the payload is the MQTT payload.
+  Payload for the respective service or MQTT message. If -topic is used, then the payload is the MQTT payload.
 
 - **push**
-  -push flag pushes the local version of the respective code service prior to executing
+  -push flag pushes the local version of the respective code service before executing.
 
 #### Examples
 
@@ -895,7 +896,7 @@ You can combine these options on a single command line just like with pull
 
 # Full Example
 
-## Step 1: Developer uses init to create initial directory structure
+## Step 1: The developer uses init to create an initial directory structure
 
 **Command:**
 
@@ -904,15 +905,15 @@ You can combine these options on a single command line just like with pull
 - Platform URL : - System Key : - Developer Email : - Password :
 
 **Result:**
-A new directory will be created named your System Name. Inside there will be a single file called .cbmeta
+A new directory will be created with your system name. Inside, there will be a single file called .cbmeta.
 
     -/<SYSTEM_NAME>
 
 |- .cbmeta
 
-## Step 2: Developer exports their system locally
+## Step 2: The developer exports their system locally
 
-This process will bring all the schema and asset definitions to your local environment
+This process will bring all the schema and asset definitions to your local environment.
 
 **Command:**
 
@@ -920,7 +921,7 @@ This process will bring all the schema and asset definitions to your local envir
     $ cb-cli export
 
 **Result:**
-Your folder should now be filled with a structure that looks like
+Your folder should now be filled with a structure that looks like this:
 
     -/<SYSTEM_NAME>
       |- .cb-cli
@@ -937,16 +938,16 @@ Your folder should now be filled with a structure that looks like
       |- triggers
       |- timers
 
-## Step 3: Developer modifies a local service
+## Step 3: The developer modifies a local service
 
-This step represents a typical developer activity of making a modification to a service. For this task modify a service of your choice
+This step represents a typical developer activity of modifying a service. For this task, modify a service of your choice.
 
     function helloworld(req, resp){
     	// COMMENT CHANGED!!!!
     	resp.success("hello world: ");
     }
 
-## Step 4: Developer views the differences
+## Step 4: The developer views the differences
 
 **Action:**
 
@@ -954,11 +955,11 @@ This step represents a typical developer activity of making a modification to a 
 
 **Result:**
 
-    the differences in your file will be listed
+    The differences in your file will be listed.
 
-## Step 5: Developer tests the new service
+## Step 5: The developer tests the new service
 
-This is an optional step but often developers want to ensure that their changes work
+This is an optional step, but developers often want to ensure their changes work.
 
 **Action:**
 
@@ -966,14 +967,13 @@ This is an optional step but often developers want to ensure that their changes 
 
 **Result:**
 
-The latest service source code is uploaded to the system and then execute with the parameters passed in.
-The response will be similar to
+The latest service source code is uploaded to the system and then executed with the parameters passed in.
 
-**NOTE: Testing a service will push your service to your system. This actvity should be done against a Test System**
+**NOTE: Testing a service will push your service to your system. This activity should be done against a test system.**
 
-## Step 6: Developer pushes their changes back to the ClearBlade system
+## Step 6: The developer pushes their changes back to the ClearBlade system
 
-Next if the developer has diffs that have not been tested and already sent the server they can now push those changes
+If the developer has diffs that have not been tested and have already been sent to the server, they can now push those changes.
 
 **NOTE: Now is a good time to commit your code to a source control repository!**
 
@@ -983,67 +983,67 @@ Next if the developer has diffs that have not been tested and already sent the s
 
 **Results:**
 
-Upon completion you will receive a list of all the files successully pushed up to the ClearBlade System
+Upon completion, you will receive a list of all the files successfully pushed to the ClearBlade system.
 
 ## Step 7: Pulling the latest code
 
-In a team environment you may want to pull latest changes that others have running on the system. You can accomplish this using
+In a team environment, you can pull the latest changes that others have running on the system. You can accomplish this using:
 
-- a source control branch
-- the asset running in the system
+- A source control branch
+- The asset running in the system
 
-To get the asset running in the system locally use the pull command
+Use the pull command to get the asset running in the system locally.
 
 **Action:**
 
     cb-cli pull -service=anotherworld
 
 **Result:**
-Your file system is now updated with the latest javascript in the anotherworld.js file.
+Your file system is now updated with the latest JavaScript in the anotherworld.js file.
 
 ### Summary
 
-The process for developing a local system continues with these above steps. Done correctly you should include a source control repository tool and best practice for back-up and change history purposes.
+The process of developing a local system continues with these above steps. Done correctly, you should include a source control repository tool and best practices for backup and change history purposes.
 
-To learn more about the devops lifecycle the CLI also supports see the DevOps Example
+See the DevOps example to learn more about the DevOps lifecycle the CLI supports.
 
 # DevOps
 
-In addition to supporting local development on services and systems the CLI also provides critical capability to integrate your current DevOps processes with the ClearBlade platform.
+In addition to supporting local development on services and systems, the CLI also provides the critical capability to integrate your current DevOps processes with the ClearBlade Platform.
 
-The below describes a typical agile development team working within the ClearBlade Platform
+This describes a typical agile development team working within the ClearBlade Platform:
 
-- Multiple Developers working with their own Systems
-- A ClearBlade platform System for a shared Development instance
-- A ClearBlade platform System for Test and QA
-- A ClearBlade platform System for Production
+- Multiple developers working with their systems
+- A ClearBlade system for a shared development instance
+- A ClearBlade system for testing and QA
+- A ClearBlade system for production
 
-To support this environment ClearBlade expects a mature use of a source control environment where developers are able to work in shared isolation. - git, svn, cvs and others are supported with the same pattern
+ClearBlade expects a mature use of a source control environment where developers can work in shared isolation. - git, svn, cvs, and others are supported with the same pattern.
 
-## Task: Developer works in local branch
+## Task: The developer works in the local branch.
 
-During this period the developer will use their own ClearBlade platform System and use the standard local development process.
+The developer will use their ClearBlade system and the standard local development process during this period.
 
-When ready to move forward with a feature the developer will commit their work to a source control development branch with-in the source control environment.
+The developer will commit their work to a source control environment's development branch when moving forward with a feature.
 
-## Task: Promotion of feature branch to Development
+## Task: Promotion of a feature branch to development
 
-With the development source control branch updated current devops build system can take control. This involves the following steps
+With the development source control branch updated, a current DevOps build system can take control. This involves the following steps:
 
-1.  A build system checks out the latest version of the development branch
+1.  A build system checks out the latest version of the development branch:
 
     \$ git pull origin development
 
-2.  The build system ensures they are init'd into the correct development system
+2.  The build system ensures they are init'd into the correct development system:
 
     \$ cb-cli init
 
-3.  The build system promotes any code that is now in the stream
+3.  The build system promotes any code that is now in the stream:
 
     \$ cb-cli push
 
-At this point the development system is now running the latest code running as captured in source control
+At this point, the development system is running the latest code captured in source control.
 
 ### Summary
 
-This process can be leveraged by Dev-Ops tools to continue the promotion and roll back of any environment
+DevOps tools can leverage this process to continue the promotion and rollback of any environment.
