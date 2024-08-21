@@ -145,6 +145,8 @@ The directory structure after export will look as:
     | |_myEdge.json
     |_external-databases
     | |_myDB.json
+    |_message-history-storage
+    | |_storage.json
     |_plugins
     | |_myPlugin.json
     |_portals
