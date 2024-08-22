@@ -147,6 +147,8 @@ The directory structure after export will look as:
     | |_myDB.json
     |_message-history-storage
     | |_storage.json
+    |_message-type-triggers
+    | |_triggers.json
     |_plugins
     | |_myPlugin.json
     |_portals
