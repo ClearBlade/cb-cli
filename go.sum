@@ -169,6 +169,8 @@ github.com/clearblade/cblib v0.0.0-20240911162156-c26f29fbf013 h1:TH1KW4Phy9zYsG
 github.com/clearblade/cblib v0.0.0-20240911162156-c26f29fbf013/go.mod h1:Bo4nj8jEz8yGixG9bt39f2DUbHTPjstbA89wwxTu26I=
 github.com/clearblade/cblib v0.0.0-20240911203804-82d6d6972975 h1:Hg+2sDuprCqBHSpGy8vhQSdwKt8Wdgm0s9/1U0RHpLU=
 github.com/clearblade/cblib v0.0.0-20240911203804-82d6d6972975/go.mod h1:Bo4nj8jEz8yGixG9bt39f2DUbHTPjstbA89wwxTu26I=
+github.com/clearblade/cblib v0.0.0-20240911204905-1a93e84a5d53 h1:1wWoqiwOykk8XscdYVI8iK6CGsDMlYqZQJ2G7EXcPHA=
+github.com/clearblade/cblib v0.0.0-20240911204905-1a93e84a5d53/go.mod h1:Bo4nj8jEz8yGixG9bt39f2DUbHTPjstbA89wwxTu26I=
 github.com/clearblade/go-utils v1.1.4 h1:/pcYKVTAJ5RcXRZnVENNdUZUKCoZRa3OVhbyer/aHiY=
 github.com/clearblade/go-utils v1.1.4/go.mod h1:neQH1vakc/9y8BORrnWgSnBAQFBCS2U8OT3f47oM/YU=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 h1:bZ0WWsMfcukPazNfOG8rR/BXJieIDaF29YcJP0M1cu4=
