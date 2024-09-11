@@ -161,10 +161,14 @@ github.com/clearblade/cblib v0.0.0-20240717140757-4b95bb881547 h1:GmO4b9yKwlo/SC
 github.com/clearblade/cblib v0.0.0-20240717140757-4b95bb881547/go.mod h1:nFiprp/Q3p7W9Q81EupVEqspoF/dbjPRyv0u1piMxNo=
 github.com/clearblade/cblib v0.0.0-20240806205453-008d88917171 h1:iQbpsWejqL5/gvWFdu+uiegsLLzUkP3yNSirtiAyEFI=
 github.com/clearblade/cblib v0.0.0-20240806205453-008d88917171/go.mod h1:fx1PVWF8rNRIGEORt+Y5JHsOu2X+IMouYgi+CDkOxlE=
+github.com/clearblade/cblib v0.0.0-20240821152818-7797171d6e1d h1:XVLr3P398SVQKCB5T8uxhgzl41Q/bKQJZD8yRBDSL0M=
+github.com/clearblade/cblib v0.0.0-20240821152818-7797171d6e1d/go.mod h1:fx1PVWF8rNRIGEORt+Y5JHsOu2X+IMouYgi+CDkOxlE=
 github.com/clearblade/cblib v0.0.0-20240827192315-427c107b66a7 h1:GYbP4PlzudpxqtlFRtAm7ZSpz62vJLxE9uO4qVWIZ7Q=
 github.com/clearblade/cblib v0.0.0-20240827192315-427c107b66a7/go.mod h1:iNbsOR2/WRLU9Iix3b2nnh67vykI/PvNDGY9GEBFvRU=
 github.com/clearblade/cblib v0.0.0-20240911162156-c26f29fbf013 h1:TH1KW4Phy9zYsG8VPCwmmzYlvuBGO/wS58kTtTO0cEU=
 github.com/clearblade/cblib v0.0.0-20240911162156-c26f29fbf013/go.mod h1:Bo4nj8jEz8yGixG9bt39f2DUbHTPjstbA89wwxTu26I=
+github.com/clearblade/cblib v0.0.0-20240911203804-82d6d6972975 h1:Hg+2sDuprCqBHSpGy8vhQSdwKt8Wdgm0s9/1U0RHpLU=
+github.com/clearblade/cblib v0.0.0-20240911203804-82d6d6972975/go.mod h1:Bo4nj8jEz8yGixG9bt39f2DUbHTPjstbA89wwxTu26I=
 github.com/clearblade/go-utils v1.1.4 h1:/pcYKVTAJ5RcXRZnVENNdUZUKCoZRa3OVhbyer/aHiY=
 github.com/clearblade/go-utils v1.1.4/go.mod h1:neQH1vakc/9y8BORrnWgSnBAQFBCS2U8OT3f47oM/YU=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 h1:bZ0WWsMfcukPazNfOG8rR/BXJieIDaF29YcJP0M1cu4=

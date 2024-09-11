@@ -4,7 +4,7 @@ go 1.22.2
 
 toolchain go1.22.7
 
-require github.com/clearblade/cblib v0.0.0-20240911162156-c26f29fbf013
+require github.com/clearblade/cblib v0.0.0-20240911203804-82d6d6972975
 
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
