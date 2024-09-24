@@ -181,6 +181,8 @@ github.com/clearblade/cblib v0.0.0-20240924141934-f3b6f0f628fe h1:k7tGZ19jBSVnbD
 github.com/clearblade/cblib v0.0.0-20240924141934-f3b6f0f628fe/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
 github.com/clearblade/cblib v0.0.0-20240924145414-92b03d5d8de9 h1:Qdyio0soNh58tU8LTMY7jc/Dwryh7gYkdxxrhPBcRaM=
 github.com/clearblade/cblib v0.0.0-20240924145414-92b03d5d8de9/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
+github.com/clearblade/cblib v0.0.0-20240924162841-03cbd28c83c5 h1:3nrfCFS+akJm7DKvoGUm6cZ+DYZXuI45ubNoJSGbmpc=
+github.com/clearblade/cblib v0.0.0-20240924162841-03cbd28c83c5/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
 github.com/clearblade/go-utils v1.1.4 h1:/pcYKVTAJ5RcXRZnVENNdUZUKCoZRa3OVhbyer/aHiY=
 github.com/clearblade/go-utils v1.1.4/go.mod h1:neQH1vakc/9y8BORrnWgSnBAQFBCS2U8OT3f47oM/YU=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 h1:bZ0WWsMfcukPazNfOG8rR/BXJieIDaF29YcJP0M1cu4=
