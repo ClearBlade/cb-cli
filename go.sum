@@ -7,14 +7,8 @@ github.com/clearblade/Go-SDK v0.0.0-20240913151318-3d23d590c91f h1:7M9NoiJq/S/S7
 github.com/clearblade/Go-SDK v0.0.0-20240913151318-3d23d590c91f/go.mod h1:Zw/X4NXHkdIG6ebMLUX8+RMwzOH5C1SvNzv2rP8yvSY=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c h1:KnJkP9fLFNyoV+pU3mXiRW5oLJdgDzVM/hWQhc0Scas=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c/go.mod h1:Pbu2bhtMVaWboL3mRaFQmGs8USG8uG4EAW2LB3SfCME=
-github.com/clearblade/cblib v0.0.0-20241120225044-3adce1f5727d h1:Sqk4gQjSGcCR4pBJ4UrH+Yw1AVqBHripqUS49eXHiHk=
-github.com/clearblade/cblib v0.0.0-20241120225044-3adce1f5727d/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
-github.com/clearblade/cblib v0.0.0-20250207210233-cb8f36a089b9 h1:pXw0wmT19vnrnhnfSTH7BTTSASD0rTugudSOSpISCWE=
-github.com/clearblade/cblib v0.0.0-20250207210233-cb8f36a089b9/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
-github.com/clearblade/cblib v0.0.0-20250224210209-c07b977fad74 h1:oQrZ9NQuGm59tlGLNl0xLnx9QhOVcvv2MoifDVOxJIk=
-github.com/clearblade/cblib v0.0.0-20250224210209-c07b977fad74/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
-github.com/clearblade/cblib v0.0.0-20250416183832-fb2f3b5aa19b h1:oUmFNdeEUqfsVT358vmwGhbPLgK4ysIGWuAIESb0FTI=
-github.com/clearblade/cblib v0.0.0-20250416183832-fb2f3b5aa19b/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
+github.com/clearblade/cblib v0.0.0-20250623153434-dd1c3f173417 h1:zwxANHRvClYss+Y0/v/IoqoPvTib3DMM4ps+tLNvKoo=
+github.com/clearblade/cblib v0.0.0-20250623153434-dd1c3f173417/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 h1:bZ0WWsMfcukPazNfOG8rR/BXJieIDaF29YcJP0M1cu4=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5/go.mod h1:oCpgejfd+56P7nlPGDQ3mpYnQWHjoBjStBXAokqWKV4=
 github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 h1:/T6Cq3XSwmuFoN6GDoPWgGpNW5X0Idx49DbfQazRUOQ=
