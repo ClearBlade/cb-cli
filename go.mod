@@ -2,7 +2,7 @@ module github.com/clearblade/cb-cli
 
 go 1.22.2
 
-require github.com/clearblade/cblib v0.0.0-20250707202400-a4fc4f2e7f86
+require github.com/clearblade/cblib v0.0.0-20250709210757-25739abc1a97
 
 require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
