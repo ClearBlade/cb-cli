@@ -7,6 +7,8 @@ github.com/clearblade/Go-SDK v0.0.0-20240913151318-3d23d590c91f h1:7M9NoiJq/S/S7
 github.com/clearblade/Go-SDK v0.0.0-20240913151318-3d23d590c91f/go.mod h1:Zw/X4NXHkdIG6ebMLUX8+RMwzOH5C1SvNzv2rP8yvSY=
 github.com/clearblade/Go-SDK v0.0.0-20250826202029-8409eefafa2a h1:tsAIHwlHNilLaZWYysi6V/bAovCjBbGa28exT2BZBgI=
 github.com/clearblade/Go-SDK v0.0.0-20250826202029-8409eefafa2a/go.mod h1:3p+ysXnI08VdBAVYKe9dndqsRVSXvLgxQqZxLtp/mCo=
+github.com/clearblade/Go-SDK v0.0.0-20250827141621-2eac925f0330 h1:rrVPCWdQNlkr3Az3Grs6PSCuckB6/h3Q0ip/I+bz46U=
+github.com/clearblade/Go-SDK v0.0.0-20250827141621-2eac925f0330/go.mod h1:3p+ysXnI08VdBAVYKe9dndqsRVSXvLgxQqZxLtp/mCo=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c h1:KnJkP9fLFNyoV+pU3mXiRW5oLJdgDzVM/hWQhc0Scas=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c/go.mod h1:Pbu2bhtMVaWboL3mRaFQmGs8USG8uG4EAW2LB3SfCME=
 github.com/clearblade/cblib v0.0.0-20250623153434-dd1c3f173417 h1:zwxANHRvClYss+Y0/v/IoqoPvTib3DMM4ps+tLNvKoo=
@@ -19,6 +21,8 @@ github.com/clearblade/cblib v0.0.0-20250709213713-d4866047b0bf h1:1k1fkFKWdGTLnP
 github.com/clearblade/cblib v0.0.0-20250709213713-d4866047b0bf/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
 github.com/clearblade/cblib v0.0.0-20250827135821-eef32c08a3f0 h1:HEjDEM+CXV4bZGbKzTpOIuyQT5ziRYPBBu0i5TW7I7Y=
 github.com/clearblade/cblib v0.0.0-20250827135821-eef32c08a3f0/go.mod h1:hm9gxJN1Pk+Ed/QtaN8cuko5PGSPCytN12w8knrL5c0=
+github.com/clearblade/cblib v0.0.0-20250827141706-fb78261e8bc6 h1:6JGP3nYXnH9qp44SjCRb1PW0Wwx5VRxMC3ML5bnshSk=
+github.com/clearblade/cblib v0.0.0-20250827141706-fb78261e8bc6/go.mod h1:mvywRSCzahfg2aYx+Zby9iwCjbdm7ilKjFkboUu4rhM=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 h1:bZ0WWsMfcukPazNfOG8rR/BXJieIDaF29YcJP0M1cu4=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5/go.mod h1:oCpgejfd+56P7nlPGDQ3mpYnQWHjoBjStBXAokqWKV4=
 github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 h1:/T6Cq3XSwmuFoN6GDoPWgGpNW5X0Idx49DbfQazRUOQ=

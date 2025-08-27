@@ -4,12 +4,12 @@ go 1.23.0
 
 toolchain go1.24.2
 
-require github.com/clearblade/cblib v0.0.0-20250827135821-eef32c08a3f0
+require github.com/clearblade/cblib v0.0.0-20250827141706-fb78261e8bc6
 
 require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/clearblade/Go-SDK v0.0.0-20250826202029-8409eefafa2a // indirect
+	github.com/clearblade/Go-SDK v0.0.0-20250827141621-2eac925f0330 // indirect
 	github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c // indirect
 	github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 // indirect
 	github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 // indirect
