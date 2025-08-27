@@ -5,6 +5,8 @@ github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK3
 github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/clearblade/Go-SDK v0.0.0-20240913151318-3d23d590c91f h1:7M9NoiJq/S/S7FpncZ44QDZ+Przm9Zkv0U7zEPdxwF4=
 github.com/clearblade/Go-SDK v0.0.0-20240913151318-3d23d590c91f/go.mod h1:Zw/X4NXHkdIG6ebMLUX8+RMwzOH5C1SvNzv2rP8yvSY=
+github.com/clearblade/Go-SDK v0.0.0-20250826202029-8409eefafa2a h1:tsAIHwlHNilLaZWYysi6V/bAovCjBbGa28exT2BZBgI=
+github.com/clearblade/Go-SDK v0.0.0-20250826202029-8409eefafa2a/go.mod h1:3p+ysXnI08VdBAVYKe9dndqsRVSXvLgxQqZxLtp/mCo=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c h1:KnJkP9fLFNyoV+pU3mXiRW5oLJdgDzVM/hWQhc0Scas=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c/go.mod h1:Pbu2bhtMVaWboL3mRaFQmGs8USG8uG4EAW2LB3SfCME=
 github.com/clearblade/cblib v0.0.0-20250623153434-dd1c3f173417 h1:zwxANHRvClYss+Y0/v/IoqoPvTib3DMM4ps+tLNvKoo=
@@ -15,6 +17,8 @@ github.com/clearblade/cblib v0.0.0-20250709210757-25739abc1a97 h1:YH+jQg57B2n9wl
 github.com/clearblade/cblib v0.0.0-20250709210757-25739abc1a97/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
 github.com/clearblade/cblib v0.0.0-20250709213713-d4866047b0bf h1:1k1fkFKWdGTLnP4OSMhfRXpKzZTa1tfW2+mMKHG/QyI=
 github.com/clearblade/cblib v0.0.0-20250709213713-d4866047b0bf/go.mod h1:ho3ztfN0m/ac3QVNMlnzipX1Zlqvj1y+VN7v3g2jkK8=
+github.com/clearblade/cblib v0.0.0-20250827135821-eef32c08a3f0 h1:HEjDEM+CXV4bZGbKzTpOIuyQT5ziRYPBBu0i5TW7I7Y=
+github.com/clearblade/cblib v0.0.0-20250827135821-eef32c08a3f0/go.mod h1:hm9gxJN1Pk+Ed/QtaN8cuko5PGSPCytN12w8knrL5c0=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 h1:bZ0WWsMfcukPazNfOG8rR/BXJieIDaF29YcJP0M1cu4=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5/go.mod h1:oCpgejfd+56P7nlPGDQ3mpYnQWHjoBjStBXAokqWKV4=
 github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 h1:/T6Cq3XSwmuFoN6GDoPWgGpNW5X0Idx49DbfQazRUOQ=
@@ -26,6 +30,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.1 h1:r/myEWzV9lfsM1tFLgDyu0atFtJ1fXn261LKY
 github.com/cpuguy83/go-md2man/v2 v2.0.1/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/davecgh/go-spew v1.1.0 h1:ZDRjVQ15GmhC3fiQ8ni8+OwkZQO4DARzQgrnXU1Liz8=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/fatih/structs v1.1.0 h1:Q7juDM0QtcnhCpeyLGQKyg4TOIghuNXrkL32pHAUMxo=
+github.com/fatih/structs v1.1.0/go.mod h1:9NiDSp5zOcgEDl+j00MP/WkGVPOlPRLejGD8Ga6PJ7M=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/fsnotify/fsnotify v1.4.9 h1:hsms1Qyu0jgnwNXIxa+/V/PDsU6CfLf6CNO8H7IWoS4=
 github.com/fsnotify/fsnotify v1.4.9/go.mod h1:znqG4EE+3YCdAaPaxE2ZRY/06pZUdp0tY4IgpuI1SZQ=
@@ -59,6 +65,8 @@ github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb h1:zGWFAtiMc
 github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
 golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d h1:LO7XpTYMwTqxjLcGWPijK3vRXg1aWdlNOVOHRq45d7c=
 golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d/go.mod h1:9nx3DQGgdP8bBQD5qxJ1jj9UTztislL4KSBs9R2vV5Y=
+golang.org/x/net v0.38.0 h1:vRMAPTMaeGqVhG5QyLJHqNDwecKTomGeqbnfZyKlBI8=
+golang.org/x/net v0.38.0/go.mod h1:ivrbrMbzFq5J41QOQh0siUuly180yBYtLp+CKbEaFx8=
 golang.org/x/sys v0.0.0-20190904154756-749cb33beabd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210423082822-04245dca01da h1:b3NXsE2LusjYGGjL5bxEVZZORm/YEFFrWFjR8eFrw/c=
