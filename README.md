@@ -419,6 +419,8 @@ cb-cli push
         [-all-bucket-sets]
         [-all-bucket-set-files]
   [-all-user-secrets]
+  [-all-file-stores]
+  [-all-file-store-files]
 	[-userschema]
 	[-edgeschema]
 	[-deviceschema]
@@ -444,6 +446,9 @@ cb-cli push
     	[-bucket-set-files=<BUCKET_SET_NAME>]
     	[-box=<inbox | outbox | sandbox>]
     	[-file=<FILE_NAME>]
+  [-file-store=<FILE_STORE_NAME>]
+      [-file-store-files=<FILE_STORE_NAME>]
+      [-file-store-file=<FILE_NAME>]
   [-user-secret=<SECRET_NAME>]
 ```
 
