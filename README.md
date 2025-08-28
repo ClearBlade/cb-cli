@@ -145,6 +145,11 @@ The directory structure after export will look as:
     | |_myEdge.json
     |_external-databases
     | |_myDB.json
+    |_file-stores
+    | |_myFileStore.json
+    |_file-stores-files
+    | |_myFileStore
+    | | |_myfile.txt
     |_message-history-storage
     | |_storage.json
     |_message-type-triggers
@@ -301,6 +306,8 @@ Outstanding_System/
   | |-roles/
   |- edges/
   |- external-databases/
+  |- file-stores/
+  |- file-stores-files/
   |- plugins/
   |- portals/
 	|- roles/
@@ -590,6 +597,8 @@ cb-cli pull
 	[-all-external-databases]
   [-all-bucket-sets]
   [-all-bucket-set-files]
+  [-all-file-stores]
+  [-all-file-store-files]
   [-all-user-secrets]
 	[-userschema]
   [-deviceschema]
@@ -616,6 +625,8 @@ cb-cli pull
   [-bucket-set-files=<BUCKET_SET_NAME>]
     [-box=<inbox | outbox | sandbox>]
     [-file=<FILE_NAME>]
+  [-file-store-files=<FILE_STORE_NAME>]
+    [-file-store-file=<FILE_NAME>]
   [-user-secret=<SECRET_NAME>]
 ```
 
