@@ -487,6 +487,12 @@ You can combine these options on a single command line, like with pull.
 - **all-bucket-set-files**
   Pushes all the bucket set files stored in a local repo
 
+- **all-file-stores**
+  Pushes all the file stores stored in a local repo. Does not include file store files (use -all-file-store-files for that)
+
+- **all-file-store-files**
+  Pushes all the file store files stored in a local repo
+
 - **userschema**
   Pushes the local version of the users' table schema to a remote ClearBlade system
 
@@ -547,6 +553,15 @@ You can combine these options on a single command line, like with pull.
 - **file=< file-path-relative-to-box >**
   Pushes a specific file within a specific box for a specific bucket set. Must be used with -bucket-set-files and -box
 
+- **file-store=< file-store-name >**
+  Pushes the local version of a specific file store to a remote ClearBlade system. Does not include the file store's files (use -file-store-files for that)
+
+- **file-store-files=< file-store-name >**
+  Pushes all the specific file store files
+
+- **file-store-file=< file-path >**
+  Pushes a specific file within a specific file store. Must be used with -file-store-files
+
 #### Examples
 
 `cb-cli push`
@@ -562,6 +577,11 @@ You can combine these options on a single command line, like with pull.
 `cb-cli push -bucket-set-files=MyBucketSet -box=inbox`
 
 `cb-cli push -bucket-set-files=MyBucketSet -box=inbox -file=relative/path/from/inbox`
+
+`cb-cli push -file-store-files=MyFileStore`
+
+`cb-cli push -file-store-files=MyFileStore -file-store-file=path/within/my/file/store.txt`
+
 
 ## Update
 
@@ -697,6 +717,12 @@ The pull command allows you to selectively grab a specific object (e.g., a parti
 - **all-bucket-set-files**
   Pulls all the files of all remote bucket sets stored in a system to a local repo
 
+- **all-file-stores**
+  Pulls all the remote file stores in a system to a local repo. Does not include file store files (use -all-file-store-files for that)
+
+- **all-file-store-files**
+  Pulls all the files of all remote file stores in a system to a local repo
+
 - **all-user-secrets**
   Pulls all the secrets stored in the system to a local repo
 
@@ -775,6 +801,15 @@ The pull command allows you to selectively grab a specific object (e.g., a parti
 - **file=< file-path-relative-to-box >**
   Pulls a specific file within a specific box for a specific bucket set. Must be used with -bucket-set-files and -box
 
+- **file-store=< file-store-name >**
+  Pulls the remote version of a specific file store to a local repository. Does not include the file store's files (use -file-store-files for that)
+
+- **file-store-files=< file-store-name >**
+  Pulls all the files for a specific remote file store
+
+- **file-store-file=< file-path >**
+  Pulls a specific file within a specific file store. Must be used with -file-store-files
+
 - **user-secret=< secret-name >**
   Pulls the remote version of a specific secret to a local repository.
 
@@ -793,6 +828,10 @@ The pull command allows you to selectively grab a specific object (e.g., a parti
 `cb-cli pull -bucket-set-files=MyBucketSet -box=inbox`
 
 `cb-cli pull -bucket-set-files=MyBucketSet -box=inbox -file=relative/path/from/inbox`
+
+`cb-cli pull -file-store-files=MyFileStore`
+
+`cb-cli pull -file-store-files=MyBucketSet -file-store-file=path/within/my/file/store.txt`
 
 ## Remote
 
