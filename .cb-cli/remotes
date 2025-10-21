@@ -1,0 +1,13 @@
+{
+    "remotes": {
+        "init": {
+            "Name": "init",
+            "PlatformURL": "https://community.clearblade.com",
+            "MessagingURL": "community.clearblade.com:1883",
+            "SystemKey": "d8e7d3c40caabce2c288aba599a301",
+            "SystemSecret": "D8E7D3C40CB8CB8CF9B9B3B6CCE001",
+            "Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOi0xLCJpYXQiOjE3NjA5ODUxNzAsInNpZCI6Ijk5NWYwYzBkLWRmMGEtNGZkMS1hZjUyLTg1YmY2ZGUyMTQyMyIsInR0IjoxLCJ1aWQiOiJiMjk3ODdlMDBiZDJkM2M0YzVjMmEwOTM4ZDEyIiwidXQiOjF9.6AMmyWbLnfcxnnq7RtB0qmpfP9iBlR1QQpMyEhKhlnk"
+        }
+    },
+    "current": "init"
+}

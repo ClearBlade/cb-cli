@@ -1,0 +1,9 @@
+{
+    "auth": true,
+    "description": "",
+    "messaging_url": "community.clearblade.com:1883",
+    "name": "ans_HashicorpTest",
+    "platform_url": "https://community.clearblade.com",
+    "system_key": "d8e7d3c40caabce2c288aba599a301",
+    "system_secret": "D8E7D3C40CB8CB8CF9B9B3B6CCE001"
+}

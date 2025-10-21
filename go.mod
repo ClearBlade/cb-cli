@@ -4,18 +4,13 @@ go 1.24
 
 toolchain go1.24.2
 
-require (
-	github.com/chromedp/chromedp v0.14.1
-	github.com/clearblade/cblib v0.0.0-20251021125134-814faa8679f5
-)
-
-replace github.com/clearblade/cblib => /home/skysharma/cblib
+require github.com/clearblade/cblib v0.0.0-20251021125134-814faa8679f5
 
 require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
-	github.com/blang/semver v3.5.1+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327 // indirect
+	github.com/chromedp/chromedp v0.14.1 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
 	github.com/clearblade/Go-SDK v0.0.0-20250829145014-ec1c43d72f29 // indirect
 	github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c // indirect
@@ -35,7 +30,6 @@ require (
 	github.com/nxadm/tail v1.4.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/tebeka/selenium v0.9.9 // indirect
 	github.com/totherme/unstructured v0.0.0-20170821094912-3faf2d56d8b8 // indirect
 	github.com/urfave/cli/v2 v2.3.0 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
