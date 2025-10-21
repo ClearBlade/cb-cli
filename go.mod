@@ -1,12 +1,12 @@
 module github.com/clearblade/cb-cli
 
-go 1.24.0
+go 1.24
 
 toolchain go1.24.2
 
 require (
 	github.com/chromedp/chromedp v0.14.1
-	github.com/clearblade/cblib v0.0.0-20250917211102-3700adbd04ec
+	github.com/clearblade/cblib v0.0.0-20251021125134-814faa8679f5
 )
 
 replace github.com/clearblade/cblib => /home/skysharma/cblib
