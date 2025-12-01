@@ -17,6 +17,8 @@ github.com/clearblade/cblib v0.0.0-20251027153549-600e326680df h1:dL4x4a5iThFwGs
 github.com/clearblade/cblib v0.0.0-20251027153549-600e326680df/go.mod h1:XEwBEMW4tWo94P7O82ssyc/EMgkLHMzR2CNT2Ynw+gw=
 github.com/clearblade/cblib v0.0.0-20251111222949-d4b39f7d05e1 h1:tR0Ls5qoA5B/cH/mLJb8xoh0bwgrE1dmSS4WZFt6dIs=
 github.com/clearblade/cblib v0.0.0-20251111222949-d4b39f7d05e1/go.mod h1:XEwBEMW4tWo94P7O82ssyc/EMgkLHMzR2CNT2Ynw+gw=
+github.com/clearblade/cblib v0.0.0-20251117215108-8399decf37c4 h1:xXt1lutKcg4bCfjMfaOAqDWPrpdI5YmH/p7OsUQ4k6M=
+github.com/clearblade/cblib v0.0.0-20251117215108-8399decf37c4/go.mod h1:XEwBEMW4tWo94P7O82ssyc/EMgkLHMzR2CNT2Ynw+gw=
 github.com/clearblade/cblib v0.0.0-20251119155737-79fa4716ab0c h1:9gObusOE/Sm8erQE7CCDWphmlzxedVRoVj1E+C3CnuA=
 github.com/clearblade/cblib v0.0.0-20251119155737-79fa4716ab0c/go.mod h1:XEwBEMW4tWo94P7O82ssyc/EMgkLHMzR2CNT2Ynw+gw=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 h1:bZ0WWsMfcukPazNfOG8rR/BXJieIDaF29YcJP0M1cu4=
