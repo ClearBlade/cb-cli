@@ -11,12 +11,16 @@ github.com/chromedp/sysutil v1.1.0 h1:PUFNv5EcprjqXZD9nJb9b/c9ibAbxiYo4exNWZyipw
 github.com/chromedp/sysutil v1.1.0/go.mod h1:WiThHUdltqCNKGc4gaU50XgYjwjYIhKWoHGPTUfWTJ8=
 github.com/clearblade/Go-SDK v0.0.0-20250829145014-ec1c43d72f29 h1:Wpq7EHOdZTcO25ZUmcN5+dZZQTjojjiXI3pai3+tmJc=
 github.com/clearblade/Go-SDK v0.0.0-20250829145014-ec1c43d72f29/go.mod h1:3p+ysXnI08VdBAVYKe9dndqsRVSXvLgxQqZxLtp/mCo=
+github.com/clearblade/Go-SDK v0.0.0-20251229144222-b59ca7e97518 h1:jXzg1zYeUd49dKJoC82WbnF9vPofrgUlZJe0b79HC/I=
+github.com/clearblade/Go-SDK v0.0.0-20251229144222-b59ca7e97518/go.mod h1:3p+ysXnI08VdBAVYKe9dndqsRVSXvLgxQqZxLtp/mCo=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c h1:KnJkP9fLFNyoV+pU3mXiRW5oLJdgDzVM/hWQhc0Scas=
 github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c/go.mod h1:Pbu2bhtMVaWboL3mRaFQmGs8USG8uG4EAW2LB3SfCME=
 github.com/clearblade/cblib v0.0.0-20251123154931-166c455a3fb6 h1:M6ZUTTOKfNcadeb3lojPVCDiP1H6j7GoLMIKnxDLy8Y=
 github.com/clearblade/cblib v0.0.0-20251123154931-166c455a3fb6/go.mod h1:XEwBEMW4tWo94P7O82ssyc/EMgkLHMzR2CNT2Ynw+gw=
 github.com/clearblade/cblib v0.0.0-20251222191312-02808d298479 h1:Ry6K6j56Wjwf1YDJS0C9bTozDaS1n3Op97B0RAO1eGY=
 github.com/clearblade/cblib v0.0.0-20251222191312-02808d298479/go.mod h1:XEwBEMW4tWo94P7O82ssyc/EMgkLHMzR2CNT2Ynw+gw=
+github.com/clearblade/cblib v0.0.0-20251229195212-d9648ebbd833 h1:/uT0uV1KilC3ETixxLcNV5fCi6V2VkC+WHaZfwb4tAc=
+github.com/clearblade/cblib v0.0.0-20251229195212-d9648ebbd833/go.mod h1:fY1/G4Qf6tQz+wePVkH4h+W8gSXPYMImv05KtuuqbjQ=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 h1:bZ0WWsMfcukPazNfOG8rR/BXJieIDaF29YcJP0M1cu4=
 github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5/go.mod h1:oCpgejfd+56P7nlPGDQ3mpYnQWHjoBjStBXAokqWKV4=
 github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 h1:/T6Cq3XSwmuFoN6GDoPWgGpNW5X0Idx49DbfQazRUOQ=

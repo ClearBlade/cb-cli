@@ -4,7 +4,7 @@ go 1.24
 
 toolchain go1.24.2
 
-require github.com/clearblade/cblib v0.0.0-20251222191312-02808d298479
+require github.com/clearblade/cblib v0.0.0-20251229195212-d9648ebbd833
 
 require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
@@ -12,7 +12,7 @@ require (
 	github.com/chromedp/cdproto v0.0.0-20250724212937-08a3db8b4327 // indirect
 	github.com/chromedp/chromedp v0.14.1 // indirect
 	github.com/chromedp/sysutil v1.1.0 // indirect
-	github.com/clearblade/Go-SDK v0.0.0-20250829145014-ec1c43d72f29 // indirect
+	github.com/clearblade/Go-SDK v0.0.0-20251229144222-b59ca7e97518 // indirect
 	github.com/clearblade/cbjson v0.0.0-20160215162041-f1a77f1fc21c // indirect
 	github.com/clearblade/go-utils v1.1.5-0.20240513160427-a20563b372a5 // indirect
 	github.com/clearblade/mqtt_parsing v0.0.0-20160301165118-6ae49eac0961 // indirect
