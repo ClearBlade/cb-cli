@@ -4,7 +4,7 @@ go 1.24
 
 toolchain go1.24.2
 
-require github.com/clearblade/cblib v0.0.0-20251230224317-806bfecca1bd
+require github.com/clearblade/cblib v0.0.0-20260218175446-a91634fabc1b
 
 require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
