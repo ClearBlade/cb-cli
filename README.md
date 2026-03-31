@@ -31,18 +31,18 @@ Go to [cb-cli releases](https://github.com/ClearBlade/cb-cli/releases) and downl
 
 #### Source installation
 
-Go should be installed. If it's not, install it from: [goLang](https://golang.org/doc/install)
+Building from source requires a working golang installation. The instructions below expect your golang version >= 1.17. If your machine doesn't have go installed or you need to update, please see: [go: Download and install](https://go.dev/doc/install). 
 
 After Go is installed, run:
 
 ```
-go get github.com/clearblade/cb-cli
+go install github.com/clearblade/cb-cli
 ```
 
 You may need to specify the version you want. e.g.:
 
 ```
-go get github.com/clearblade/cb-cli@9.10.2
+go install github.com/clearblade/cb-cli@9.32.0
 ```
 
 Add path to cb-cli, executable to \$PATH in bashrc, or execute using full path.
